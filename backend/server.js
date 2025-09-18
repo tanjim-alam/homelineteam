@@ -40,18 +40,29 @@ const corsOptions = {
 		// Allow requests with no origin (like mobile apps or curl requests)
 		if (!origin) return callback(null, true);
 
+		// Check if origin is in allowed list
 		if (config.CORS_ORIGINS.indexOf(origin) !== -1) {
 			callback(null, true);
 		} else {
-			// CORS blocked origin in development
+			// Log the blocked origin for debugging
+			console.log('CORS blocked origin:', origin);
 			callback(new Error('Not allowed by CORS'));
 		}
 	},
 	credentials: true,
-	methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-	allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-	exposedHeaders: ['Set-Cookie'],
-	optionsSuccessStatus: 200
+	methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+	allowedHeaders: [
+		'Content-Type',
+		'Authorization',
+		'X-Requested-With',
+		'Accept',
+		'Origin',
+		'Access-Control-Request-Method',
+		'Access-Control-Request-Headers'
+	],
+	exposedHeaders: ['Set-Cookie', 'Authorization'],
+	optionsSuccessStatus: 200,
+	preflightContinue: false
 };
 
 app.use(cors(corsOptions));

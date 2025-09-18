@@ -8,6 +8,36 @@ class ApiService {
     this.maxRetries = config.MAX_RETRY_ATTEMPTS;
     this.cache = new Map();
     this.cacheDuration = config.CACHE_DURATION;
+    this.token = null;
+  }
+
+  // Set token for Authorization header (fallback if cookies don't work)
+  setToken(token) {
+    this.token = token;
+  }
+
+  // Get token from localStorage (fallback)
+  getToken() {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('auth_token') || this.token;
+    }
+    return this.token;
+  }
+
+  // Store token in localStorage (fallback)
+  storeToken(token) {
+    this.token = token;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('auth_token', token);
+    }
+  }
+
+  // Clear token
+  clearToken() {
+    this.token = null;
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('auth_token');
+    }
   }
 
   async request(endpoint, options = {}, retryCount = 0) {
@@ -36,11 +66,17 @@ class ApiService {
     }
 
     const url = `${this.baseURL}${endpoint}`;
+
+    // Get token for Authorization header (fallback if cookies don't work)
+    const token = this.getToken();
+
     const requestConfig = {
       headers: {
         'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` }),
         ...options.headers,
       },
+      credentials: 'include', // Include cookies in requests
       ...options,
     };
 
@@ -123,6 +159,36 @@ class ApiService {
   // Health check
   async healthCheck() {
     return this.request('/api/health');
+  }
+
+  // Authentication methods
+  async login(credentials) {
+    const response = await this.request('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+    });
+
+    // Store token if provided in response (fallback)
+    if (response.token) {
+      this.storeToken(response.token);
+    }
+
+    return response;
+  }
+
+  async logout() {
+    const response = await this.request('/api/auth/logout', {
+      method: 'POST',
+    });
+
+    // Clear stored token
+    this.clearToken();
+
+    return response;
+  }
+
+  async getMe() {
+    return this.request('/api/auth/me');
   }
 
   // Categories

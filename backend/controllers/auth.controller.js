@@ -31,17 +31,27 @@ exports.login = async (req, res, next) => {
 
 		// Cookie configuration for development and production
 		const isProduction = process.env.NODE_ENV === 'production';
-		const isLocalhost = req.get('origin')?.includes('localhost') || req.get('host')?.includes('localhost');
+		const origin = req.get('origin') || '';
+		const isLocalhost = origin.includes('localhost') || origin.includes('127.0.0.1');
+		const isVercel = origin.includes('vercel.app') || origin.includes('homelineteams.com');
+
+		// Set cookie with proper configuration
+		const cookieOptions = {
+			httpOnly: true,
+			secure: isProduction && !isLocalhost, // Secure only in production and not localhost
+			sameSite: isProduction && !isLocalhost ? 'none' : 'lax', // 'none' for cross-origin in production
+			maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+			path: '/',
+			domain: isProduction && !isLocalhost ? undefined : undefined // Let browser handle domain
+		};
 
 		res
-			.cookie('token', token, {
-				httpOnly: true,
-				secure: isProduction, // Only secure in production
-				sameSite: isLocalhost ? 'lax' : 'none', // Use 'lax' for localhost, 'none' for production
-				maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-				path: '/',
-			})
-			.json({ message: 'Logged in', admin: { id: admin._id, email: admin.email, name: admin.name } });
+			.cookie('token', token, cookieOptions)
+			.json({
+				message: 'Logged in',
+				admin: { id: admin._id, email: admin.email, name: admin.name },
+				token: token // Also send token in response for fallback
+			});
 	} catch (err) {
 		next(err);
 	}
