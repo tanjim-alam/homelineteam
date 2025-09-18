@@ -28,7 +28,11 @@ module.exports = {
         "https://homelineteam-admin.vercel.app",
         "https://www.homelineteam-admin.vercel.app",
         "https://homelineteam.vercel.app",
-        "https://www.homelineteam.vercel.app"
+        "https://www.homelineteam.vercel.app",
+        // Vercel preview URLs pattern
+        "https://homelineteam-git-*.vercel.app",
+        "https://homelineteam-admin-git-*.vercel.app",
+        "https://homelineteams-git-*.vercel.app"
     ],
 
     // Rate Limiting

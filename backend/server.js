@@ -41,11 +41,30 @@ const corsOptions = {
 		if (!origin) return callback(null, true);
 
 		// Check if origin is in allowed list
-		if (config.CORS_ORIGINS.indexOf(origin) !== -1) {
+		const allowedOrigins = config.CORS_ORIGINS;
+
+		// Allow all Vercel domains for now (temporary fix)
+		if (origin.includes('vercel.app')) {
+			console.log('Allowing Vercel origin:', origin);
+			return callback(null, true);
+		}
+
+		const isAllowed = allowedOrigins.some(allowedOrigin => {
+			// Check exact match
+			if (origin === allowedOrigin) return true;
+			// Check if origin starts with allowed origin (for Vercel preview URLs)
+			if (allowedOrigin.includes('vercel.app') && origin.includes('vercel.app')) return true;
+			// Check if origin contains the base domain
+			if (origin.includes('homelineteam') && origin.includes('vercel.app')) return true;
+			return false;
+		});
+
+		if (isAllowed) {
 			callback(null, true);
 		} else {
 			// Log the blocked origin for debugging
 			console.log('CORS blocked origin:', origin);
+			console.log('Allowed origins:', allowedOrigins);
 			callback(new Error('Not allowed by CORS'));
 		}
 	},
@@ -89,6 +108,7 @@ app.get('/api/cors-test', (req, res) => {
 	res.json({
 		message: 'CORS is working!',
 		origin: req.get('origin'),
+		userAgent: req.get('user-agent'),
 		credentials: req.get('cookie') ? 'Cookies present' : 'No cookies',
 		timestamp: new Date().toISOString()
 	});
