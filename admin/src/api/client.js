@@ -1,0 +1,41 @@
+import axios from 'axios';
+import config from '../config/config';
+
+const api = axios.create({
+  baseURL: config.API_BASE_URL,
+  withCredentials: true,
+  headers: {
+    'X-Requested-With': 'XMLHttpRequest'
+  },
+  timeout: config.DEFAULTS.TIMEOUT.API_REQUEST,
+});
+
+// Request interceptor
+api.interceptors.request.use(
+  (config) => {
+    // Handle FormData properly
+    if (config.data instanceof FormData) {
+      // For FormData, let the browser set the Content-Type with boundary
+      // Remove any manually set Content-Type to avoid conflicts
+      delete config.headers['Content-Type'];
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor
+api.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+export default api;
+
+
