@@ -284,7 +284,7 @@ class ApiService {
       method: 'POST',
       body: JSON.stringify(payload),
       headers: { 'Content-Type': 'application/json' }
-    });
+    }, 0); // Disable retries for lead submissions to prevent duplicates
   }
 
   async getLeads() {

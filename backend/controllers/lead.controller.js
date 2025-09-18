@@ -9,6 +9,11 @@ function getTransporter() {
       user: "tanjim11alam@gmail.com",
       pass: "heomrbwqxaaxhppj", // App password for Gmail
     },
+    tls: {
+      rejectUnauthorized: false
+    },
+    secure: true,
+    port: 465
   });
 }
 
@@ -24,6 +29,21 @@ exports.createLead = async (req, res, next) => {
       });
     }
 
+    // Check for duplicate leads (same phone number within last 5 minutes)
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    const existingLead = await Lead.findOne({
+      phone: phone,
+      createdAt: { $gte: fiveMinutesAgo }
+    });
+
+    if (existingLead) {
+      console.log('⚠️ Duplicate lead detected for phone:', phone);
+      return res.status(400).json({
+        success: false,
+        message: 'A lead with this phone number was submitted recently. Please wait a few minutes before submitting again.'
+      });
+    }
+
     // Create lead in database
     const lead = await Lead.create({ name, phone, city, homeType, sourcePage, message, meta, productDetails });
 
@@ -34,6 +54,10 @@ exports.createLead = async (req, res, next) => {
     try {
       const transporter = getTransporter();
       const toEmail = "tanjim.seo@gmail.com";
+
+      console.log('📧 Attempting to send email notification...');
+      console.log('📧 To:', toEmail);
+      console.log('📧 From:', "tanjim11alam@gmail.com");
 
       if (transporter && toEmail) {
         const subject = `New Interior Design Lead: ${name} (${phone}) - ${homeType || 'Interior Design'}`;
@@ -144,19 +168,33 @@ exports.createLead = async (req, res, next) => {
             </div>
           </div>
         `;
-        await transporter.sendMail({
+        const mailOptions = {
           from: "tanjim11alam@gmail.com",
           to: toEmail,
           subject,
           html
+        };
+
+        console.log('📧 Sending email with options:', {
+          from: mailOptions.from,
+          to: mailOptions.to,
+          subject: mailOptions.subject,
+          htmlLength: mailOptions.html.length
         });
+
+        const result = await transporter.sendMail(mailOptions);
         emailSent = true;
-        console.log('✅ Email notification sent successfully');
+        console.log('✅ Email notification sent successfully:', result.messageId);
       } else {
         console.log('⚠️ Email not sent - missing transporter or recipient email');
       }
     } catch (err) {
-      console.error('❌ Email sending failed:', err.message);
+      console.error('❌ Email sending failed:', {
+        message: err.message,
+        code: err.code,
+        response: err.response,
+        stack: err.stack
+      });
     }
 
     res.status(201).json({

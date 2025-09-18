@@ -226,3 +226,4 @@ deliveryPartnerSchema.methods.calculateDeliveryCost = function (distance, weight
 
 module.exports = mongoose.model('DeliveryPartner', deliveryPartnerSchema);
 
+

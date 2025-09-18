@@ -177,12 +177,18 @@ const InteriorDesignCalculator = () => {
 
       if (response.success) {
         alert('Thank you! Your design estimate request has been submitted. Our team will contact you within 24 hours.');
+        // Reset form
+        setFormData({ name: '', phone: '', email: '', city: '', homeType: '', rooms: [], area: '', budget: '', style: '', timeline: '' });
+        setEstimatedCost(null);
+        setShowResults(false);
+        setCurrentStep(1);
       } else {
-        alert('Failed to submit your request. Please try again or contact us directly.');
+        alert(response.message || 'Failed to submit your request. Please try again or contact us directly.');
       }
     } catch (error) {
       console.error('Lead submission error:', error);
-      alert(`Failed to submit your request: ${error.message || 'Please try again or contact us directly.'}`);
+      const errorMessage = error.message || error.error || 'Please try again or contact us directly.';
+      alert(`Failed to submit your request: ${errorMessage}`);
     } finally {
       setSubmitting(false);
     }
