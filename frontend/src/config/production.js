@@ -1,25 +1,28 @@
 // Production configuration
 export const config = {
   // API Configuration
-  API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || 
-    (typeof window !== 'undefined' && window.location.hostname === 'localhost' 
-      ? 'http://localhost:5000' 
-      : 'https://api.homelineteams.com'),
+  API_BASE_URL: "https://homelineteam-production.up.railway.app" ||
+    (typeof window !== 'undefined' && window.location.hostname === 'localhost'
+      ? 'http://localhost:5000'
+      : 'https://homelineteam-production.up.railway.app'),
 
-    // Environment
-    NODE_ENV: process.env.NODE_ENV || 'production',
+  // Environment
+  NODE_ENV: process.env.NODE_ENV || 'production',
 
-    // Feature Flags
-    ENABLE_ANALYTICS: process.env.NEXT_PUBLIC_ENABLE_ANALYTICS === 'true',
-    ENABLE_DEBUG: process.env.NEXT_PUBLIC_ENABLE_DEBUG === 'true',
+  // Feature Flags
+  ENABLE_ANALYTICS: process.env.NEXT_PUBLIC_ENABLE_ANALYTICS === 'true',
+  ENABLE_DEBUG: process.env.NEXT_PUBLIC_ENABLE_DEBUG === 'true',
 
-    // Performance
-    CACHE_DURATION: 5 * 60 * 1000, // 5 minutes
-    REQUEST_TIMEOUT: 10000, // 10 seconds
+  // Performance
+  CACHE_DURATION: 5 * 60 * 1000, // 5 minutes
+  REQUEST_TIMEOUT: 10000, // 10 seconds
 
-    // Error Handling
-    MAX_RETRY_ATTEMPTS: 3,
-    RETRY_DELAY: 1000, // 1 second
+  // Error Handling
+  MAX_RETRY_ATTEMPTS: 3,
+  RETRY_DELAY: 1000, // 1 second
 };
 
 export default config;
+
+
+// process.env.NEXT_PUBLIC_API_BASE_URL 
