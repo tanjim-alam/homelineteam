@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useContext } from 'react';
 import { CartContext } from '@/contexts/CartContext';
-import { Home, Search, Grid3X3, ShoppingCart } from 'lucide-react';
+import { Home, Search, Grid, ShoppingCart } from 'lucide-react';
 
 export default function BottomNavbar() {
   const pathname = usePathname();
@@ -26,7 +26,7 @@ export default function BottomNavbar() {
     {
       name: 'Categories',
       href: '/collections',
-      icon: Grid3X3,
+      icon: Grid,
       active: pathname.startsWith('/collections')
     },
     {
@@ -47,17 +47,15 @@ export default function BottomNavbar() {
             <Link
               key={item.name}
               href={item.href}
-              className={`flex flex-col items-center justify-center w-full py-1 px-1 transition-all duration-300 ${
-                item.active
+              className={`flex flex-col items-center justify-center w-full py-1 px-1 transition-all duration-300 ${item.active
                   ? 'text-primary-600'
                   : 'text-gray-500 hover:text-gray-700'
-              }`}
+                }`}
             >
               <div className="relative">
-                <Icon 
-                  className={`w-6 h-6 transition-all duration-300 ${
-                    item.active ? 'scale-110' : 'scale-100'
-                  }`} 
+                <Icon
+                  className={`w-6 h-6 transition-all duration-300 ${item.active ? 'scale-110' : 'scale-100'
+                    }`}
                 />
                 {item.badge && (
                   <span className="absolute -top-2 -right-2 bg-primary-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium animate-pulse">
@@ -65,9 +63,8 @@ export default function BottomNavbar() {
                   </span>
                 )}
               </div>
-              <span className={`text-xs mt-1 font-medium transition-all duration-300 ${
-                item.active ? 'scale-105' : 'scale-100'
-              }`}>
+              <span className={`text-xs mt-1 font-medium transition-all duration-300 ${item.active ? 'scale-105' : 'scale-100'
+                }`}>
                 {item.name}
               </span>
             </Link>

@@ -35,10 +35,12 @@ const nextConfig = {
     ],
   },
   experimental: {
-    optimizePackageImports: ['lucide-react'],
+    // optimizePackageImports: ['lucide-react'],
   },
   // Enable React strict mode for better development experience
   reactStrictMode: true,
+  // Skip static generation for 404 page
+  trailingSlash: false,
 }
 
 module.exports = nextConfig

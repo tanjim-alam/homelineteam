@@ -9,7 +9,7 @@ const dotenv = require('dotenv');
 
 dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
-const config = require('./config/production');
+const config = require(process.env.NODE_ENV === 'development' ? './config/development' : './config/production');
 const connectDatabase = require('./config/db');
 const { configureCloudinary } = require('./utils/cloudinary');
 const { uploadProduct, debugUpload, uploadCategory, uploadSingle } = require('./middlewares/upload.middleware');
@@ -38,25 +38,47 @@ app.use(helmet());
 // CORS configuration - simplified
 const corsOptions = {
 	origin: function (origin, callback) {
-		// Allow requests with no origin (like mobile apps or curl requests)
-		if (!origin) return callback(null, true);
+		console.log('CORS request from origin:', origin);
+
+		// For requests with no origin (like mobile apps or curl requests), 
+		// we need to be more specific when credentials are required
+		if (!origin) {
+			// Only allow no-origin requests in development
+			if (process.env.NODE_ENV === 'development') {
+				console.log('Allowing no-origin request in development');
+				return callback(null, true);
+			}
+			// In production, allow no-origin for API testing but log it
+			console.log('Allowing no-origin request in production (API testing)');
+			return callback(null, true);
+		}
 
 		// Allow all Vercel domains
 		if (origin.includes('vercel.app')) {
+			console.log('Allowing Vercel domain:', origin);
 			return callback(null, true);
 		}
 
 		// Check if origin is in allowed list
 		const allowedOrigins = config.CORS_ORIGINS;
 		if (allowedOrigins.includes(origin)) {
+			console.log('Allowing origin from config:', origin);
 			return callback(null, true);
 		}
 
 		// Allow homelineteam domains
 		if (origin.includes('homelineteam') && origin.includes('vercel.app')) {
+			console.log('Allowing homelineteam domain:', origin);
 			return callback(null, true);
 		}
 
+		// Allow localhost for development
+		if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+			console.log('Allowing localhost domain:', origin);
+			return callback(null, true);
+		}
+
+		console.log('Rejecting origin:', origin);
 		callback(new Error('Not allowed by CORS'));
 	},
 	credentials: true,

@@ -61,7 +61,7 @@ export default function OneBHKPackagePage() {
         wardrobeType: selectedProduct.wardrobeType || 'Not specified'
       } : null;
 
-      await api.createLead({
+      const response = await api.createLead({
         name: leadForm.name.trim(),
         phone: leadForm.phone.trim(),
         city: leadForm.city || '',
@@ -81,11 +81,17 @@ export default function OneBHKPackagePage() {
           } : null
         }
       });
-      alert('Thank you! Your 1 BHK design session request has been submitted. Our team will contact you within 24 hours.');
-      setShowDesignSession(false);
-      setLeadForm({ name: '', phone: '', city: '', homeType: '' });
-      setSelectedProduct(null);
+
+      if (response.success) {
+        alert('Thank you! Your 1 BHK design session request has been submitted. Our team will contact you within 24 hours.');
+        setShowDesignSession(false);
+        setLeadForm({ name: '', phone: '', city: '', homeType: '' });
+        setSelectedProduct(null);
+      } else {
+        alert('Failed to submit your request. Please try again or contact us directly.');
+      }
     } catch (e) {
+      console.error('Lead submission error:', e);
       alert('Failed to submit your request. Please try again or contact us directly.');
     } finally {
       setSubmitting(false);
@@ -287,8 +293,8 @@ export default function OneBHKPackagePage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                     {filteredPackages.map((pkg, index) => (
                       <div key={pkg._id || index} className={`bg-white rounded-xl shadow-lg overflow-hidden border transition-all duration-300 transform hover:-translate-y-1 ${selectedProduct?._id === pkg._id
-                          ? 'border-purple-500 ring-2 ring-purple-200'
-                          : 'border-gray-200 hover:shadow-xl'
+                        ? 'border-purple-500 ring-2 ring-purple-200'
+                        : 'border-gray-200 hover:shadow-xl'
                         }`}>
                         <div className="h-48 bg-cover bg-center bg-no-repeat relative" style={{ backgroundImage: `url("${pkg.mainImages?.[0] || '/placeholder-kitchen.jpg'}")` }}>
                           <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>

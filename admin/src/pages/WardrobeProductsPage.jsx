@@ -25,7 +25,7 @@ export default function WardrobeProductsPage() {
     defaultType: '3-door',
     defaultMaterials: [],
     defaultFeatures: [],
-    availableTypes: ['2-door','3-door','4-door','5-door','sliding'],
+    availableTypes: ['2-door', '3-door', '4-door', '5-door', 'sliding'],
     hasVariants: false,
     variants: [],
     variantOptions: {},
@@ -74,7 +74,7 @@ export default function WardrobeProductsPage() {
 
   const generateSlug = (name) => {
     if (!name) return;
-    const slug = name.toLowerCase().replace(/[^a-z0-9 -]/g,'').replace(/\s+/g,'-').replace(/-+/g,'-');
+    const slug = name.toLowerCase().replace(/[^a-z0-9 -]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
     setForm({ ...form, slug });
   };
 
@@ -82,7 +82,7 @@ export default function WardrobeProductsPage() {
     setForm({
       name: '', slug: '', description: '', basePrice: '', mrp: '', discount: '', mainImages: [],
       category: 'wardrobe', defaultOpening: 'sliding', defaultType: '3-door', defaultMaterials: [], defaultFeatures: [],
-      availableTypes: ['2-door','3-door','4-door','5-door','sliding'], hasVariants: false, variants: [],
+      availableTypes: ['2-door', '3-door', '4-door', '5-door', 'sliding'], hasVariants: false, variants: [],
       variantOptions: {}, dynamicFields: {}, wardrobeMetadata: { suitableFor: [], style: [], colorScheme: [], deliveryTime: '' },
       metaData: { title: '', description: '', keywords: '', ogImage: null }, tags: ''
     });
@@ -151,7 +151,7 @@ export default function WardrobeProductsPage() {
       defaultType: item.defaultType || '3-door',
       defaultMaterials: item.defaultMaterials || [],
       defaultFeatures: item.defaultFeatures || [],
-      availableTypes: item.availableTypes || ['2-door','3-door','4-door','5-door','sliding'],
+      availableTypes: item.availableTypes || ['2-door', '3-door', '4-door', '5-door', 'sliding'],
       hasVariants: item.hasVariants || false,
       variants: item.variants || [],
       variantOptions: item.variantOptions || {},
@@ -171,7 +171,7 @@ export default function WardrobeProductsPage() {
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this wardrobe product?')) return;
     try { await apiClient.delete(`/api/wardrobe-products/${id}`); fetchItems(); }
-    catch(e){ setError('Failed to delete wardrobe'); }
+    catch (e) { setError('Failed to delete wardrobe'); }
   };
 
   if (loading) {
@@ -190,7 +190,7 @@ export default function WardrobeProductsPage() {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Wardrobe Products</h1>
             <p className="text-gray-600">Manage dynamic wardrobe catalog</p>
           </div>
-          <button onClick={() => setShowForm(true)} className="bg-gradient-to-r from-violet-500 to-violet-600 text-white px-6 py-3 rounded-xl font-semibold shadow"> <Plus size={18}/> Add Wardrobe </button>
+          <button onClick={() => setShowForm(true)} className="bg-gradient-to-r from-violet-500 to-violet-600 text-white px-6 py-3 rounded-xl font-semibold flex items-center shadow"> <Plus size={18} /> Add Wardrobe </button>
         </div>
       </div>
 
@@ -207,45 +207,45 @@ export default function WardrobeProductsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">Name *</label>
-                  <input className="w-full border rounded px-3 py-2" value={form.name} onChange={(e)=>setForm({...form, name:e.target.value})} onBlur={()=>generateSlug(form.name)} required />
+                  <input className="w-full border rounded px-3 py-2" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} onBlur={() => generateSlug(form.name)} required />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Slug *</label>
-                  <input className="w-full border rounded px-3 py-2" value={form.slug} onChange={(e)=>setForm({...form, slug:e.target.value})} required />
+                  <input className="w-full border rounded px-3 py-2" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} required />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">Base Price *</label>
-                  <input type="number" className="w-full border rounded px-3 py-2" value={form.basePrice} onChange={(e)=>setForm({...form, basePrice:e.target.value})} required />
+                  <input type="number" className="w-full border rounded px-3 py-2" value={form.basePrice} onChange={(e) => setForm({ ...form, basePrice: e.target.value })} required />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">MRP</label>
-                  <input type="number" className="w-full border rounded px-3 py-2" value={form.mrp} onChange={(e)=>setForm({...form, mrp:e.target.value})} />
+                  <input type="number" className="w-full border rounded px-3 py-2" value={form.mrp} onChange={(e) => setForm({ ...form, mrp: e.target.value })} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Discount %</label>
-                  <input type="number" className="w-full border rounded px-3 py-2" value={form.discount} onChange={(e)=>setForm({...form, discount:e.target.value})} min="0" max="100" />
+                  <input type="number" className="w-full border rounded px-3 py-2" value={form.discount} onChange={(e) => setForm({ ...form, discount: e.target.value })} min="0" max="100" />
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium mb-1">Description</label>
-                <textarea className="w-full border rounded px-3 py-2" rows={3} value={form.description} onChange={(e)=>setForm({...form, description:e.target.value})} />
+                <textarea className="w-full border rounded px-3 py-2" rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
               </div>
 
               <div>
                 <label className="block text-sm font-medium mb-2">Opening Type</label>
                 <div className="flex flex-wrap gap-2 mb-2">
-                  {['sliding','swinging'].map(t => (
-                    <button type="button" key={t} onClick={()=>setForm({...form, defaultOpening:t})} className={`px-3 py-1.5 rounded border text-sm ${form.defaultOpening===t?'border-violet-600 bg-violet-50':'border-gray-200 hover:border-violet-300'}`}>{t}</button>
+                  {['sliding', 'swinging'].map(t => (
+                    <button type="button" key={t} onClick={() => setForm({ ...form, defaultOpening: t })} className={`px-3 py-1.5 rounded border text-sm ${form.defaultOpening === t ? 'border-violet-600 bg-violet-50' : 'border-gray-200 hover:border-violet-300'}`}>{t}</button>
                   ))}
                 </div>
                 <label className="block text-sm font-medium mb-2">Default Type</label>
                 <div className="flex flex-wrap gap-2">
-                  {['2-door','3-door','4-door','5-door','sliding'].map(t => (
-                    <button type="button" key={t} onClick={()=>setForm({...form, defaultType:t})} className={`px-3 py-1.5 rounded border text-sm ${form.defaultType===t?'border-violet-600 bg-violet-50':'border-gray-200 hover:border-violet-300'}`}>{t}</button>
+                  {['2-door', '3-door', '4-door', '5-door', 'sliding'].map(t => (
+                    <button type="button" key={t} onClick={() => setForm({ ...form, defaultType: t })} className={`px-3 py-1.5 rounded border text-sm ${form.defaultType === t ? 'border-violet-600 bg-violet-50' : 'border-gray-200 hover:border-violet-300'}`}>{t}</button>
                   ))}
                 </div>
               </div>
@@ -254,12 +254,12 @@ export default function WardrobeProductsPage() {
                 <label className="block text-sm font-medium mb-2">Default Features</label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {featureOptions.map(f => {
-                    const selected = form.defaultFeatures.some(x=>x.id===f.id);
+                    const selected = form.defaultFeatures.some(x => x.id === f.id);
                     return (
                       <label key={f.id} className="flex items-center gap-2 text-sm">
-                        <input type="checkbox" checked={selected} onChange={()=>{
-                          const exists = form.defaultFeatures.some(x=>x.id===f.id);
-                          setForm({...form, defaultFeatures: exists ? form.defaultFeatures.filter(x=>x.id!==f.id) : [...form.defaultFeatures, f]});
+                        <input type="checkbox" checked={selected} onChange={() => {
+                          const exists = form.defaultFeatures.some(x => x.id === f.id);
+                          setForm({ ...form, defaultFeatures: exists ? form.defaultFeatures.filter(x => x.id !== f.id) : [...form.defaultFeatures, f] });
                         }} />
                         <span>{f.name}</span>
                       </label>
@@ -271,14 +271,14 @@ export default function WardrobeProductsPage() {
               <div>
                 <label className="block text-sm font-medium mb-2">Default Materials</label>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 max-h-44 overflow-auto border rounded p-3">
-                  {materialOptions.map((m,i)=>{
+                  {materialOptions.map((m, i) => {
                     const key = `${m.category}-${m.material}-${i}`;
-                    const selected = form.defaultMaterials.some(x=>x.category===m.category && x.material===m.material);
+                    const selected = form.defaultMaterials.some(x => x.category === m.category && x.material === m.material);
                     return (
                       <label key={key} className="flex items-center gap-2 text-sm">
-                        <input type="checkbox" checked={selected} onChange={()=>{
-                          const exists = form.defaultMaterials.some(x=>x.category===m.category && x.material===m.material);
-                          setForm({...form, defaultMaterials: exists ? form.defaultMaterials.filter(x=>!(x.category===m.category && x.material===m.material)) : [...form.defaultMaterials, m]});
+                        <input type="checkbox" checked={selected} onChange={() => {
+                          const exists = form.defaultMaterials.some(x => x.category === m.category && x.material === m.material);
+                          setForm({ ...form, defaultMaterials: exists ? form.defaultMaterials.filter(x => !(x.category === m.category && x.material === m.material)) : [...form.defaultMaterials, m] });
                         }} />
                         <span>{m.category} • {m.material}</span>
                       </label>
@@ -289,15 +289,15 @@ export default function WardrobeProductsPage() {
 
               <div>
                 <label className="block text-sm font-medium mb-2">Images</label>
-                <input type="file" multiple accept="image/*" onChange={(e)=>{
-                  const files = Array.from(e.target.files||[]);
-                  setForm({...form, mainImages: files });
+                <input type="file" multiple accept="image/*" onChange={(e) => {
+                  const files = Array.from(e.target.files || []);
+                  setForm({ ...form, mainImages: files });
                 }} />
               </div>
 
               <div className="flex justify-end gap-3 pt-2">
-                <button type="button" className="px-4 py-2 border rounded" onClick={()=>{ setShowForm(false); resetForm(); }}>Cancel</button>
-                <button type="submit" disabled={saving} className="px-5 py-2 bg-violet-600 text-white rounded disabled:opacity-50">{saving?'Saving...':(editing?'Update':'Create')}</button>
+                <button type="button" className="px-4 py-2 border rounded" onClick={() => { setShowForm(false); resetForm(); }}>Cancel</button>
+                <button type="submit" disabled={saving} className="px-5 py-2 bg-violet-600 text-white rounded disabled:opacity-50">{saving ? 'Saving...' : (editing ? 'Update' : 'Create')}</button>
               </div>
             </form>
           </div>
@@ -305,7 +305,7 @@ export default function WardrobeProductsPage() {
 
         <div className="mx-6 bg-white rounded-2xl border overflow-hidden">
           <div className="p-4 border-b flex items-center justify-between">
-            <div className="flex items-center gap-2 text-violet-700"><Layers size={16}/> <span className="font-semibold">{items.length} items</span></div>
+            <div className="flex items-center gap-2 text-violet-700"><Layers size={16} /> <span className="font-semibold">{items.length} items</span></div>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
@@ -324,7 +324,7 @@ export default function WardrobeProductsPage() {
                     <td className="px-6 py-3">
                       <div className="flex items-center gap-3">
                         <div className="h-12 w-12 rounded overflow-hidden bg-gray-100">
-                          {item.mainImages?.[0] ? <img src={item.mainImages[0]} alt={item.name} className="h-12 w-12 object-cover"/> : <div className="h-12 w-12 flex items-center justify-center text-gray-400">WR</div>}
+                          {item.mainImages?.[0] ? <img src={item.mainImages[0]} alt={item.name} className="h-12 w-12 object-cover" /> : <div className="h-12 w-12 flex items-center justify-center text-gray-400">WR</div>}
                         </div>
                         <div>
                           <div className="font-medium text-gray-900">{item.name}</div>
@@ -334,11 +334,11 @@ export default function WardrobeProductsPage() {
                     </td>
                     <td className="px-6 py-3 text-sm text-gray-700">{item.defaultType || '-'}</td>
                     <td className="px-6 py-3 text-sm text-gray-700">₹{item.basePrice || 0}</td>
-                    <td className="px-6 py-3 text-sm text-gray-700">{item.hasVariants ? (item.variants?.length||0) : 0}</td>
+                    <td className="px-6 py-3 text-sm text-gray-700">{item.hasVariants ? (item.variants?.length || 0) : 0}</td>
                     <td className="px-6 py-3">
                       <div className="flex items-center gap-2">
-                        <button className="px-3 py-1.5 text-xs rounded bg-blue-50 text-blue-700" onClick={()=>handleEdit(item)}><Edit size={14}/> Edit</button>
-                        <button className="px-3 py-1.5 text-xs rounded bg-red-50 text-red-700" onClick={()=>handleDelete(item._id)}><Trash2 size={14}/> Delete</button>
+                        <button className="px-3 py-1.5 text-xs rounded bg-blue-50 text-blue-700" onClick={() => handleEdit(item)}><Edit size={14} /> Edit</button>
+                        <button className="px-3 py-1.5 text-xs rounded bg-red-50 text-red-700" onClick={() => handleDelete(item._id)}><Trash2 size={14} /> Delete</button>
                       </div>
                     </td>
                   </tr>

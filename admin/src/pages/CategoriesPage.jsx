@@ -14,6 +14,7 @@ import {
   Plus,
   FolderOpen,
   AlertCircle,
+  CheckCircle,
   X,
   Edit3,
   Trash2,
@@ -34,12 +35,14 @@ export default function CategoriesPage() {
   const [showCustomFieldForm, setShowCustomFieldForm] = useState(false)
   const [showVariantFieldForm, setShowVariantFieldForm] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState(null)
+  const [successMessage, setSuccessMessage] = useState('')
 
   const [form, setForm] = useState({
     name: '',
     slug: '',
     description: '',
     image: null,
+    imagePreview: null,
     seoContent: '',
     metaData: {
       title: '',
@@ -106,22 +109,41 @@ export default function CategoriesPage() {
 
     if (editingCategory) {
       dispatch(updateCategory({ id: editingCategory._id, payload: formData }))
+        .then(() => {
+          setSuccessMessage('Category updated successfully!')
+          setTimeout(() => {
+            setSuccessMessage('')
+            resetForm()
+            setShowForm(false)
+          }, 2000)
+        })
+        .catch(() => {
+          // Error handling is done by Redux
+        })
     } else {
       dispatch(createCategory(formData))
+        .then(() => {
+          setSuccessMessage('Category created successfully!')
+          setTimeout(() => {
+            setSuccessMessage('')
+            resetForm()
+            setShowForm(false)
+          }, 2000)
+        })
+        .catch(() => {
+          // Error handling is done by Redux
+        })
     }
-
-    resetForm()
-    setShowForm(false)
   }
 
   const handleEdit = (category) => {
-
     setEditingCategory(category)
     setForm({
       name: category.name,
       slug: category.slug,
       description: category.description || '',
       image: null,
+      imagePreview: category.image || null, // Set existing image as preview
       seoContent: category.seoContent || '',
       metaData: {
         title: category.metaData?.title || '',
@@ -130,8 +152,6 @@ export default function CategoriesPage() {
         ogImage: category.metaData?.ogImage || ''
       }
     })
-
-
     setShowForm(true)
   }
 
@@ -188,6 +208,7 @@ export default function CategoriesPage() {
       slug: '',
       description: '',
       image: null,
+      imagePreview: null,
       seoContent: '',
       metaData: {
         title: '',
@@ -203,7 +224,12 @@ export default function CategoriesPage() {
   const handleImageChange = (e) => {
     const file = e.target.files[0]
     if (file) {
-      setForm({ ...form, image: file })
+      // Create image preview
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        setForm({ ...form, image: file, imagePreview: e.target.result })
+      }
+      reader.readAsDataURL(file)
     }
   }
 
@@ -254,6 +280,19 @@ export default function CategoriesPage() {
         </button>
       </div>
 
+      {/* Success Alert */}
+      {successMessage && (
+        <div className="bg-green-50 border border-green-200 rounded-2xl p-6 mb-6">
+          <div className="flex items-center space-x-3">
+            <CheckCircle className="h-6 w-6 text-green-500 flex-shrink-0" />
+            <div>
+              <h3 className="text-sm font-semibold text-green-800">Success</h3>
+              <p className="text-sm text-green-700 mt-1">{successMessage}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Error Alert */}
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-2xl p-6">
@@ -269,7 +308,19 @@ export default function CategoriesPage() {
 
       {/* Category Form */}
       {showForm && (
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 relative">
+          {/* Loading Overlay */}
+          {(createLoading || updateLoading) && (
+            <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 rounded-2xl">
+              <div className="flex flex-col items-center space-y-4">
+                <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-gray-700 font-medium">
+                  {createLoading ? 'Creating category...' : 'Updating category...'}
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="flex justify-between items-center mb-6">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl flex items-center justify-center">
@@ -332,12 +383,35 @@ export default function CategoriesPage() {
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-3">Category Image</label>
+
+                  {/* Image Preview */}
+                  {form.imagePreview && (
+                    <div className="mb-4">
+                      <div className="relative inline-block">
+                        <img
+                          src={form.imagePreview}
+                          alt="Category preview"
+                          className="w-32 h-32 object-cover rounded-2xl border-2 border-gray-200 shadow-sm"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setForm({ ...form, image: null, imagePreview: null })}
+                          className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">Click the X to remove this image</p>
+                    </div>
+                  )}
+
                   <input
                     type="file"
                     accept="image/*"
                     onChange={handleImageChange}
                     className="w-full border border-gray-200 rounded-2xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white"
                   />
+                  <p className="text-xs text-gray-500 mt-2">Upload a category image (JPG, PNG, GIF - Max 5MB)</p>
                 </div>
               </div>
 
@@ -429,16 +503,22 @@ export default function CategoriesPage() {
                   setShowForm(false)
                   resetForm()
                 }}
-                className="px-6 py-3 border-2 border-gray-200 rounded-2xl text-gray-700 hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 font-medium"
+                disabled={createLoading || updateLoading}
+                className="px-6 py-3 border-2 border-gray-200 rounded-2xl text-gray-700 hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={createLoading || updateLoading}
-                className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105"
+                className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none flex items-center space-x-2"
               >
-                {createLoading || updateLoading ? 'Saving...' : (editingCategory ? 'Update Category' : 'Create Category')}
+                {(createLoading || updateLoading) && (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                )}
+                <span>
+                  {createLoading ? 'Creating...' : updateLoading ? 'Updating...' : (editingCategory ? 'Update Category' : 'Create Category')}
+                </span>
               </button>
             </div>
           </form>
@@ -768,9 +848,19 @@ export default function CategoriesPage() {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center space-x-4 mb-4">
-                      <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-2xl flex items-center justify-center">
-                        <FolderOpen className="w-8 h-8 text-blue-600" />
-                      </div>
+                      {category.image ? (
+                        <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-gray-200 shadow-sm">
+                          <img
+                            src={category.image}
+                            alt={category.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-2xl flex items-center justify-center">
+                          <FolderOpen className="w-8 h-8 text-blue-600" />
+                        </div>
+                      )}
                       <div>
                         <h3 className="text-2xl font-bold text-gray-900 mb-1">{category.name}</h3>
                         <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">/{category.slug}</span>
@@ -784,15 +874,6 @@ export default function CategoriesPage() {
                       />
                     )}
 
-                    {category.image && (
-                      <div className="mb-3">
-                        <img
-                          src={category.image}
-                          alt={category.name}
-                          className="w-20 h-20 object-cover rounded-lg border"
-                        />
-                      </div>
-                    )}
 
                     {/* SEO Metadata Display */}
                     {(category.metaData?.title || category.metaData?.description || category.metaData?.keywords) && (

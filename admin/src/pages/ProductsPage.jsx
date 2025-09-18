@@ -13,6 +13,7 @@ export default function ProductsPage() {
   const [createLoading, setCreateLoading] = useState(false);
   const [updateLoading, setUpdateLoading] = useState(false);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   const [form, setForm] = useState({
     categoryId: '',
@@ -23,6 +24,7 @@ export default function ProductsPage() {
     discount: '',
     description: '',
     mainImages: [],
+    imagePreviews: [], // For preview URLs
     hasVariants: false,
     variants: [],
     variantOptions: {}, // Store available options for each variant field
@@ -135,6 +137,29 @@ export default function ProductsPage() {
     }
   };
 
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length > 0) {
+      // Create preview URLs for all selected files
+      const previews = files.map(file => URL.createObjectURL(file));
+      setForm({
+        ...form,
+        mainImages: files,
+        imagePreviews: previews
+      });
+    }
+  };
+
+  const removeImagePreview = (index) => {
+    const newFiles = form.mainImages.filter((_, i) => i !== index);
+    const newPreviews = form.imagePreviews.filter((_, i) => i !== index);
+    setForm({
+      ...form,
+      mainImages: newFiles,
+      imagePreviews: newPreviews
+    });
+  };
+
   const updateDynamicField = (fieldSlug, value) => {
     setForm(prev => ({
       ...prev,
@@ -212,6 +237,7 @@ export default function ProductsPage() {
       discount: '',
       description: '',
       mainImages: [],
+      imagePreviews: [],
       hasVariants: false,
       variants: [],
       variantOptions: {},
@@ -297,15 +323,23 @@ export default function ProductsPage() {
         setUpdateLoading(true);
         await apiClient.put(`/api/products/${editingProduct._id}`, formData);
         setError('');
-        setShowForm(false);
-        resetForm();
+        setSuccessMessage('Product updated successfully!');
+        setTimeout(() => {
+          setSuccessMessage('');
+          setShowForm(false);
+          resetForm();
+        }, 2000);
         fetchProducts();
       } else {
         setCreateLoading(true);
         await apiClient.post('/api/products', formData);
         setError('');
-        setShowForm(false);
-        resetForm();
+        setSuccessMessage('Product created successfully!');
+        setTimeout(() => {
+          setSuccessMessage('');
+          setShowForm(false);
+          resetForm();
+        }, 2000);
         fetchProducts();
       }
     } catch (err) {
@@ -327,6 +361,7 @@ export default function ProductsPage() {
       discount: product.discount || '',
       description: product.description || '',
       mainImages: [], // Start with empty array for new uploads
+      imagePreviews: [], // Start with empty array for new previews
       hasVariants: product.hasVariants || false,
       variants: product.variants || [],
       variantOptions: product.variantOptions || {},
@@ -573,6 +608,21 @@ export default function ProductsPage() {
 
       <div className="py-6 space-y-6">
 
+        {successMessage && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-green-800">{successMessage}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
             <div className="flex">
@@ -597,7 +647,19 @@ export default function ProductsPage() {
 
         {/* Modern Product Form */}
         {showForm && (
-          <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 overflow-hidden mb-6">
+          <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 overflow-hidden mb-6 relative">
+            {/* Loading Overlay */}
+            {(createLoading || updateLoading) && (
+              <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 rounded-3xl">
+                <div className="flex flex-col items-center space-y-4">
+                  <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                  <p className="text-gray-700 font-medium">
+                    {createLoading ? 'Creating product...' : 'Updating product...'}
+                  </p>
+                </div>
+              </div>
+            )}
+
             <div className="p-6 border-b border-gray-100/50 bg-gradient-to-r from-gray-50/50 to-white/50">
               <div className="flex justify-between items-center">
                 <div>
@@ -818,10 +880,7 @@ export default function ProductsPage() {
                           type="file"
                           multiple
                           accept="image/*"
-                          onChange={(e) => {
-                            const files = Array.from(e.target.files);
-                            setForm({ ...form, mainImages: files });
-                          }}
+                          onChange={handleImageChange}
                           className="hidden"
                           id="image-upload"
                           required={!editingProduct}
@@ -847,6 +906,38 @@ export default function ProductsPage() {
                           </div>
                         </label>
                       </div>
+
+                      {/* New Image Previews */}
+                      {form.imagePreviews && form.imagePreviews.length > 0 && (
+                        <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
+                          <p className="text-sm font-medium text-blue-700 mb-3">New images to upload:</p>
+                          <div className="flex flex-wrap gap-3">
+                            {form.imagePreviews.map((preview, index) => (
+                              <div key={index} className="relative group">
+                                <img
+                                  src={preview}
+                                  alt={`Preview ${index + 1}`}
+                                  className="w-20 h-20 object-cover rounded-lg border-2 border-blue-200"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => removeImagePreview(index)}
+                                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                                </button>
+                                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-lg transition-all duration-200 flex items-center justify-center">
+                                  <span className="text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                    New
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
                       {editingProduct && existingImages && existingImages.length > 0 && (
                         <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200">

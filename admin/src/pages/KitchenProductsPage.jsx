@@ -244,7 +244,7 @@ export default function KitchenProductsPage() {
                     </div>
                     <button
                         onClick={() => setShowForm(true)}
-                        className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-xl font-semibold shadow"
+                        className="bg-gradient-to-r from-orange-500 flex items-center gap-2 to-orange-600 text-white px-6 py-3 rounded-xl font-semibold shadow"
                     >
                         <Plus size={18} /> Add Kitchen Product
                     </button>

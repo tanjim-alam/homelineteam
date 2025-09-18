@@ -15,17 +15,25 @@ function getTransporter() {
 exports.createLead = async (req, res, next) => {
   try {
     const { name, phone, city, homeType, sourcePage, message, meta, productDetails } = req.body;
+
+    // Validate required fields
     if (!name || !phone) {
-      return res.status(400).json({ message: 'Name and phone are required' });
+      return res.status(400).json({
+        success: false,
+        message: 'Name and phone are required'
+      });
     }
 
+    // Create lead in database
     const lead = await Lead.create({ name, phone, city, homeType, sourcePage, message, meta, productDetails });
 
+    console.log('✅ Lead created successfully:', lead._id);
+
     // Send email notification
+    let emailSent = false;
     try {
       const transporter = getTransporter();
       const toEmail = "tanjim.seo@gmail.com";
-
 
       if (transporter && toEmail) {
         const subject = `New Interior Design Lead: ${name} (${phone}) - ${homeType || 'Interior Design'}`;
@@ -142,17 +150,28 @@ exports.createLead = async (req, res, next) => {
           subject,
           html
         });
-        // Email sent successfully
+        emailSent = true;
+        console.log('✅ Email notification sent successfully');
       } else {
-        // Email not sent - missing transporter or recipient email
+        console.log('⚠️ Email not sent - missing transporter or recipient email');
       }
     } catch (err) {
-      // Lead email send failed
+      console.error('❌ Email sending failed:', err.message);
     }
 
-    res.status(201).json(lead);
+    res.status(201).json({
+      success: true,
+      message: 'Lead submitted successfully',
+      lead: lead,
+      emailSent: emailSent
+    });
   } catch (err) {
-    next(err);
+    console.error('❌ Lead creation failed:', err.message);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to create lead. Please try again.',
+      error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
+    });
   }
 };
 

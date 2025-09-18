@@ -91,7 +91,7 @@ export default function KitchenCollectionPage() {
         materials: selectedProduct.defaultMaterials?.map(m => m.material).join(', ') || 'Not specified'
       } : null;
 
-      await api.createLead({
+      const response = await api.createLead({
         name: leadForm.name,
         phone: leadForm.phone,
         city: leadForm.city,
@@ -113,12 +113,17 @@ export default function KitchenCollectionPage() {
         }
       });
 
-      alert('Thank you! Your kitchen design session request has been submitted. Our team will contact you within 24 hours.');
-      setShowDesignSession(false);
-      setLeadForm({ name: '', phone: '', city: '', homeType: '' });
-      setSelectedProduct(null);
+      if (response.success) {
+        alert('Thank you! Your kitchen design session request has been submitted. Our team will contact you within 24 hours.');
+        setShowDesignSession(false);
+        setLeadForm({ name: '', phone: '', city: '', homeType: '' });
+        setSelectedProduct(null);
+      } else {
+        alert('Failed to submit your request. Please try again or contact us directly.');
+      }
     } catch (error) {
-      alert('Failed to submit your request. Please try again or contact us directly.');
+      console.error('Lead submission error:', error);
+      alert(`Failed to submit your request: ${error.message || 'Please try again or contact us directly.'}`);
     } finally {
       setSubmitting(false);
     }

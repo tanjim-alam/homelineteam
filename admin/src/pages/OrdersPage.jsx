@@ -7,7 +7,7 @@ import {
   clearError
 } from '../store/slices/orderSlice'
 import apiClient from '../api/client'
-import { Truck, Package, Clock, CheckCircle, XCircle, User, Phone, Mail } from 'lucide-react'
+import { Truck, Package, Clock, CheckCircle, XCircle, User, Phone, Mail, RefreshCw } from 'lucide-react'
 
 export default function OrdersPage() {
   const dispatch = useDispatch()
@@ -44,6 +44,10 @@ export default function OrdersPage() {
 
   const handleStatusUpdate = (orderId, newStatus) => {
     dispatch(updateOrderStatus({ id: orderId, status: newStatus }))
+  }
+
+  const handleRefresh = () => {
+    dispatch(listOrders())
   }
 
   const handleViewOrder = (order) => {
@@ -230,6 +234,14 @@ export default function OrdersPage() {
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold text-gray-900">All Orders</h2>
             <div className="flex items-center space-x-4">
+              <button
+                onClick={handleRefresh}
+                disabled={loading}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center gap-2 text-sm font-medium"
+              >
+                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                Refresh
+              </button>
               <label className="text-sm font-medium text-gray-700">Filter by Status:</label>
               <select
                 value={statusFilter}

@@ -103,11 +103,6 @@ const Footer = () => {
                     Interior Design
                   </Link>
                 </li>
-                <li>
-                  <Link href="/modern-design" className="text-gray-300 hover:text-primary-400 transition-colors duration-300">
-                    Modern Design
-                  </Link>
-                </li>
               </ul>
             </div>
 

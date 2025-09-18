@@ -250,7 +250,7 @@ export default function OneBHKPackagePage() {
                     </div>
                     <button
                         onClick={() => setShowForm(true)}
-                        className="bg-gradient-to-r from-purple-500 to-pink-600 text-white px-6 py-3 rounded-xl font-semibold shadow"
+                        className="bg-gradient-to-r from-purple-500 flex items-center to-pink-600 text-white px-6 py-3 rounded-xl font-semibold shadow"
                     >
                         <Plus size={18} /> Add 1BHK Package
                     </button>

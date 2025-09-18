@@ -144,9 +144,6 @@ export default function Navbar() {
             <Link href="/interior-design" className="text-gray-700 hover:text-primary-600 transition-colors">
               Interior Design
             </Link>
-            <Link href="/modern-design" className="text-gray-700 hover:text-primary-600 transition-colors">
-              Modern Design
-            </Link>
             <Link href="/about" className="text-gray-700 hover:text-primary-600 transition-colors">
               About
             </Link>
@@ -288,13 +285,6 @@ export default function Navbar() {
                   Interior Design
                 </Link>
 
-                <Link
-                  href="/modern-design"
-                  onClick={handleNavLinkClick}
-                  className="px-6 py-4 text-gray-700 hover:text-primary-600 hover:bg-gray-50 transition-colors font-medium"
-                >
-                  Modern Design
-                </Link>
 
                 <Link
                   href="/about"

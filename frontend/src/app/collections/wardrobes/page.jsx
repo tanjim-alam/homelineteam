@@ -67,7 +67,7 @@ export default function WardrobesPage() {
         doors: selectedProduct.doors || 'Not specified'
       } : null;
 
-      await api.createLead({
+      const response = await api.createLead({
         name: leadForm.name,
         phone: leadForm.phone,
         city: leadForm.city,
@@ -89,11 +89,16 @@ export default function WardrobesPage() {
         }
       });
 
-      alert('Thank you! Your wardrobe design session request has been submitted. Our team will contact you within 24 hours.');
-      setShowDesignSession(false);
-      setLeadForm({ name: '', phone: '', city: '', homeType: '' });
-      setSelectedProduct(null);
+      if (response.success) {
+        alert('Thank you! Your wardrobe design session request has been submitted. Our team will contact you within 24 hours.');
+        setShowDesignSession(false);
+        setLeadForm({ name: '', phone: '', city: '', homeType: '' });
+        setSelectedProduct(null);
+      } else {
+        alert('Failed to submit your request. Please try again or contact us directly.');
+      }
     } catch (error) {
+      console.error('Lead submission error:', error);
       alert('Failed to submit your request. Please try again or contact us directly.');
     } finally {
       setSubmitting(false);
@@ -227,8 +232,8 @@ export default function WardrobesPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                     {filteredWardrobes.map((wardrobe, index) => (
                       <div key={index} className={`bg-white rounded-xl shadow-lg overflow-hidden border transition-all duration-300 transform hover:-translate-y-1 ${selectedProduct?._id === wardrobe._id
-                          ? 'border-blue-500 ring-2 ring-blue-200'
-                          : 'border-gray-200 hover:shadow-xl'
+                        ? 'border-blue-500 ring-2 ring-blue-200'
+                        : 'border-gray-200 hover:shadow-xl'
                         }`}>
                         <div className="h-48 bg-cover bg-center bg-no-repeat relative" style={{ backgroundImage: `url("${wardrobe.mainImages?.[0] || wardrobe.image}")` }}>
                           {selectedProduct?._id === wardrobe._id && (

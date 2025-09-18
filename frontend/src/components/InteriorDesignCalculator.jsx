@@ -152,7 +152,7 @@ const InteriorDesignCalculator = () => {
         description: sampleProducts[0].description || 'Premium interior design product'
       } : null;
 
-      await api.createLead({
+      const response = await api.createLead({
         name: formData.name.trim(),
         phone: formData.phone.trim(),
         email: formData.email.trim(),
@@ -175,9 +175,14 @@ const InteriorDesignCalculator = () => {
         }
       });
 
-      alert('Thank you! Your design estimate request has been submitted. Our team will contact you within 24 hours.');
+      if (response.success) {
+        alert('Thank you! Your design estimate request has been submitted. Our team will contact you within 24 hours.');
+      } else {
+        alert('Failed to submit your request. Please try again or contact us directly.');
+      }
     } catch (error) {
-      alert('Failed to submit your request. Please try again or contact us directly.');
+      console.error('Lead submission error:', error);
+      alert(`Failed to submit your request: ${error.message || 'Please try again or contact us directly.'}`);
     } finally {
       setSubmitting(false);
     }

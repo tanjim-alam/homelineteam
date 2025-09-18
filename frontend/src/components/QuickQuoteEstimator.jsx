@@ -57,18 +57,24 @@ export default function QuickQuoteEstimator({ className = '' }) {
         message: 'QuickQuoteEstimator design session request',
         meta: formData
       };
-      await api.createLead(payload);
-      alert('Design session request submitted! Our team will contact you shortly.');
-      setIsOpen(false);
-      setFormData({
-        homeType: '',
-        rooms: [],
-        purpose: '',
-        timeline: '',
-        contactInfo: { name: '', phone: '' }
-      });
+      const response = await api.createLead(payload);
+
+      if (response.success) {
+        alert('Design session request submitted! Our team will contact you shortly.');
+        setIsOpen(false);
+        setFormData({
+          homeType: '',
+          rooms: [],
+          purpose: '',
+          timeline: '',
+          contactInfo: { name: '', phone: '' }
+        });
+      } else {
+        alert('Failed to submit request. Please try again.');
+      }
     } catch (err) {
-      alert('Failed to submit request. Please try again.');
+      console.error('Lead submission error:', err);
+      alert(`Failed to submit request: ${err.message || 'Please try again.'}`);
     }
   };
 
@@ -114,18 +120,17 @@ export default function QuickQuoteEstimator({ className = '' }) {
                   <label className="block text-sm font-medium text-gray-700 mb-3">Home Type</label>
                   <div className="grid grid-cols-2 gap-3">
                     {homeTypes.map((type) => (
-                                             <button
-                         key={type.id}
-                         onClick={() => setFormData({...formData, homeType: type.id})}
-                         className={`p-3 rounded-lg border-2 text-center transition-all duration-200 ${
-                           formData.homeType === type.id
-                             ? 'border-primary-600 bg-primary-50'
-                             : 'border-gray-200 hover:border-primary-300'
-                         }`}
-                       >
-                         <div className="font-semibold text-gray-900 text-sm">{type.name}</div>
-                         <div className="text-xs text-gray-600">{type.description}</div>
-                       </button>
+                      <button
+                        key={type.id}
+                        onClick={() => setFormData({ ...formData, homeType: type.id })}
+                        className={`p-3 rounded-lg border-2 text-center transition-all duration-200 ${formData.homeType === type.id
+                            ? 'border-primary-600 bg-primary-50'
+                            : 'border-gray-200 hover:border-primary-300'
+                          }`}
+                      >
+                        <div className="font-semibold text-gray-900 text-sm">{type.name}</div>
+                        <div className="text-xs text-gray-600">{type.description}</div>
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -141,13 +146,12 @@ export default function QuickQuoteEstimator({ className = '' }) {
                           const newRooms = formData.rooms.includes(room.id)
                             ? formData.rooms.filter(r => r !== room.id)
                             : [...formData.rooms, room.id];
-                          setFormData({...formData, rooms: newRooms});
+                          setFormData({ ...formData, rooms: newRooms });
                         }}
-                        className={`p-3 rounded-lg border-2 text-center transition-all duration-200 ${
-                          formData.rooms.includes(room.id)
+                        className={`p-3 rounded-lg border-2 text-center transition-all duration-200 ${formData.rooms.includes(room.id)
                             ? 'border-primary-600 bg-primary-50'
                             : 'border-gray-200 hover:border-primary-300'
-                        }`}
+                          }`}
                       >
                         <div className="text-lg mb-1">{room.icon}</div>
                         <div className="text-xs font-medium text-gray-900">{room.name}</div>
@@ -168,12 +172,11 @@ export default function QuickQuoteEstimator({ className = '' }) {
                     ].map((purpose) => (
                       <button
                         key={purpose.id}
-                        onClick={() => setFormData({...formData, purpose: purpose.id})}
-                        className={`p-3 rounded-lg border-2 text-center transition-all duration-200 ${
-                          formData.purpose === purpose.id
+                        onClick={() => setFormData({ ...formData, purpose: purpose.id })}
+                        className={`p-3 rounded-lg border-2 text-center transition-all duration-200 ${formData.purpose === purpose.id
                             ? 'border-primary-600 bg-primary-50'
                             : 'border-gray-200 hover:border-primary-300'
-                        }`}
+                          }`}
                       >
                         <div className="text-sm font-medium text-gray-900">{purpose.name}</div>
                         <div className="text-xs text-gray-600">{purpose.description}</div>
@@ -189,12 +192,11 @@ export default function QuickQuoteEstimator({ className = '' }) {
                     {['ASAP', '1-2 months', '3-6 months', '6+ months'].map((timeline) => (
                       <button
                         key={timeline}
-                        onClick={() => setFormData({...formData, timeline})}
-                        className={`p-3 rounded-lg border-2 text-center transition-all duration-200 ${
-                          formData.timeline === timeline
+                        onClick={() => setFormData({ ...formData, timeline })}
+                        className={`p-3 rounded-lg border-2 text-center transition-all duration-200 ${formData.timeline === timeline
                             ? 'border-primary-600 bg-primary-50'
                             : 'border-gray-200 hover:border-primary-300'
-                        }`}
+                          }`}
                       >
                         <div className="text-sm font-medium text-gray-900">{timeline}</div>
                       </button>
@@ -211,7 +213,7 @@ export default function QuickQuoteEstimator({ className = '' }) {
                       value={formData.contactInfo.name}
                       onChange={(e) => setFormData({
                         ...formData,
-                        contactInfo: {...formData.contactInfo, name: e.target.value}
+                        contactInfo: { ...formData.contactInfo, name: e.target.value }
                       })}
                       className="w-full px-4 py-3 border border-gray-300 text-gray-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       placeholder="Enter your name"
@@ -224,7 +226,7 @@ export default function QuickQuoteEstimator({ className = '' }) {
                       value={formData.contactInfo.phone}
                       onChange={(e) => setFormData({
                         ...formData,
-                        contactInfo: {...formData.contactInfo, phone: e.target.value}
+                        contactInfo: { ...formData.contactInfo, phone: e.target.value }
                       })}
                       className="w-full px-4 py-3 border border-gray-300 text-gray-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       placeholder="+91 98765 43210"
