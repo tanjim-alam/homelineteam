@@ -43,9 +43,21 @@ const corsOptions = {
 		// Check if origin is in allowed list
 		const allowedOrigins = config.CORS_ORIGINS;
 
-		// Allow all Vercel domains for now (temporary fix)
+		// Allow all Vercel domains (both HTTP and HTTPS)
 		if (origin.includes('vercel.app')) {
 			console.log('Allowing Vercel origin:', origin);
+			return callback(null, true);
+		}
+
+		// Check for exact match first
+		if (allowedOrigins.includes(origin)) {
+			return callback(null, true);
+		}
+
+		// Check for homelineteam domains with different protocols
+		const isHomelineTeamDomain = origin.includes('homelineteam') && origin.includes('vercel.app');
+		if (isHomelineTeamDomain) {
+			console.log('Allowing homelineteam domain:', origin);
 			return callback(null, true);
 		}
 
@@ -77,14 +89,27 @@ const corsOptions = {
 		'Accept',
 		'Origin',
 		'Access-Control-Request-Method',
-		'Access-Control-Request-Headers'
+		'Access-Control-Request-Headers',
+		'Cache-Control',
+		'Pragma'
 	],
 	exposedHeaders: ['Set-Cookie', 'Authorization'],
 	optionsSuccessStatus: 200,
-	preflightContinue: false
+	preflightContinue: false,
+	maxAge: 86400 // 24 hours
 };
 
 app.use(cors(corsOptions));
+
+// Handle preflight requests explicitly
+app.options('*', (req, res) => {
+	res.header('Access-Control-Allow-Origin', req.get('origin') || '*');
+	res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+	res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Cache-Control, Pragma');
+	res.header('Access-Control-Allow-Credentials', 'true');
+	res.header('Access-Control-Max-Age', '86400');
+	res.sendStatus(200);
+});
 
 app.use(morgan('dev'));
 

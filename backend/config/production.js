@@ -25,6 +25,12 @@ module.exports = {
         'https://homelineteams-git-main-tanjims-projects-af087137.vercel.app',
         'https://homelineteams.com',
         'https://www.homelineteams.com',
+        // HTTP versions (for development/preview)
+        "http://homelineteam-admin.vercel.app",
+        "http://www.homelineteam-admin.vercel.app",
+        "http://homelineteam.vercel.app",
+        "http://www.homelineteam.vercel.app",
+        // HTTPS versions (for production)
         "https://homelineteam-admin.vercel.app",
         "https://www.homelineteam-admin.vercel.app",
         "https://homelineteam.vercel.app",
@@ -32,7 +38,10 @@ module.exports = {
         // Vercel preview URLs pattern
         "https://homelineteam-git-*.vercel.app",
         "https://homelineteam-admin-git-*.vercel.app",
-        "https://homelineteams-git-*.vercel.app"
+        "https://homelineteams-git-*.vercel.app",
+        "http://homelineteam-git-*.vercel.app",
+        "http://homelineteam-admin-git-*.vercel.app",
+        "http://homelineteams-git-*.vercel.app"
     ],
 
     // Rate Limiting
