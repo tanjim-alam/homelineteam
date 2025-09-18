@@ -32,53 +32,32 @@ const { notFoundHandler, errorHandler } = require('./middlewares/error.middlewar
 const app = express();
 
 // Security & misc
+// Security & misc
 app.use(helmet());
 
-// CORS configuration - more explicit for credentials
+// CORS configuration - simplified
 const corsOptions = {
 	origin: function (origin, callback) {
 		// Allow requests with no origin (like mobile apps or curl requests)
 		if (!origin) return callback(null, true);
 
-		// Check if origin is in allowed list
-		const allowedOrigins = config.CORS_ORIGINS;
-
-		// Allow all Vercel domains (both HTTP and HTTPS)
+		// Allow all Vercel domains
 		if (origin.includes('vercel.app')) {
-			console.log('Allowing Vercel origin:', origin);
 			return callback(null, true);
 		}
 
-		// Check for exact match first
+		// Check if origin is in allowed list
+		const allowedOrigins = config.CORS_ORIGINS;
 		if (allowedOrigins.includes(origin)) {
 			return callback(null, true);
 		}
 
-		// Check for homelineteam domains with different protocols
-		const isHomelineTeamDomain = origin.includes('homelineteam') && origin.includes('vercel.app');
-		if (isHomelineTeamDomain) {
-			console.log('Allowing homelineteam domain:', origin);
+		// Allow homelineteam domains
+		if (origin.includes('homelineteam') && origin.includes('vercel.app')) {
 			return callback(null, true);
 		}
 
-		const isAllowed = allowedOrigins.some(allowedOrigin => {
-			// Check exact match
-			if (origin === allowedOrigin) return true;
-			// Check if origin starts with allowed origin (for Vercel preview URLs)
-			if (allowedOrigin.includes('vercel.app') && origin.includes('vercel.app')) return true;
-			// Check if origin contains the base domain
-			if (origin.includes('homelineteam') && origin.includes('vercel.app')) return true;
-			return false;
-		});
-
-		if (isAllowed) {
-			callback(null, true);
-		} else {
-			// Log the blocked origin for debugging
-			console.log('CORS blocked origin:', origin);
-			console.log('Allowed origins:', allowedOrigins);
-			callback(new Error('Not allowed by CORS'));
-		}
+		callback(new Error('Not allowed by CORS'));
 	},
 	credentials: true,
 	methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
@@ -87,32 +66,14 @@ const corsOptions = {
 		'Authorization',
 		'X-Requested-With',
 		'Accept',
-		'Origin',
-		'Access-Control-Request-Method',
-		'Access-Control-Request-Headers',
-		'Cache-Control',
-		'Pragma'
+		'Origin'
 	],
 	exposedHeaders: ['Set-Cookie', 'Authorization'],
-	optionsSuccessStatus: 200,
-	preflightContinue: false,
-	maxAge: 86400 // 24 hours
+	optionsSuccessStatus: 200
 };
 
 app.use(cors(corsOptions));
-
-// Handle preflight requests explicitly
-app.options('*', (req, res) => {
-	res.header('Access-Control-Allow-Origin', req.get('origin') || '*');
-	res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-	res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Cache-Control, Pragma');
-	res.header('Access-Control-Allow-Credentials', 'true');
-	res.header('Access-Control-Max-Age', '86400');
-	res.sendStatus(200);
-});
-
 app.use(morgan('dev'));
-
 app.use(express.json({ limit: config.MAX_REQUEST_SIZE }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -229,10 +190,17 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 connectDatabase().then(() => {
+	console.log('Database connected successfully');
 	configureCloudinary();
+	console.log(`Starting server on port ${config.PORT}...`);
 	app.listen(config.PORT, () => {
-		// Server started successfully
+		console.log(`✅ Server running on port ${config.PORT}`);
+		console.log(`✅ Environment: ${config.NODE_ENV}`);
+		console.log(`✅ CORS enabled for Vercel domains`);
 	});
+}).catch((error) => {
+	console.error('❌ Database connection failed:', error);
+	process.exit(1);
 });
 
 
