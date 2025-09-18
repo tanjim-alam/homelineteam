@@ -24,7 +24,11 @@ module.exports = {
         'https://homelineteams.vercel.app',
         'https://homelineteams-git-main-tanjims-projects-af087137.vercel.app',
         'https://homelineteams.com',
-        'https://www.homelineteams.com'
+        'https://www.homelineteams.com',
+        "https://homelineteam-admin.vercel.app",
+        "https://www.homelineteam-admin.vercel.app",
+        "https://homelineteam.vercel.app",
+        "https://www.homelineteam.vercel.app"
     ],
 
     // Rate Limiting
