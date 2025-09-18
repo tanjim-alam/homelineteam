@@ -4,6 +4,12 @@ import api from '../../api/client';
 export const login = createAsyncThunk('auth/login', async (payload, { rejectWithValue }) => {
   try {
     const res = await api.post('/api/auth/login', payload);
+
+    // Store token if provided in response (fallback if cookies don't work)
+    if (res.data.token) {
+      localStorage.setItem('auth_token', res.data.token);
+    }
+
     return res.data.admin;
   } catch (err) {
     return rejectWithValue(err.response?.data?.message || 'Login failed');
@@ -12,6 +18,8 @@ export const login = createAsyncThunk('auth/login', async (payload, { rejectWith
 
 export const logout = createAsyncThunk('auth/logout', async () => {
   await api.post('/api/auth/logout');
+  // Clear token from localStorage
+  localStorage.removeItem('auth_token');
 });
 
 export const fetchMe = createAsyncThunk('auth/me', async (_, { rejectWithValue }) => {
@@ -29,6 +37,11 @@ const authSlice = createSlice({
   reducers: {
     clearError: (state) => {
       state.error = null;
+    },
+    clearAuth: (state) => {
+      state.user = null;
+      state.error = null;
+      localStorage.removeItem('auth_token');
     }
   },
   extraReducers: (builder) => {
@@ -41,7 +54,7 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearError } = authSlice.actions;
+export const { clearError, clearAuth } = authSlice.actions;
 export default authSlice.reducer;
 
 
