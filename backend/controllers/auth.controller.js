@@ -38,12 +38,20 @@ exports.login = async (req, res, next) => {
 		// Set cookie with proper configuration
 		const cookieOptions = {
 			httpOnly: true,
-			secure: isProduction && !isLocalhost, // Secure only in production and not localhost
-			sameSite: isProduction && !isLocalhost ? 'none' : 'lax', // 'none' for cross-origin in production
+			secure: isProduction, // Always secure in production
+			sameSite: isVercel ? 'none' : 'lax', // 'none' for Vercel domains, 'lax' for others
 			maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
 			path: '/',
-			domain: isProduction && !isLocalhost ? undefined : undefined // Let browser handle domain
+			// Don't set domain to allow cross-subdomain cookies
 		};
+
+		// Debug logging
+		console.log('Cookie settings:', {
+			origin,
+			isProduction,
+			isVercel,
+			cookieOptions
+		});
 
 		res
 			.cookie('token', token, cookieOptions)
@@ -58,7 +66,19 @@ exports.login = async (req, res, next) => {
 };
 
 exports.logout = async (req, res) => {
-	res.clearCookie('token').json({ message: 'Logged out' });
+	// Clear cookie with same options as login
+	const isProduction = process.env.NODE_ENV === 'production';
+	const origin = req.get('origin') || '';
+	const isVercel = origin.includes('vercel.app') || origin.includes('homelineteams.com');
+
+	const cookieOptions = {
+		httpOnly: true,
+		secure: isProduction,
+		sameSite: isVercel ? 'none' : 'lax',
+		path: '/',
+	};
+
+	res.clearCookie('token', cookieOptions).json({ message: 'Logged out' });
 };
 
 exports.me = async (req, res) => {

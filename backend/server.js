@@ -139,6 +139,33 @@ app.get('/api/cors-test', (req, res) => {
 	});
 });
 
+// Cookie test endpoint
+app.get('/api/cookie-test', (req, res) => {
+	const isProduction = process.env.NODE_ENV === 'production';
+	const origin = req.get('origin') || '';
+	const isVercel = origin.includes('vercel.app') || origin.includes('homelineteams.com');
+
+	const cookieOptions = {
+		httpOnly: true,
+		secure: isProduction,
+		sameSite: isVercel ? 'none' : 'lax',
+		maxAge: 60 * 1000, // 1 minute
+		path: '/',
+	};
+
+	res
+		.cookie('test-cookie', 'test-value', cookieOptions)
+		.json({
+			message: 'Cookie test',
+			origin,
+			isProduction,
+			isVercel,
+			cookieOptions,
+			existingCookies: req.cookies,
+			timestamp: new Date().toISOString()
+		});
+});
+
 // Kitchen products test endpoint
 app.get('/api/kitchen-products-test', (req, res) => {
 	res.json({
