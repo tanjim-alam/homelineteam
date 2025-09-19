@@ -1,7 +1,30 @@
+import Hero from '@/components/Hero';
+import CategorySection from '@/components/CategorySection';
+import FeaturedProducts from '@/components/FeaturedProducts';
+import WhyChooseUs from '@/components/WhyChooseUs';
+import InteriorDesignCalculator from '@/components/InteriorDesignCalculator';
+import InteriorDesignSection from '@/components/InteriorDesignSection';
+
 export default function Home() {
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <h1 className="text-4xl font-bold">HomeLine - Testing Build</h1>
-    </div>
+    <main className="min-h-screen">
+      {/* Hero Section */}
+      <Hero />
+
+      {/* Category Section */}
+      <CategorySection />
+
+      {/* Featured Products */}
+      <FeaturedProducts />
+
+      {/* Interior Design Section */}
+      <InteriorDesignSection />
+
+      {/* Interior Design Calculator */}
+      {/* <InteriorDesignCalculator /> */}
+
+      {/* Why Choose Us */}
+      <WhyChooseUs />
+    </main>
   );
 }

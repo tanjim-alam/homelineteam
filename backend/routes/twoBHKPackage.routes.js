@@ -22,3 +22,4 @@ router.delete('/:id', authenticate, deleteTwoBHKPackage);
 module.exports = router;
 
 
+

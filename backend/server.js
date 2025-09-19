@@ -53,6 +53,12 @@ const corsOptions = {
 			return callback(null, true);
 		}
 
+		// In development, allow all localhost origins
+		if (process.env.NODE_ENV === 'development' && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
+			console.log('Allowing localhost in development:', origin);
+			return callback(null, true);
+		}
+
 		// Allow all Vercel domains
 		if (origin.includes('vercel.app')) {
 			console.log('Allowing Vercel domain:', origin);
@@ -75,6 +81,12 @@ const corsOptions = {
 		// Allow localhost for development
 		if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
 			console.log('Allowing localhost domain:', origin);
+			return callback(null, true);
+		}
+
+		// Allow all localhost ports for development
+		if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
+			console.log('Allowing localhost port:', origin);
 			return callback(null, true);
 		}
 
