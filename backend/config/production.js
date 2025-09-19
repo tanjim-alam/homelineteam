@@ -16,6 +16,13 @@ module.exports = {
     CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY || 'your-api-key',
     CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET || 'your-api-secret',
 
+    // Email Configuration
+    EMAIL_SERVICE: process.env.EMAIL_SERVICE || 'gmail',
+    EMAIL_USER: process.env.EMAIL_USER || 'tanjim11alam@gmail.com',
+    EMAIL_PASS: process.env.EMAIL_PASS || 'heomrbwqxaaxhppj',
+    EMAIL_FROM: process.env.EMAIL_FROM || 'tanjim11alam@gmail.com',
+    EMAIL_TO: process.env.EMAIL_TO || 'tanjim.seo@gmail.com',
+
     // CORS Configuration
     CORS_ORIGINS: [
         'http://localhost:5173',

@@ -1,20 +1,40 @@
 const Lead = require('../models/Lead');
 const nodemailer = require('nodemailer');
+const config = require('../config/' + (process.env.NODE_ENV || 'development'));
 
 function getTransporter() {
-  // Use Gmail SMTP with app password
-  return nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: "tanjim11alam@gmail.com",
-      pass: "heomrbwqxaaxhppj", // App password for Gmail
-    },
-    tls: {
-      rejectUnauthorized: false
-    },
-    secure: true,
-    port: 465
-  });
+  // Use configuration for email settings
+  const emailService = config.EMAIL_SERVICE || 'gmail';
+
+  // If using smtp.gmail.com, use host instead of service
+  if (emailService === 'smtp.gmail.com') {
+    return nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false, // true for 465, false for other ports
+      auth: {
+        user: config.EMAIL_USER || 'tanjim11alam@gmail.com',
+        pass: config.EMAIL_PASS || 'heomrbwqxaaxhppj',
+      },
+      tls: {
+        rejectUnauthorized: false
+      }
+    });
+  } else {
+    // Use service for gmail, outlook, etc.
+    return nodemailer.createTransport({
+      service: emailService,
+      auth: {
+        user: config.EMAIL_USER || 'tanjim11alam@gmail.com',
+        pass: config.EMAIL_PASS || 'heomrbwqxaaxhppj',
+      },
+      tls: {
+        rejectUnauthorized: false
+      },
+      secure: true,
+      port: 465
+    });
+  }
 }
 
 exports.createLead = async (req, res, next) => {
@@ -67,14 +87,26 @@ exports.createLead = async (req, res, next) => {
     // Send email notification
     let emailSent = false;
     try {
+      console.log('📧 Email configuration check:');
+      console.log('📧 Config loaded:', !!config);
+      console.log('📧 EMAIL_SERVICE:', config.EMAIL_SERVICE);
+      console.log('📧 EMAIL_USER:', config.EMAIL_USER);
+      console.log('📧 EMAIL_PASS exists:', !!config.EMAIL_PASS);
+      console.log('📧 EMAIL_FROM:', config.EMAIL_FROM);
+      console.log('📧 EMAIL_TO:', config.EMAIL_TO);
+
       const transporter = getTransporter();
-      const toEmail = "tanjim.seo@gmail.com";
+      const toEmail = config.EMAIL_TO || 'tanjim.seo@gmail.com';
 
       console.log('📧 Attempting to send email notification...');
       console.log('📧 To:', toEmail);
-      console.log('📧 From:', "tanjim11alam@gmail.com");
+      console.log('📧 From:', config.EMAIL_FROM);
+      console.log('📧 Service:', config.EMAIL_SERVICE);
+      console.log('📧 User:', config.EMAIL_USER);
 
       if (transporter && toEmail) {
+        console.log('📧 Transporter created successfully');
+        console.log('📧 Email will be sent to:', toEmail);
         const subject = `New Interior Design Lead: ${name} (${phone}) - ${homeType || 'Interior Design'}`;
 
         // Format configuration data for better readability
@@ -184,7 +216,7 @@ exports.createLead = async (req, res, next) => {
           </div>
         `;
         const mailOptions = {
-          from: "tanjim11alam@gmail.com",
+          from: config.EMAIL_FROM,
           to: toEmail,
           subject,
           html
@@ -208,7 +240,14 @@ exports.createLead = async (req, res, next) => {
         message: err.message,
         code: err.code,
         response: err.response,
-        stack: err.stack
+        stack: err.stack,
+        emailConfig: {
+          service: config.EMAIL_SERVICE,
+          user: config.EMAIL_USER,
+          from: config.EMAIL_FROM,
+          to: config.EMAIL_TO,
+          hasPassword: !!config.EMAIL_PASS
+        }
       });
     }
 
@@ -251,6 +290,69 @@ exports.updateLeadStatus = async (req, res, next) => {
     res.json(lead);
   } catch (err) {
     next(err);
+  }
+};
+
+// Test email endpoint
+exports.testEmail = async (req, res, next) => {
+  try {
+    console.log('🧪 Testing email configuration...');
+    console.log('📧 Email Config:', {
+      service: config.EMAIL_SERVICE,
+      user: config.EMAIL_USER,
+      from: config.EMAIL_FROM,
+      to: config.EMAIL_TO,
+      hasPassword: !!config.EMAIL_PASS
+    });
+
+    const transporter = getTransporter();
+
+    console.log('📧 Transporter created for test email');
+
+    // Test email
+    const testMailOptions = {
+      from: config.EMAIL_FROM,
+      to: config.EMAIL_TO,
+      subject: 'Test Email from HomeLine Backend',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2>🧪 Email Test</h2>
+          <p>This is a test email from your HomeLine backend.</p>
+          <p><strong>Environment:</strong> ${process.env.NODE_ENV || 'development'}</p>
+          <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
+          <p>If you receive this email, your SMTP configuration is working correctly!</p>
+        </div>
+      `
+    };
+
+    const result = await transporter.sendMail(testMailOptions);
+
+    res.json({
+      success: true,
+      message: 'Test email sent successfully',
+      messageId: result.messageId,
+      config: {
+        service: config.EMAIL_SERVICE,
+        user: config.EMAIL_USER,
+        from: config.EMAIL_FROM,
+        to: config.EMAIL_TO,
+        hasPassword: !!config.EMAIL_PASS
+      }
+    });
+  } catch (err) {
+    console.error('❌ Email test failed:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Email test failed',
+      error: err.message,
+      config: {
+        service: config.EMAIL_SERVICE,
+        user: config.EMAIL_USER,
+        from: config.EMAIL_FROM,
+        to: config.EMAIL_TO,
+        hasPassword: !!config.EMAIL_PASS
+      }
+    });
   }
 };
 

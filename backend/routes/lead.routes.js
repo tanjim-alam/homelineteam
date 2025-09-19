@@ -6,6 +6,9 @@ const { authenticate, requireAdmin } = require('../middlewares/auth.middleware')
 // Public create lead
 router.post('/', controller.createLead);
 
+// Test email endpoint (for debugging)
+router.get('/test-email', controller.testEmail);
+
 // Admin list/update
 router.get('/', authenticate, requireAdmin, controller.getLeads);
 router.patch('/:id/status', authenticate, requireAdmin, controller.updateLeadStatus);
