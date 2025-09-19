@@ -15,6 +15,7 @@ import {
   ChevronRight,
   Phone
 } from 'lucide-react';
+import Image from 'next/image';
 
 export default function Navbar() {
   const router = useRouter();
@@ -113,7 +114,7 @@ export default function Navbar() {
         <div className="flex items-center justify-between py-4">
           {/* Logo */}
           <Link href="/" className="text-2xl font-bold text-primary-600">
-            HomeLine
+            <Image src="/logo.jpeg" alt="HomeLine" width={150} height={100} />
           </Link>
 
           {/* Desktop Navigation */}
