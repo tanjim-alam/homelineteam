@@ -10,6 +10,7 @@ import {
 import Metadata from '@/components/Metadata';
 import Image from 'next/image';
 import api from '@/services/api';
+import { useSubmission } from '@/contexts/SubmissionContext';
 
 export default function TwoBHKPackagePage() {
   const [activeTab, setActiveTab] = useState('quote');
@@ -28,7 +29,8 @@ export default function TwoBHKPackagePage() {
     city: '',
     homeType: ''
   });
-  const [submitting, setSubmitting] = useState(false);
+  const { isSubmitting, startSubmission, endSubmission } = useSubmission();
+  const formId = '2bhk-package-page';
   const [selectedProduct, setSelectedProduct] = useState(null);
 
   useEffect(() => {
@@ -83,7 +85,12 @@ export default function TwoBHKPackagePage() {
       return;
     }
 
-    setSubmitting(true);
+    // Prevent multiple submissions
+    const submissionId = startSubmission(formId);
+    if (!submissionId) {
+      return;
+    }
+
     try {
       console.log('Sending 2BHK package configuration:', packageConfig);
       console.log('Selected product:', selectedProduct);
@@ -135,7 +142,7 @@ export default function TwoBHKPackagePage() {
       console.error('Lead submission error:', error);
       alert('Failed to submit your request. Please try again or contact us directly.');
     } finally {
-      setSubmitting(false);
+      endSubmission(formId);
     }
   };
 
@@ -565,10 +572,10 @@ export default function TwoBHKPackagePage() {
                   {/* Submit Button */}
                   <button
                     onClick={handleLeadSubmit}
-                    disabled={submitting}
-                    className={`w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 ${submitting ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
+                    disabled={isSubmitting(formId)}
+                    className={`w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 ${isSubmitting(formId) ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
                   >
-                    {submitting ? 'Submitting...' : 'Book Free 2 BHK Design Session'}
+                    {isSubmitting(formId) ? 'Submitting...' : 'Book Free 2 BHK Design Session'}
                   </button>
                 </div>
               </div>

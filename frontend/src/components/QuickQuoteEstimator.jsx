@@ -3,9 +3,12 @@
 import { useState } from 'react';
 import api from '@/services/api';
 import { Calculator, Home, ArrowRight, CheckCircle } from 'lucide-react';
+import { useSubmission } from '@/contexts/SubmissionContext';
 
 export default function QuickQuoteEstimator({ className = '' }) {
   const [isOpen, setIsOpen] = useState(false);
+  const { isSubmitting, startSubmission, endSubmission } = useSubmission();
+  const formId = 'quick-quote-estimator';
   const [formData, setFormData] = useState({
     homeType: '',
     contactInfo: {
@@ -47,6 +50,12 @@ export default function QuickQuoteEstimator({ className = '' }) {
   };
 
   const handleBookSession = async () => {
+    // Prevent multiple submissions
+    const submissionId = startSubmission(formId);
+    if (!submissionId) {
+      return;
+    }
+
     try {
       const payload = {
         name: formData.contactInfo?.name || '',
@@ -55,7 +64,10 @@ export default function QuickQuoteEstimator({ className = '' }) {
         homeType: formData.homeType || '',
         sourcePage: typeof window !== 'undefined' ? window.location.pathname : 'unknown',
         message: 'QuickQuoteEstimator design session request',
-        meta: formData
+        meta: {
+          ...formData,
+          requestId: `quick_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        }
       };
       const response = await api.createLead(payload);
 
@@ -75,6 +87,8 @@ export default function QuickQuoteEstimator({ className = '' }) {
     } catch (err) {
       console.error('Lead submission error:', err);
       alert(`Failed to submit request: ${err.message || 'Please try again.'}`);
+    } finally {
+      endSubmission(formId);
     }
   };
 
@@ -124,8 +138,8 @@ export default function QuickQuoteEstimator({ className = '' }) {
                         key={type.id}
                         onClick={() => setFormData({ ...formData, homeType: type.id })}
                         className={`p-3 rounded-lg border-2 text-center transition-all duration-200 ${formData.homeType === type.id
-                            ? 'border-primary-600 bg-primary-50'
-                            : 'border-gray-200 hover:border-primary-300'
+                          ? 'border-primary-600 bg-primary-50'
+                          : 'border-gray-200 hover:border-primary-300'
                           }`}
                       >
                         <div className="font-semibold text-gray-900 text-sm">{type.name}</div>
@@ -149,8 +163,8 @@ export default function QuickQuoteEstimator({ className = '' }) {
                           setFormData({ ...formData, rooms: newRooms });
                         }}
                         className={`p-3 rounded-lg border-2 text-center transition-all duration-200 ${formData.rooms.includes(room.id)
-                            ? 'border-primary-600 bg-primary-50'
-                            : 'border-gray-200 hover:border-primary-300'
+                          ? 'border-primary-600 bg-primary-50'
+                          : 'border-gray-200 hover:border-primary-300'
                           }`}
                       >
                         <div className="text-lg mb-1">{room.icon}</div>
@@ -174,8 +188,8 @@ export default function QuickQuoteEstimator({ className = '' }) {
                         key={purpose.id}
                         onClick={() => setFormData({ ...formData, purpose: purpose.id })}
                         className={`p-3 rounded-lg border-2 text-center transition-all duration-200 ${formData.purpose === purpose.id
-                            ? 'border-primary-600 bg-primary-50'
-                            : 'border-gray-200 hover:border-primary-300'
+                          ? 'border-primary-600 bg-primary-50'
+                          : 'border-gray-200 hover:border-primary-300'
                           }`}
                       >
                         <div className="text-sm font-medium text-gray-900">{purpose.name}</div>
@@ -194,8 +208,8 @@ export default function QuickQuoteEstimator({ className = '' }) {
                         key={timeline}
                         onClick={() => setFormData({ ...formData, timeline })}
                         className={`p-3 rounded-lg border-2 text-center transition-all duration-200 ${formData.timeline === timeline
-                            ? 'border-primary-600 bg-primary-50'
-                            : 'border-gray-200 hover:border-primary-300'
+                          ? 'border-primary-600 bg-primary-50'
+                          : 'border-gray-200 hover:border-primary-300'
                           }`}
                       >
                         <div className="text-sm font-medium text-gray-900">{timeline}</div>
@@ -248,9 +262,9 @@ export default function QuickQuoteEstimator({ className = '' }) {
 
               {/* Actions */}
               <div className="space-y-3 mt-6">
-                {/* <button
+                {/*                 <button
                   onClick={handleBookSession}
-                  disabled={!formData.homeType || !formData.contactInfo.name || !formData.contactInfo.phone}
+                  disabled={!formData.homeType || !formData.contactInfo.name || !formData.contactInfo.phone || isSubmitting(formId)}
                   className="w-full bg-yellow-400 hover:bg-yellow-500 text-primary-900 font-bold py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                 >
                   BOOK FREE DESIGN SESSION
@@ -263,11 +277,11 @@ export default function QuickQuoteEstimator({ className = '' }) {
                     Cancel
                   </button>
                   <button
-                    onClick={handleSubmit}
-                    disabled={!formData.homeType || !formData.contactInfo.name || !formData.contactInfo.phone}
+                    onClick={handleBookSession}
+                    disabled={!formData.homeType || !formData.contactInfo.name || !formData.contactInfo.phone || isSubmitting(formId)}
                     className="flex-1 btn-primary flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Get Quote
+                    {isSubmitting(formId) ? 'Submitting...' : 'Get Quote'}
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>

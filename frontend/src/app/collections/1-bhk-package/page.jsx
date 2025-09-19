@@ -10,12 +10,14 @@ import {
 import Metadata from '@/components/Metadata';
 import api from '@/services/api';
 import Image from 'next/image';
+import { useSubmission } from '@/contexts/SubmissionContext';
 
 export default function OneBHKPackagePage() {
   const [activeTab, setActiveTab] = useState('quote');
   const [showDesignSession, setShowDesignSession] = useState(false);
   const [leadForm, setLeadForm] = useState({ name: '', phone: '', city: '', homeType: '' });
-  const [submitting, setSubmitting] = useState(false);
+  const { isSubmitting, startSubmission, endSubmission } = useSubmission();
+  const formId = '1-bhk-package-page';
   const [packageConfig, setPackageConfig] = useState({
     kitchenType: '',
     wardrobeType: ''
@@ -45,8 +47,14 @@ export default function OneBHKPackagePage() {
       alert('Please enter your name and phone number.');
       return;
     }
+
+    // Prevent multiple submissions
+    const submissionId = startSubmission(formId);
+    if (!submissionId) {
+      return;
+    }
+
     try {
-      setSubmitting(true);
       console.log('Sending 1BHK package configuration:', packageConfig);
       console.log('Selected product:', selectedProduct);
 
@@ -94,7 +102,7 @@ export default function OneBHKPackagePage() {
       console.error('Lead submission error:', e);
       alert('Failed to submit your request. Please try again or contact us directly.');
     } finally {
-      setSubmitting(false);
+      endSubmission(formId);
     }
   };
 
@@ -505,10 +513,10 @@ export default function OneBHKPackagePage() {
                   {/* Submit Button */}
                   <button
                     onClick={handleLeadSubmit}
-                    disabled={submitting}
-                    className={`w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 ${submitting ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
+                    disabled={isSubmitting(formId)}
+                    className={`w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 ${isSubmitting(formId) ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
                   >
-                    {submitting ? 'Submitting...' : 'Book Free 1 BHK Design Session'}
+                    {isSubmitting(formId) ? 'Submitting...' : 'Book Free 1 BHK Design Session'}
                   </button>
                 </div>
               </div>

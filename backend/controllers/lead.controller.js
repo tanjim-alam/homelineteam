@@ -29,6 +29,21 @@ exports.createLead = async (req, res, next) => {
       });
     }
 
+    // Check for duplicate leads by requestId first (if provided)
+    if (meta && meta.requestId) {
+      const existingLeadByRequestId = await Lead.findOne({
+        'meta.requestId': meta.requestId
+      });
+
+      if (existingLeadByRequestId) {
+        console.log('⚠️ Duplicate lead detected by requestId:', meta.requestId);
+        return res.status(400).json({
+          success: false,
+          message: 'This request has already been submitted. Please wait a moment before trying again.'
+        });
+      }
+    }
+
     // Check for duplicate leads (same phone number within last 5 minutes)
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
     const existingLead = await Lead.findOne({

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Calculator, Home, Ruler, Palette, DollarSign, CheckCircle, ArrowRight } from 'lucide-react';
 import api from '@/services/api';
+import { useSubmission } from '@/contexts/SubmissionContext';
 
 const InteriorDesignCalculator = () => {
   const [formData, setFormData] = useState({
@@ -21,7 +22,8 @@ const InteriorDesignCalculator = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [estimatedCost, setEstimatedCost] = useState(null);
   const [showResults, setShowResults] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  const { isSubmitting, startSubmission, endSubmission } = useSubmission();
+  const formId = 'interior-design-calculator';
 
   const homeTypes = [
     { id: '1bhk', name: '1 BHK', basePrice: 150000, description: 'Perfect for small families' },
@@ -140,7 +142,13 @@ const InteriorDesignCalculator = () => {
       return;
     }
 
-    setSubmitting(true);
+    // Prevent multiple submissions
+    const submissionId = startSubmission(formId);
+    if (!submissionId) {
+      return;
+    }
+
+    console.log('Starting lead submission...', submissionId);
     try {
       // Fetch sample products for interior design
       const sampleProducts = await api.getProducts({ limit: 3, featured: true });
@@ -171,7 +179,8 @@ const InteriorDesignCalculator = () => {
             timeline: formData.timeline,
             estimatedCost: estimatedCost
           },
-          page: 'interior-design-calculator'
+          page: 'interior-design-calculator',
+          requestId: `calc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
         }
       });
 
@@ -190,7 +199,7 @@ const InteriorDesignCalculator = () => {
       const errorMessage = error.message || error.error || 'Please try again or contact us directly.';
       alert(`Failed to submit your request: ${errorMessage}`);
     } finally {
-      setSubmitting(false);
+      endSubmission(formId);
     }
   };
 
@@ -310,10 +319,10 @@ const InteriorDesignCalculator = () => {
             </button>
             <button
               onClick={submitLead}
-              disabled={submitting}
-              className={`bg-primary-600 text-white font-semibold px-6 py-3 rounded-xl hover:bg-primary-700 transition-colors flex items-center gap-2 ${submitting ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
+              disabled={isSubmitting(formId)}
+              className={`bg-primary-600 text-white font-semibold px-6 py-3 rounded-xl hover:bg-primary-700 transition-colors flex items-center gap-2 ${isSubmitting(formId) ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
             >
-              {submitting ? 'Submitting...' : 'Get Detailed Quote'}
+              {isSubmitting(formId) ? 'Submitting...' : 'Get Detailed Quote'}
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>

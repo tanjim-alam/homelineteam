@@ -4,6 +4,7 @@ import Footer from '@/components/Footer';
 import BottomNavbar from '@/components/BottomNavbar';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { CartProvider } from '@/contexts/CartContext';
+import { SubmissionProvider } from '@/contexts/SubmissionContext';
 
 export const metadata = {
   title: 'HomeLine - Premium Home Furnishings & Interior Design',
@@ -16,10 +17,12 @@ export default function RootLayout({ children }) {
       <body>
         <ErrorBoundary>
           <CartProvider>
-            <Navbar />
-            <main className="pb-20 lg:pb-0">{children}</main>
-            <Footer />
-            <BottomNavbar />
+            <SubmissionProvider>
+              <Navbar />
+              <main className="pb-20 lg:pb-0">{children}</main>
+              <Footer />
+              <BottomNavbar />
+            </SubmissionProvider>
           </CartProvider>
         </ErrorBoundary>
       </body>

@@ -10,6 +10,7 @@ import {
 import Metadata from '@/components/Metadata';
 import Image from 'next/image';
 import api from '@/services/api';
+import { useSubmission } from '@/contexts/SubmissionContext';
 
 export default function WardrobesPage() {
   const [activeTab, setActiveTab] = useState('quote');
@@ -24,7 +25,8 @@ export default function WardrobesPage() {
     city: '',
     homeType: ''
   });
-  const [submitting, setSubmitting] = useState(false);
+  const { isSubmitting, startSubmission, endSubmission } = useSubmission();
+  const formId = 'wardrobes-page';
   const [wardrobeProducts, setWardrobeProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -51,7 +53,12 @@ export default function WardrobesPage() {
       return;
     }
 
-    setSubmitting(true);
+    // Prevent multiple submissions
+    const submissionId = startSubmission(formId);
+    if (!submissionId) {
+      return;
+    }
+
     try {
       console.log('Sending wardrobe configuration:', wardrobeConfig);
       console.log('Selected product:', selectedProduct);
@@ -101,7 +108,7 @@ export default function WardrobesPage() {
       console.error('Lead submission error:', error);
       alert('Failed to submit your request. Please try again or contact us directly.');
     } finally {
-      setSubmitting(false);
+      endSubmission(formId);
     }
   };
 
@@ -473,10 +480,10 @@ export default function WardrobesPage() {
                   {/* Submit Button */}
                   <button
                     onClick={handleLeadSubmit}
-                    disabled={submitting}
-                    className={`w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 ${submitting ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
+                    disabled={isSubmitting(formId)}
+                    className={`w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 ${isSubmitting(formId) ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
                   >
-                    {submitting ? 'Submitting...' : 'Book Free Wardrobe Design Session'}
+                    {isSubmitting(formId) ? 'Submitting...' : 'Book Free Wardrobe Design Session'}
                   </button>
                 </div>
               </div>
