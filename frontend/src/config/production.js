@@ -4,7 +4,7 @@
 // https://homelineteam-production.up.railway.app
 export const config = {
   // API Configuration
-  API_BASE_URL: "http://localhost:5000" ||
+  API_BASE_URL: "https://homelineteam-production.up.railway.app" ||
     (typeof window !== 'undefined' && window.location.hostname === 'localhost'
       ? 'http://localhost:5000'
       : 'https://homelineteam-production.up.railway.app'),

@@ -3,7 +3,7 @@ import config from '../config/production';
 
 class ApiService {
   constructor() {
-    this.baseURL = config.API_BASE_URL || "http://localhost:5000";
+    this.baseURL = config.API_BASE_URL || "https://homelineteam-production.up.railway.app";
     this.timeout = config.REQUEST_TIMEOUT;
     this.maxRetries = config.MAX_RETRY_ATTEMPTS;
     this.cache = new Map();

@@ -2,14 +2,6 @@ const nodemailer = require('nodemailer');
 const config = require('./config/' + (process.env.NODE_ENV || 'development'));
 
 async function testEmail() {
-    console.log('🧪 Testing Email Configuration...');
-    console.log('📧 Environment:', process.env.NODE_ENV || 'development');
-    console.log('📧 Config loaded:', !!config);
-    console.log('📧 EMAIL_SERVICE:', config.EMAIL_SERVICE);
-    console.log('📧 EMAIL_USER:', config.EMAIL_USER);
-    console.log('📧 EMAIL_PASS exists:', !!config.EMAIL_PASS);
-    console.log('📧 EMAIL_FROM:', config.EMAIL_FROM);
-    console.log('📧 EMAIL_TO:', config.EMAIL_TO);
 
     try {
         const emailService = config.EMAIL_SERVICE || 'gmail';
@@ -45,8 +37,6 @@ async function testEmail() {
             });
         }
 
-        console.log('📧 Transporter created successfully');
-
         const testMailOptions = {
             from: config.EMAIL_FROM,
             to: config.EMAIL_TO,
@@ -62,19 +52,11 @@ async function testEmail() {
       `
         };
 
-        console.log('📧 Sending test email...');
         const result = await transporter.sendMail(testMailOptions);
-
         console.log('✅ Test email sent successfully!');
-        console.log('📧 Message ID:', result.messageId);
-        console.log('📧 Response:', result.response);
 
     } catch (error) {
-        console.error('❌ Email test failed:');
-        console.error('📧 Error message:', error.message);
-        console.error('📧 Error code:', error.code);
-        console.error('📧 Error response:', error.response);
-        console.error('📧 Full error:', error);
+        console.error('❌ Email test failed:', error.message);
     }
 }
 

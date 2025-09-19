@@ -38,59 +38,49 @@ app.use(helmet());
 // CORS configuration - simplified
 const corsOptions = {
 	origin: function (origin, callback) {
-		console.log('CORS request from origin:', origin);
 
 		// For requests with no origin (like mobile apps or curl requests), 
 		// we need to be more specific when credentials are required
 		if (!origin) {
 			// Only allow no-origin requests in development
 			if (process.env.NODE_ENV === 'development') {
-				console.log('Allowing no-origin request in development');
 				return callback(null, true);
 			}
-			// In production, allow no-origin for API testing but log it
-			console.log('Allowing no-origin request in production (API testing)');
+			// In production, allow no-origin for API testing
 			return callback(null, true);
 		}
 
 		// In development, allow all localhost origins
 		if (process.env.NODE_ENV === 'development' && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
-			console.log('Allowing localhost in development:', origin);
 			return callback(null, true);
 		}
 
 		// Allow all Vercel domains
 		if (origin.includes('vercel.app')) {
-			console.log('Allowing Vercel domain:', origin);
 			return callback(null, true);
 		}
 
 		// Check if origin is in allowed list
 		const allowedOrigins = config.CORS_ORIGINS;
 		if (allowedOrigins.includes(origin)) {
-			console.log('Allowing origin from config:', origin);
 			return callback(null, true);
 		}
 
 		// Allow homelineteam domains
 		if (origin.includes('homelineteam') && origin.includes('vercel.app')) {
-			console.log('Allowing homelineteam domain:', origin);
 			return callback(null, true);
 		}
 
 		// Allow localhost for development
 		if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
-			console.log('Allowing localhost domain:', origin);
 			return callback(null, true);
 		}
 
 		// Allow all localhost ports for development
 		if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
-			console.log('Allowing localhost port:', origin);
 			return callback(null, true);
 		}
 
-		console.log('Rejecting origin:', origin);
 		callback(new Error('Not allowed by CORS'));
 	},
 	credentials: true,
@@ -224,16 +214,11 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 connectDatabase().then(() => {
-	console.log('Database connected successfully');
 	configureCloudinary();
-	console.log(`Starting server on port ${config.PORT}...`);
 	app.listen(config.PORT, () => {
-		console.log(`✅ Server running on port ${config.PORT}`);
-		console.log(`✅ Environment: ${config.NODE_ENV}`);
-		console.log(`✅ CORS enabled for Vercel domains`);
+		// Server started successfully
 	});
 }).catch((error) => {
-	console.error('❌ Database connection failed:', error);
 	process.exit(1);
 });
 

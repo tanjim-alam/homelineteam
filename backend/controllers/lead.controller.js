@@ -56,7 +56,6 @@ exports.createLead = async (req, res, next) => {
       });
 
       if (existingLeadByRequestId) {
-        console.log('⚠️ Duplicate lead detected by requestId:', meta.requestId);
         return res.status(400).json({
           success: false,
           message: 'This request has already been submitted. Please wait a moment before trying again.'
@@ -72,7 +71,6 @@ exports.createLead = async (req, res, next) => {
     });
 
     if (existingLead) {
-      console.log('⚠️ Duplicate lead detected for phone:', phone);
       return res.status(400).json({
         success: false,
         message: 'A lead with this phone number was submitted recently. Please wait a few minutes before submitting again.'
@@ -82,31 +80,14 @@ exports.createLead = async (req, res, next) => {
     // Create lead in database
     const lead = await Lead.create({ name, phone, city, homeType, sourcePage, message, meta, productDetails });
 
-    console.log('✅ Lead created successfully:', lead._id);
 
     // Send email notification
     let emailSent = false;
     try {
-      console.log('📧 Email configuration check:');
-      console.log('📧 Config loaded:', !!config);
-      console.log('📧 EMAIL_SERVICE:', config.EMAIL_SERVICE);
-      console.log('📧 EMAIL_USER:', config.EMAIL_USER);
-      console.log('📧 EMAIL_PASS exists:', !!config.EMAIL_PASS);
-      console.log('📧 EMAIL_FROM:', config.EMAIL_FROM);
-      console.log('📧 EMAIL_TO:', config.EMAIL_TO);
-
       const transporter = getTransporter();
       const toEmail = config.EMAIL_TO || 'tanjim.seo@gmail.com';
 
-      console.log('📧 Attempting to send email notification...');
-      console.log('📧 To:', toEmail);
-      console.log('📧 From:', config.EMAIL_FROM);
-      console.log('📧 Service:', config.EMAIL_SERVICE);
-      console.log('📧 User:', config.EMAIL_USER);
-
       if (transporter && toEmail) {
-        console.log('📧 Transporter created successfully');
-        console.log('📧 Email will be sent to:', toEmail);
         const subject = `New Interior Design Lead: ${name} (${phone}) - ${homeType || 'Interior Design'}`;
 
         // Format configuration data for better readability
@@ -222,33 +203,11 @@ exports.createLead = async (req, res, next) => {
           html
         };
 
-        console.log('📧 Sending email with options:', {
-          from: mailOptions.from,
-          to: mailOptions.to,
-          subject: mailOptions.subject,
-          htmlLength: mailOptions.html.length
-        });
-
         const result = await transporter.sendMail(mailOptions);
         emailSent = true;
-        console.log('✅ Email notification sent successfully:', result.messageId);
-      } else {
-        console.log('⚠️ Email not sent - missing transporter or recipient email');
       }
     } catch (err) {
-      console.error('❌ Email sending failed:', {
-        message: err.message,
-        code: err.code,
-        response: err.response,
-        stack: err.stack,
-        emailConfig: {
-          service: config.EMAIL_SERVICE,
-          user: config.EMAIL_USER,
-          from: config.EMAIL_FROM,
-          to: config.EMAIL_TO,
-          hasPassword: !!config.EMAIL_PASS
-        }
-      });
+      // Email sending failed silently
     }
 
     res.status(201).json({
@@ -258,7 +217,6 @@ exports.createLead = async (req, res, next) => {
       emailSent: emailSent
     });
   } catch (err) {
-    console.error('❌ Lead creation failed:', err.message);
     res.status(500).json({
       success: false,
       message: 'Failed to create lead. Please try again.',
@@ -296,18 +254,7 @@ exports.updateLeadStatus = async (req, res, next) => {
 // Test email endpoint
 exports.testEmail = async (req, res, next) => {
   try {
-    console.log('🧪 Testing email configuration...');
-    console.log('📧 Email Config:', {
-      service: config.EMAIL_SERVICE,
-      user: config.EMAIL_USER,
-      from: config.EMAIL_FROM,
-      to: config.EMAIL_TO,
-      hasPassword: !!config.EMAIL_PASS
-    });
-
     const transporter = getTransporter();
-
-    console.log('📧 Transporter created for test email');
 
     // Test email
     const testMailOptions = {
@@ -330,28 +277,13 @@ exports.testEmail = async (req, res, next) => {
     res.json({
       success: true,
       message: 'Test email sent successfully',
-      messageId: result.messageId,
-      config: {
-        service: config.EMAIL_SERVICE,
-        user: config.EMAIL_USER,
-        from: config.EMAIL_FROM,
-        to: config.EMAIL_TO,
-        hasPassword: !!config.EMAIL_PASS
-      }
+      messageId: result.messageId
     });
   } catch (err) {
-    console.error('❌ Email test failed:', err);
     res.status(500).json({
       success: false,
       message: 'Email test failed',
-      error: err.message,
-      config: {
-        service: config.EMAIL_SERVICE,
-        user: config.EMAIL_USER,
-        from: config.EMAIL_FROM,
-        to: config.EMAIL_TO,
-        hasPassword: !!config.EMAIL_PASS
-      }
+      error: err.message
     });
   }
 };

@@ -45,13 +45,6 @@ exports.login = async (req, res, next) => {
 			// Don't set domain to allow cross-subdomain cookies
 		};
 
-		// Debug logging
-		console.log('Cookie settings:', {
-			origin,
-			isProduction,
-			isVercel,
-			cookieOptions
-		});
 
 		res
 			.cookie('token', token, cookieOptions)
