@@ -92,7 +92,22 @@ class ApiService {
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        // Try to get error message from response body
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          if (errorData.message) {
+            errorMessage = errorData.message;
+          } else if (errorData.error) {
+            errorMessage = errorData.error;
+          }
+        } catch (parseError) {
+          // If we can't parse the error response, use the default message
+        }
+
+        const error = new Error(errorMessage);
+        error.response = { data: { message: errorMessage } };
+        throw error;
       }
 
       const data = await response.json();
@@ -161,7 +176,7 @@ class ApiService {
     return this.request('/api/health');
   }
 
-  // Authentication methods
+  // Admin Authentication methods
   async login(credentials) {
     const response = await this.request('/api/auth/login', {
       method: 'POST',
@@ -191,9 +206,121 @@ class ApiService {
     return this.request('/api/auth/me');
   }
 
+  // User Authentication methods
+  async registerUser(userData) {
+    return this.request('/api/users/register', {
+      method: 'POST',
+      body: JSON.stringify(userData),
+    });
+  }
+
+  async verifyUserEmail(email, otp) {
+    return this.request('/api/users/verify-email', {
+      method: 'POST',
+      body: JSON.stringify({ email, otp }),
+    });
+  }
+
+  async resendUserEmailOTP(email) {
+    return this.request('/api/users/resend-email-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  }
+
+  async loginUser(credentials) {
+    const response = await this.request('/api/users/login', {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+    });
+
+    // Store token if provided in response (fallback)
+    if (response.token) {
+      this.storeToken(response.token);
+    }
+
+    return response;
+  }
+
+  async logoutUser() {
+    const response = await this.request('/api/users/logout', {
+      method: 'POST',
+    });
+
+    // Clear stored token
+    this.clearToken();
+
+    return response;
+  }
+
+  async getUserProfile() {
+    return this.request('/api/users/profile');
+  }
+
+  async updateUserProfile(profileData) {
+    return this.request('/api/users/profile', {
+      method: 'PUT',
+      body: JSON.stringify(profileData),
+    });
+  }
+
+  async addUserAddress(addressData) {
+    return this.request('/api/users/addresses', {
+      method: 'POST',
+      body: JSON.stringify(addressData),
+    });
+  }
+
+  async updateUserAddress(addressId, addressData) {
+    return this.request(`/api/users/addresses/${addressId}`, {
+      method: 'PUT',
+      body: JSON.stringify(addressData),
+    });
+  }
+
+  async deleteUserAddress(addressId) {
+    return this.request(`/api/users/addresses/${addressId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async forgotUserPassword(email) {
+    return this.request('/api/users/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  }
+
+  async resetUserPassword(email, token, newPassword) {
+    return this.request('/api/users/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ email, token, newPassword }),
+    });
+  }
+
   // Categories
   async getCategories() {
     return this.request('/api/categories');
+  }
+
+  async getMainCategories() {
+    return this.request('/api/main-categories');
+  }
+
+  async getSubcategories(mainCategoryId) {
+    return this.request(`/api/sub-categories?mainCategoryId=${mainCategoryId}`);
+  }
+
+  async getSubcategoriesByMainCategoryName(mainCategoryName) {
+    return this.request(`/api/sub-categories/by-main-category/${mainCategoryName}`);
+  }
+
+  async getHierarchicalCategories() {
+    return this.request('/api/categories/hierarchical');
+  }
+
+  async getCategoriesWithMainCategory() {
+    return this.request('/api/categories/with-main-category');
   }
 
   async getCategoryById(id) {
@@ -245,7 +372,40 @@ class ApiService {
       }
     });
 
-    const queryString = new URLSearchParams({ categoryId, ...processedParams }).toString();
+    // Use subcategoryId for the new hierarchical structure
+    const queryString = new URLSearchParams({ subcategoryId: categoryId, ...processedParams }).toString();
+
+    return this.request(`/api/products?${queryString}`);
+  }
+
+  async getProductsByMainCategory(mainCategoryId, params = {}) {
+    // Convert complex objects to JSON strings for backend
+    const processedParams = { ...params };
+
+    if (params.priceRange) {
+      processedParams.priceRange = JSON.stringify(params.priceRange);
+    }
+    if (params.brands && Array.isArray(params.brands)) {
+      processedParams.brands = JSON.stringify(params.brands);
+    }
+    if (params.ratings && Array.isArray(params.ratings)) {
+      processedParams.ratings = JSON.stringify(params.ratings);
+    }
+    if (params.availability && Array.isArray(params.availability)) {
+      processedParams.availability = JSON.stringify(params.availability);
+    }
+
+    // Handle dynamic filters
+    Object.keys(params).forEach(key => {
+      if (key !== 'priceRange' && key !== 'brands' && key !== 'ratings' && key !== 'availability' && key !== 'sort' && key !== 'limit') {
+        if (Array.isArray(params[key])) {
+          processedParams[key] = JSON.stringify(params[key]);
+        }
+      }
+    });
+
+    // Use mainCategoryId for filtering by main category
+    const queryString = new URLSearchParams({ mainCategoryId, ...processedParams }).toString();
 
     return this.request(`/api/products?${queryString}`);
   }
@@ -305,6 +465,14 @@ class ApiService {
     });
   }
 
+  async getUserOrders(userId) {
+    return this.request(`/api/orders/user/${userId}`);
+  }
+
+  async getOrderById(orderId) {
+    return this.request(`/api/orders/user-order/${orderId}`);
+  }
+
   // Hero Section
   async getHeroSection() {
     return this.request('/api/hero-section');
@@ -338,6 +506,40 @@ class ApiService {
     if (!category) throw new Error('Category not found');
 
     return this.getProductsByCategory(category._id, params);
+  }
+
+  // Return/Exchange API methods
+  async createReturnRequest(returnData) {
+    return this.request('/api/returns', {
+      method: 'POST',
+      body: JSON.stringify(returnData),
+    });
+  }
+
+  async getUserReturns(status = null, type = null) {
+    const params = new URLSearchParams();
+    if (status) params.append('status', status);
+    if (type) params.append('type', type);
+
+    const queryString = params.toString();
+    return this.request(`/api/returns/my-returns${queryString ? `?${queryString}` : ''}`);
+  }
+
+  async getReturnById(returnId) {
+    return this.request(`/api/returns/${returnId}`);
+  }
+
+  async updateReturnRequest(returnId, updateData) {
+    return this.request(`/api/returns/${returnId}`, {
+      method: 'PUT',
+      body: JSON.stringify(updateData),
+    });
+  }
+
+  async cancelReturnRequest(returnId) {
+    return this.request(`/api/returns/${returnId}/cancel`, {
+      method: 'PATCH',
+    });
   }
 }
 

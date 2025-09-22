@@ -12,10 +12,11 @@ dotenv.config({ path: path.join(__dirname, '..', '.env') });
 const config = require(process.env.NODE_ENV === 'development' ? './config/development' : './config/production');
 const connectDatabase = require('./config/db');
 const { configureCloudinary } = require('./utils/cloudinary');
-const { uploadProduct, debugUpload, uploadCategory, uploadSingle } = require('./middlewares/upload.middleware');
+const { uploadProduct, uploadCategory, uploadSingle } = require('./middlewares/upload.middleware');
 
 // Routes
 const categoryRoutes = require('./routes/category.routes');
+const mainCategoryRoutes = require('./routes/mainCategory.routes');
 const productRoutes = require('./routes/product.routes');
 const kitchenProductRoutes = require('./routes/kitchenProduct.routes');
 const wardrobeProductRoutes = require('./routes/wardrobeProduct.routes');
@@ -25,6 +26,9 @@ const deliveryPartnerRoutes = require('./routes/deliveryPartner.routes');
 const orderRoutes = require('./routes/order.routes');
 const heroSectionRoutes = require('./routes/heroSection.routes');
 const leadRoutes = require('./routes/lead.routes');
+const userRoutes = require('./routes/user.routes');
+const returnRoutes = require('./routes/return.routes');
+const analyticsRoutes = require('./routes/analytics.routes');
 
 // Middlewares
 const { notFoundHandler, errorHandler } = require('./middlewares/error.middleware');
@@ -96,6 +100,12 @@ const corsOptions = {
 	optionsSuccessStatus: 200
 };
 
+// const corsOptions = {
+// 	origin: "http://localhost:3001", // Allows all origins
+// 	methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Specify allowed HTTP methods
+// 	allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
+// };
+
 app.use(cors(corsOptions));
 app.use(morgan('dev'));
 app.use(express.json({ limit: config.MAX_REQUEST_SIZE }));
@@ -113,74 +123,11 @@ app.get('/api/health', (req, res) => {
 	return res.json({ ok: true, service: 'homelineteam-backend', timestamp: new Date().toISOString() });
 });
 
-// CORS test endpoint
-app.get('/api/cors-test', (req, res) => {
-	res.json({
-		message: 'CORS is working!',
-		origin: req.get('origin'),
-		userAgent: req.get('user-agent'),
-		credentials: req.get('cookie') ? 'Cookies present' : 'No cookies',
-		timestamp: new Date().toISOString()
-	});
-});
 
-// Cookie test endpoint
-app.get('/api/cookie-test', (req, res) => {
-	const isProduction = process.env.NODE_ENV === 'production';
-	const origin = req.get('origin') || '';
-	const isVercel = origin.includes('vercel.app') || origin.includes('homelineteams.com');
 
-	const cookieOptions = {
-		httpOnly: true,
-		secure: isProduction,
-		sameSite: isVercel ? 'none' : 'lax',
-		maxAge: 60 * 1000, // 1 minute
-		path: '/',
-	};
 
-	res
-		.cookie('test-cookie', 'test-value', cookieOptions)
-		.json({
-			message: 'Cookie test',
-			origin,
-			isProduction,
-			isVercel,
-			cookieOptions,
-			existingCookies: req.cookies,
-			timestamp: new Date().toISOString()
-		});
-});
 
-// Kitchen products test endpoint
-app.get('/api/kitchen-products-test', (req, res) => {
-	res.json({
-		message: 'Kitchen products endpoint is working!',
-		origin: req.get('origin'),
-		timestamp: new Date().toISOString()
-	});
-});
 
-// File upload test endpoint
-app.post('/api/test-upload', debugUpload, uploadProduct, (req, res) => {
-	res.json({
-		message: 'Upload test successful',
-		files: req.files ? Object.keys(req.files) : 'No files',
-		body: req.body
-	});
-});
-
-// Hero section upload test endpoint
-app.post('/api/test-hero-upload', uploadSingle, (req, res) => {
-	res.json({
-		message: 'Hero upload test successful',
-		file: req.file ? {
-			fieldname: req.file.fieldname,
-			originalname: req.file.originalname,
-			mimetype: req.file.mimetype,
-			size: req.file.size
-		} : 'No file'
-	});
-});
 
 // Environment check endpoint
 app.get('/api/env-check', (req, res) => {
@@ -198,7 +145,9 @@ app.get('/api/env-check', (req, res) => {
 // API routes
 const authRoutes = require('./routes/auth.routes');
 app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/users', authLimiter, userRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/main-categories', mainCategoryRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/kitchen-products', kitchenProductRoutes);
 app.use('/api/wardrobe-products', wardrobeProductRoutes);
@@ -206,8 +155,11 @@ app.use('/api/1bhk-packages', oneBHKPackageRoutes);
 app.use('/api/2bhk-packages', twoBHKPackageRoutes);
 app.use('/api/delivery-partners', deliveryPartnerRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/returns', returnRoutes);
+
 app.use('/api/hero-section', heroSectionRoutes);
 app.use('/api/leads', leadRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // 404 and error handlers
 app.use(notFoundHandler);

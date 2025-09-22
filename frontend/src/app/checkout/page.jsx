@@ -1,9 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { useCart } from '@/contexts/CartContext';
+import { useUser } from '@/contexts/UserContext';
 import {
   ArrowLeft, CreditCard, Lock, Truck, Shield,
   MapPin, Phone, Mail, User, Building,
@@ -14,6 +16,8 @@ import { generateCheckoutMetadata } from '@/utils/metadata';
 
 export default function CheckoutPage() {
   const { cartItems, getCartTotal, clearCart } = useCart();
+  const { user, isAuthenticated, loading: authLoading } = useUser();
+  const router = useRouter();
   const [activeStep, setActiveStep] = useState(1);
   const [formData, setFormData] = useState({
     // Shipping Information
@@ -49,6 +53,34 @@ export default function CheckoutPage() {
   const tax = subtotal * 0.18; // 18% GST
   const total = subtotal + shipping + tax;
 
+  // Redirect to login if not authenticated (after loading is complete)
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      // Store current URL to redirect back after login
+      localStorage.setItem('redirectAfterLogin', '/checkout');
+      router.push('/auth/login');
+    }
+  }, [isAuthenticated, authLoading, router]);
+
+  // Populate form with user data if logged in
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const nameParts = user.name.split(' ');
+      setFormData(prev => ({
+        ...prev,
+        firstName: nameParts[0] || '',
+        lastName: nameParts.slice(1).join(' ') || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        // Use default address if available
+        address: user.addresses?.find(addr => addr.isDefault)?.address || '',
+        city: user.addresses?.find(addr => addr.isDefault)?.city || '',
+        state: user.addresses?.find(addr => addr.isDefault)?.state || '',
+        pincode: user.addresses?.find(addr => addr.isDefault)?.pincode || '',
+      }));
+    }
+  }, [isAuthenticated, user]);
+
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
@@ -60,6 +92,7 @@ export default function CheckoutPage() {
     try {
       // Prepare order data
       const orderData = {
+        userId: isAuthenticated ? user.id : null, // Include user ID if logged in
         customer: {
           name: `${formData.firstName} ${formData.lastName}`,
           email: formData.email,
@@ -131,6 +164,52 @@ export default function CheckoutPage() {
     );
   }
 
+  // Show loading spinner while checking authentication
+  if (authLoading) {
+    return (
+      <>
+        <Metadata {...generateCheckoutMetadata()} />
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading...</p>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Redirect to login if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <>
+        <Metadata {...generateCheckoutMetadata()} />
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center max-w-md mx-auto">
+            <div className="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <AlertCircle className="w-10 h-10 text-yellow-600" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Login Required</h1>
+            <p className="text-gray-600 mb-6">
+              You need to be logged in to place an order. Please sign in to continue with your purchase.
+            </p>
+            <div className="flex gap-4 justify-center">
+              <Link href="/auth/login" className="btn-primary px-6 py-3">
+                Sign In
+              </Link>
+              <Link href="/auth/register" className="btn-secondary px-6 py-3">
+                Create Account
+              </Link>
+            </div>
+            <p className="text-sm text-gray-500 mt-4">
+              Don't worry, your cart items will be saved for when you return.
+            </p>
+          </div>
+        </div>
+      </>
+    );
+  }
+
   const renderShippingForm = () => (
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -139,7 +218,7 @@ export default function CheckoutPage() {
             type="text"
             value={formData.firstName}
             onChange={(e) => handleInputChange('firstName', e.target.value)}
-            className="w-full px-4 pt-6 pb-2 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-300 bg-white/80 backdrop-blur-sm peer placeholder-transparent"
+            className="w-full px-4 pt-6 pb-2 border-2 text-gray-700 border-gray-200 rounded-xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-300 bg-white/80 backdrop-blur-sm peer placeholder-transparent"
             placeholder="Enter your first name"
             required
           />
@@ -152,7 +231,7 @@ export default function CheckoutPage() {
             type="text"
             value={formData.lastName}
             onChange={(e) => handleInputChange('lastName', e.target.value)}
-            className="w-full px-4 pt-6 pb-2 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-300 bg-white/80 backdrop-blur-sm peer placeholder-transparent"
+            className="w-full px-4 pt-6 pb-2 border-2 text-gray-700 border-gray-200 rounded-xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-300 bg-white/80 backdrop-blur-sm peer placeholder-transparent"
             placeholder="Enter your last name"
             required
           />
@@ -168,11 +247,11 @@ export default function CheckoutPage() {
             type="email"
             value={formData.email}
             onChange={(e) => handleInputChange('email', e.target.value)}
-            className="w-full px-4 pt-6 pb-2 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-300 bg-white/80 backdrop-blur-sm peer placeholder-transparent"
+            className="w-full px-4 pt-6 pb-2 border-2 border-gray-200 text-gray-700 rounded-xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-300 bg-white/80 backdrop-blur-sm peer placeholder-transparent"
             placeholder="your.email@example.com"
             required
           />
-          <label className="absolute left-4 top-2 text-xs font-semibold text-gray-500 transition-all duration-300 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-xs peer-focus:text-primary-600 peer-focus:font-bold">
+          <label className="absolute left-4 top-2 text-xs font-semibold text-gray-500 text-gray-700 transition-all duration-300 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-xs peer-focus:text-primary-600 peer-focus:font-bold">
             Email Address *
           </label>
         </div>
@@ -181,7 +260,7 @@ export default function CheckoutPage() {
             type="tel"
             value={formData.phone}
             onChange={(e) => handleInputChange('phone', e.target.value)}
-            className="w-full px-4 pt-6 pb-2 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-300 bg-white/80 backdrop-blur-sm peer placeholder-transparent"
+            className="w-full px-4 pt-6 pb-2 border-2 border-gray-200 text-gray-700 rounded-xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-300 bg-white/80 backdrop-blur-sm peer placeholder-transparent"
             placeholder="+91 98765 43210"
             required
           />
@@ -608,6 +687,11 @@ export default function CheckoutPage() {
         <Link href="/" className="btn-primary px-8 py-3">
           Continue Shopping
         </Link>
+        {isAuthenticated && (
+          <Link href="/my-orders" className="btn-secondary px-8 py-3">
+            View My Orders
+          </Link>
+        )}
         <Link href="/collections" className="btn-secondary px-8 py-3">
           Browse Products
         </Link>

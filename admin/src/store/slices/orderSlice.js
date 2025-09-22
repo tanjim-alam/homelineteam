@@ -33,6 +33,15 @@ export const updateOrderStatus = createAsyncThunk('orders/updateStatus', async (
   }
 });
 
+export const updatePaymentStatus = createAsyncThunk('orders/updatePaymentStatus', async ({ id, paymentStatus, notes }, { rejectWithValue }) => {
+  try {
+    const res = await api.patch(`/api/orders/${id}/payment-status`, { paymentStatus, notes });
+    return res.data;
+  } catch (err) {
+    return rejectWithValue(err.response?.data?.message || 'Payment status update failed');
+  }
+});
+
 const slice = createSlice({
   name: 'orders',
   initialState: {
@@ -88,6 +97,23 @@ const slice = createSlice({
         s.error = null;
       })
       .addCase(updateOrderStatus.rejected, (s, a) => {
+        s.updateLoading = false;
+        s.error = a.payload;
+      })
+
+      .addCase(updatePaymentStatus.pending, (s) => { s.updateLoading = true; s.error = null; })
+      .addCase(updatePaymentStatus.fulfilled, (s, a) => {
+        s.updateLoading = false;
+        const index = s.items.findIndex(item => item._id === a.payload._id);
+        if (index !== -1) {
+          s.items[index] = a.payload;
+        }
+        if (s.currentOrder && s.currentOrder._id === a.payload._id) {
+          s.currentOrder = a.payload;
+        }
+        s.error = null;
+      })
+      .addCase(updatePaymentStatus.rejected, (s, a) => {
         s.updateLoading = false;
         s.error = a.payload;
       });

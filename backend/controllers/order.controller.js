@@ -1,10 +1,12 @@
 const Order = require('../models/Order');
 const DeliveryPartner = require('../models/DeliveryPartner');
+const User = require('../models/User');
 
-// Create order (guest checkout)
+// Create order (guest checkout or user checkout)
 exports.createOrder = async (req, res, next) => {
 	try {
 		const {
+			userId,
 			customer,
 			items,
 			total,
@@ -42,6 +44,7 @@ exports.createOrder = async (req, res, next) => {
 		}
 
 		const orderData = {
+			user: userId || null,
 			customer,
 			items,
 			total,
@@ -82,6 +85,63 @@ exports.getOrders = async (req, res, next) => {
 	}
 };
 
+// Get user orders
+exports.getUserOrders = async (req, res, next) => {
+	try {
+		const { userId } = req.params;
+
+		if (!userId) {
+			return res.status(400).json({
+				success: false,
+				message: 'User ID is required'
+			});
+		}
+
+		const orders = await Order.find({ user: userId })
+			.populate('user', 'name email phone')
+			.sort({ createdAt: -1 });
+
+		res.json({
+			success: true,
+			orders
+		});
+	} catch (err) {
+		next(err);
+	}
+};
+
+// Get single user order by ID
+exports.getUserOrderById = async (req, res, next) => {
+	try {
+		const { id } = req.params;
+		const userId = req.user._id;
+
+		if (!id) {
+			return res.status(400).json({
+				success: false,
+				message: 'Order ID is required'
+			});
+		}
+
+		const order = await Order.findOne({ _id: id, user: userId })
+			.populate('user', 'name email phone');
+
+		if (!order) {
+			return res.status(404).json({
+				success: false,
+				message: 'Order not found or does not belong to you'
+			});
+		}
+
+		res.json({
+			success: true,
+			data: order
+		});
+	} catch (err) {
+		next(err);
+	}
+};
+
 // Update order status
 exports.updateOrderStatus = async (req, res, next) => {
 	try {
@@ -97,15 +157,105 @@ exports.updateOrderStatus = async (req, res, next) => {
 			return res.status(400).json({ message: 'Invalid status' });
 		}
 
+		// Find the order first to check current status and payment method
+		const existingOrder = await Order.findById(id);
+		if (!existingOrder) {
+			return res.status(404).json({ message: 'Order not found' });
+		}
+
+		// Prepare update object
+		const updateData = { status };
+
+		// Auto-update payment status based on order status
+		if (status === 'delivered') {
+			// If order is delivered, payment should be marked as paid (especially for COD)
+			if (existingOrder.paymentMethod === 'cod' || existingOrder.paymentStatus === 'pending') {
+				updateData.paymentStatus = 'paid';
+				updateData.paymentDetails = {
+					...existingOrder.paymentDetails,
+					paidAt: new Date(),
+					paymentMethod: existingOrder.paymentMethod
+				};
+			}
+		} else if (status === 'cancelled') {
+			// If order is cancelled, handle payment status based on current payment status
+			if (existingOrder.paymentStatus === 'paid') {
+				// If already paid, mark as refunded
+				updateData.paymentStatus = 'refunded';
+				updateData.paymentDetails = {
+					...existingOrder.paymentDetails,
+					refundedAt: new Date(),
+					refundReason: 'Order cancelled'
+				};
+			} else if (existingOrder.paymentStatus === 'pending') {
+				// If pending, mark as failed
+				updateData.paymentStatus = 'failed';
+				updateData.paymentDetails = {
+					...existingOrder.paymentDetails,
+					failedAt: new Date(),
+					failureReason: 'Order cancelled'
+				};
+			}
+		}
+
 		const order = await Order.findByIdAndUpdate(
 			id,
-			{ status },
+			updateData,
 			{ new: true, runValidators: true }
 		);
 
-		if (!order) {
+		res.json(order);
+	} catch (err) {
+		next(err);
+	}
+};
+
+// Update payment status manually
+exports.updatePaymentStatus = async (req, res, next) => {
+	try {
+		const { id } = req.params;
+		const { paymentStatus, notes } = req.body;
+
+		if (!paymentStatus) {
+			return res.status(400).json({ message: 'Payment status is required' });
+		}
+
+		const validPaymentStatuses = ['pending', 'paid', 'failed', 'refunded'];
+		if (!validPaymentStatuses.includes(paymentStatus)) {
+			return res.status(400).json({ message: 'Invalid payment status' });
+		}
+
+		const existingOrder = await Order.findById(id);
+		if (!existingOrder) {
 			return res.status(404).json({ message: 'Order not found' });
 		}
+
+		// Prepare update object
+		const updateData = { paymentStatus };
+
+		// Add timestamp and notes based on payment status
+		const now = new Date();
+		updateData.paymentDetails = {
+			...existingOrder.paymentDetails,
+			updatedAt: now,
+			adminNotes: notes || ''
+		};
+
+		if (paymentStatus === 'paid') {
+			updateData.paymentDetails.paidAt = now;
+		} else if (paymentStatus === 'refunded') {
+			updateData.paymentDetails.refundedAt = now;
+			updateData.paymentDetails.refundReason = notes || 'Manual refund by admin';
+		} else if (paymentStatus === 'failed') {
+			updateData.paymentDetails.failedAt = now;
+			updateData.paymentDetails.failureReason = notes || 'Payment failed';
+		}
+
+		const order = await Order.findByIdAndUpdate(
+			id,
+			updateData,
+			{ new: true, runValidators: true }
+		);
 
 		res.json(order);
 	} catch (err) {

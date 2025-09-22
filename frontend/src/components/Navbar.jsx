@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/contexts/CartContext';
+import { useUser } from '@/contexts/UserContext';
 import api from '@/services/api';
 import {
   Menu,
@@ -13,13 +14,16 @@ import {
   ShoppingCart,
   ChevronDown,
   ChevronRight,
-  Phone
+  Phone,
+  User,
+  LogOut
 } from 'lucide-react';
 import Image from 'next/image';
 
 export default function Navbar() {
   const router = useRouter();
   const { getCartCount, getWishlistCount } = useCart();
+  const { user, isAuthenticated, logout } = useUser();
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -31,7 +35,8 @@ export default function Navbar() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const data = await api.getCategories();
+        // Try to get hierarchical categories first
+        const data = await api.getHierarchicalCategories();
 
         // Handle different possible data structures
         let categoriesData = [];
@@ -44,28 +49,56 @@ export default function Navbar() {
         } else if (data && data.data && Array.isArray(data.data)) {
           // If API returns { data: [...] }
           categoriesData = data.data;
+        } else if (data && data.success && data.data && Array.isArray(data.data)) {
+          // If API returns { success: true, data: [...] }
+          categoriesData = data.data;
         }
 
-
-        if (categoriesData.length > 0) {
+        // Ensure categoriesData is an array
+        if (Array.isArray(categoriesData) && categoriesData.length > 0) {
           setCategories(categoriesData);
         } else {
-          // Fallback to default categories
-          setCategories([
-            { slug: 'curtains', name: 'Curtains' },
-            { slug: 'table-runners', name: 'Table Runners' },
-            { slug: 'cushions', name: 'Cushions' },
-            { slug: 'bedding', name: 'Bedding' }
-          ]);
+          // Fallback to main categories only
+          const mainCategoriesData = await api.getMainCategories();
+
+          if (Array.isArray(mainCategoriesData)) {
+            setCategories(mainCategoriesData);
+          } else if (mainCategoriesData && Array.isArray(mainCategoriesData.data)) {
+            setCategories(mainCategoriesData.data);
+          } else {
+            // Final fallback to default categories
+            setCategories([
+              { slug: 'curtains', name: 'Curtains', subcategories: [] },
+              { slug: 'table-runners', name: 'Table Runners', subcategories: [] },
+              { slug: 'cushions', name: 'Cushions', subcategories: [] },
+              { slug: 'bedding', name: 'Bedding', subcategories: [] }
+            ]);
+          }
         }
       } catch (error) {
-        // Fallback to default categories
-        setCategories([
-          { slug: 'curtains', name: 'Curtains' },
-          { slug: 'table-runners', name: 'Table Runners' },
-          { slug: 'cushions', name: 'Cushions' },
-          { slug: 'bedding', name: 'Bedding' }
-        ]);
+        // Fallback to main categories only
+        try {
+          const mainCategoriesData = await api.getMainCategories();
+          if (Array.isArray(mainCategoriesData)) {
+            setCategories(mainCategoriesData);
+          } else {
+            // Final fallback to default categories
+            setCategories([
+              { slug: 'curtains', name: 'Curtains', subcategories: [] },
+              { slug: 'table-runners', name: 'Table Runners', subcategories: [] },
+              { slug: 'cushions', name: 'Cushions', subcategories: [] },
+              { slug: 'bedding', name: 'Bedding', subcategories: [] }
+            ]);
+          }
+        } catch (fallbackError) {
+          // Final fallback to default categories
+          setCategories([
+            { slug: 'curtains', name: 'Curtains', subcategories: [] },
+            { slug: 'table-runners', name: 'Table Runners', subcategories: [] },
+            { slug: 'cushions', name: 'Cushions', subcategories: [] },
+            { slug: 'bedding', name: 'Bedding', subcategories: [] }
+          ]);
+        }
       } finally {
         setLoading(false);
       }
@@ -127,19 +160,94 @@ export default function Navbar() {
                 Collections
                 <ChevronDown className="w-4 h-4" />
               </button>
-              <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                <Link href="/collections" className="block px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-primary-600">
-                  All Collections
-                </Link>
-                {!loading && categories.map((category) => (
-                  <Link
-                    key={category._id || category.slug}
-                    href={`/collections/${category.slug}`}
-                    className="block px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-primary-600"
-                  >
-                    {category.name}
-                  </Link>
-                ))}
+              {/* Mega Menu */}
+              <div className="absolute top-full left-0 mt-2 w-[900px] bg-white border border-gray-200 rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 transform translate-y-2 group-hover:translate-y-0">
+                <div className="p-8">
+                  <div className="grid grid-cols-4 gap-8">
+                    {/* All Collections Link */}
+                    <div className="col-span-1">
+                      <Link
+                        href="/collections"
+                        className="block text-xl font-bold text-gray-900 hover:text-primary-600 transition-colors mb-6 pb-2 border-b border-gray-200"
+                      >
+                        All Collections
+                      </Link>
+                      <div className="space-y-3">
+                        <Link
+                          href="/collections"
+                          className="block text-sm text-gray-600 hover:text-primary-600 transition-colors hover:bg-gray-50 p-2 rounded-lg"
+                        >
+                          View All Products
+                        </Link>
+                        <Link
+                          href="/collections?featured=true"
+                          className="block text-sm text-gray-600 hover:text-primary-600 transition-colors hover:bg-gray-50 p-2 rounded-lg"
+                        >
+                          Featured Products
+                        </Link>
+                        <Link
+                          href="/collections?new=true"
+                          className="block text-sm text-gray-600 hover:text-primary-600 transition-colors hover:bg-gray-50 p-2 rounded-lg"
+                        >
+                          New Arrivals
+                        </Link>
+                      </div>
+                    </div>
+
+                    {/* Categories Grid */}
+                    <div className="col-span-3">
+                      {loading ? (
+                        <div className="flex items-center justify-center py-8">
+                          <div className="text-gray-500">Loading categories...</div>
+                        </div>
+                      ) : Array.isArray(categories) && categories.length > 0 ? (
+                        <div className="grid grid-cols-3 gap-8">
+                          {categories.map((mainCategory) => (
+                            <div key={mainCategory._id || mainCategory.slug} className="space-y-4">
+                              {/* Main Category */}
+                              <Link
+                                href={"#"}
+                                className="block text-lg font-semibold text-gray-900 hover:text-primary-600 transition-colors border-b border-gray-100"
+                              >
+                                {mainCategory.name}
+                              </Link>
+
+                              {/* Subcategories */}
+                              {mainCategory.subcategories && mainCategory.subcategories.length > 0 && (
+                                <div className="">
+                                  {/* <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                                    Subcategories
+                                  </div> */}
+                                  {mainCategory.subcategories.slice(0, 6).map((subcategory) => (
+                                    <Link
+                                      key={subcategory._id || subcategory.slug}
+                                      href={`/collections/${subcategory.slug}`}
+                                      className="block text-md text-gray-600 hover:text-primary-600 transition-colors hover:bg-gray-50 p-2 rounded-lg border-l-2 border-transparent hover:border-primary-200"
+                                    >
+                                      {subcategory.name}
+                                    </Link>
+                                  ))}
+                                  {mainCategory.subcategories.length > 6 && (
+                                    <Link
+                                      href={`/collections/${mainCategory.slug}`}
+                                      className="block text-sm text-primary-600 hover:text-primary-700 transition-colors font-medium hover:bg-primary-50 p-2 rounded-lg mt-2 border-l-2 border-primary-200"
+                                    >
+                                      View All {mainCategory.name} ({mainCategory.subcategories.length} total) →
+                                    </Link>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center py-8">
+                          <div className="text-gray-500">No categories available</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
             <Link href="/interior-design" className="text-gray-700 hover:text-primary-600 transition-colors">
@@ -165,6 +273,24 @@ export default function Navbar() {
               />
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             </form>
+
+            {/* User Authentication */}
+            {isAuthenticated ? (
+              <Link
+                href="/profile"
+                className="flex items-center gap-2 p-2 text-gray-600 hover:text-primary-600 transition-colors duration-200"
+              >
+                <User className="w-5 h-5" />
+              </Link>
+            ) : (
+              <Link
+                href="/auth/login"
+                className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-primary-600 transition-colors duration-200 border border-gray-300 rounded-lg hover:border-primary-300"
+              >
+                <User className="w-5 h-5" />
+                <span>Sign In</span>
+              </Link>
+            )}
 
             {/* Wishlist */}
             <Link href="/wishlist" className="p-2 text-gray-600 hover:text-primary-600 transition-colors duration-200 relative">
@@ -254,26 +380,53 @@ export default function Navbar() {
                   </button>
 
                   {/* Collections Dropdown Content */}
-                  <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isCollectionsOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+                  <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isCollectionsOpen ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'
                     }`}>
-                    <div className="pl-4 pb-2 space-y-1">
+                    <div className="pl-4 pb-4 space-y-4">
                       <Link
                         href="/collections"
                         onClick={handleNavLinkClick}
-                        className="block py-2 text-gray-600 hover:text-primary-600 transition-colors"
+                        className="block py-3 text-gray-700 hover:text-primary-600 transition-colors font-semibold text-lg border-b border-gray-200"
                       >
                         All Collections
                       </Link>
-                      {!loading && categories.map((category) => (
-                        <Link
-                          key={category._id || category.slug}
-                          href={`/collections/${category.slug}`}
-                          onClick={handleNavLinkClick}
-                          className="block py-2 text-gray-600 hover:text-primary-600 transition-colors"
-                        >
-                          {category.name}
-                        </Link>
-                      ))}
+                      {loading ? (
+                        <div className="pl-4 py-4 text-gray-500">Loading categories...</div>
+                      ) : Array.isArray(categories) && categories.length > 0 ? (
+                        categories.map((mainCategory) => (
+                          <div key={mainCategory._id || mainCategory.slug} className="space-y-3">
+                            {/* Main Category */}
+                            <Link
+                              href={`/collections/${mainCategory.slug}`}
+                              onClick={handleNavLinkClick}
+                              className="block py-2 text-gray-800 hover:text-primary-600 transition-colors font-semibold text-base"
+                            >
+                              {mainCategory.name}
+                            </Link>
+
+                            {/* Subcategories */}
+                            {mainCategory.subcategories && mainCategory.subcategories.length > 0 && (
+                              <div className="pl-4 space-y-2 mt-2">
+                                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-2">
+                                  Subcategories ({mainCategory.subcategories.length})
+                                </div>
+                                {mainCategory.subcategories.map((subcategory) => (
+                                  <Link
+                                    key={subcategory._id || subcategory.slug}
+                                    href={`/collections/${subcategory.slug}`}
+                                    onClick={handleNavLinkClick}
+                                    className="block py-2 text-gray-600 hover:text-primary-600 transition-colors text-sm hover:bg-gray-50 rounded-lg px-2 border-l-2 border-transparent hover:border-primary-200"
+                                  >
+                                    {subcategory.name}
+                                  </Link>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="pl-4 py-4 text-gray-500">No categories available</div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -304,6 +457,58 @@ export default function Navbar() {
                 </Link>
               </div>
 
+
+              {/* Mobile User Authentication */}
+              <div className="px-6 py-4 border-t border-gray-100">
+                {isAuthenticated ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                      <User className="w-5 h-5 text-gray-600" />
+                      <div>
+                        <p className="font-medium text-gray-900">{user?.name}</p>
+                        <p className="text-sm text-gray-600">{user?.email}</p>
+                      </div>
+                    </div>
+                    <Link
+                      href="/profile"
+                      onClick={handleNavLinkClick}
+                      className="w-full flex items-center gap-2 p-3 text-gray-600 hover:text-primary-600 hover:bg-gray-50 transition-colors rounded-lg"
+                    >
+                      <User className="w-5 h-5" />
+                      <span className="font-medium">My Profile</span>
+                    </Link>
+                    <button
+                      onClick={() => {
+                        logout();
+                        handleNavLinkClick();
+                      }}
+                      className="w-full flex items-center gap-2 p-3 text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors rounded-lg"
+                    >
+                      <LogOut className="w-5 h-5" />
+                      <span className="font-medium">Sign Out</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Link
+                      href="/auth/login"
+                      onClick={handleNavLinkClick}
+                      className="w-full flex items-center gap-2 p-3 text-gray-600 hover:text-primary-600 hover:bg-gray-50 transition-colors rounded-lg border border-gray-300"
+                    >
+                      <User className="w-5 h-5" />
+                      <span className="font-medium">Sign In</span>
+                    </Link>
+                    <Link
+                      href="/auth/register"
+                      onClick={handleNavLinkClick}
+                      className="w-full flex items-center gap-2 p-3 text-gray-600 hover:text-primary-600 hover:bg-gray-50 transition-colors rounded-lg border border-gray-300"
+                    >
+                      <User className="w-5 h-5" />
+                      <span className="font-medium">Register</span>
+                    </Link>
+                  </div>
+                )}
+              </div>
 
               {/* Mobile Cart & Wishlist */}
               <div className="px-6 py-4 border-t border-gray-100">
@@ -337,6 +542,7 @@ export default function Navbar() {
           </div>
         )}
       </div>
+
     </nav>
   );
 }

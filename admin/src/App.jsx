@@ -13,6 +13,8 @@ import OneBHKPackagePage from './pages/OneBHKPackagePage'
 import TwoBHKPackagePage from './pages/TwoBHKPackagePage'
 import DeliveryPartnerPage from './pages/DeliveryPartnerPage'
 import OrdersPage from './pages/OrdersPage'
+import UsersPage from './pages/UsersPage'
+import ReturnsPage from './pages/ReturnsPage'
 import HeroSectionPage from './pages/HeroSectionPage'
 import LeadsPage from './pages/LeadsPage'
 
@@ -46,6 +48,8 @@ function App() {
         <Route path="/2bhk-packages" element={<ProtectedRoute><TwoBHKPackagePage /></ProtectedRoute>} />
         <Route path="/delivery-partners" element={<ProtectedRoute><DeliveryPartnerPage /></ProtectedRoute>} />
         <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
+        <Route path="/users" element={<ProtectedRoute><UsersPage /></ProtectedRoute>} />
+        <Route path="/returns" element={<ProtectedRoute><ReturnsPage /></ProtectedRoute>} />
         <Route path="/hero-section" element={<ProtectedRoute><HeroSectionPage /></ProtectedRoute>} />
         <Route path="/leads" element={<ProtectedRoute><LeadsPage /></ProtectedRoute>} />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />

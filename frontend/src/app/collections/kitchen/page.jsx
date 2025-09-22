@@ -84,8 +84,6 @@ export default function KitchenCollectionPage() {
     }
 
     try {
-      console.log('Sending kitchen configuration:', kitchenConfig);
-      console.log('Selected product:', selectedProduct);
 
       // Prepare product details if a product was selected
       const productDetails = selectedProduct ? {
@@ -129,7 +127,6 @@ export default function KitchenCollectionPage() {
         alert('Failed to submit your request. Please try again or contact us directly.');
       }
     } catch (error) {
-      console.error('Lead submission error:', error);
       alert(`Failed to submit your request: ${error.message || 'Please try again or contact us directly.'}`);
     } finally {
       endSubmission(formId);

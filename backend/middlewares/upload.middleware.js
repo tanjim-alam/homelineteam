@@ -80,10 +80,6 @@ const uploadDocuments = multer({
   { name: 'gstCertificate', maxCount: 1 }
 ]);
 
-// 🔹 Debugging middleware (optional)
-const debugUpload = (req, res, next) => {
-  next();
-};
 
 module.exports = {
   uploadSingle,
@@ -93,5 +89,4 @@ module.exports = {
   uploadProduct,
   uploadProductText,
   uploadDocuments,
-  debugUpload
 };

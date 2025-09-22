@@ -4,9 +4,7 @@ const { uploadBuffer } = require('../utils/cloudinary');
 // Create category
 exports.createCategory = async (req, res, next) => {
   try {
-    const { name, slug, description, seoContent } = req.body;
-
-    // Create category debug
+    const { name, slug, description, seoContent, mainCategoryId, order } = req.body;
 
     // Handle metadata - support both nested object and flat fields
     let metaData = {};
@@ -72,11 +70,12 @@ exports.createCategory = async (req, res, next) => {
       description,
       image: imageUrl,
       metaData,
-      seoContent
+      seoContent,
+      mainCategoryId,
+      order: order || 0
     });
 
     // Category created successfully
-
     res.status(201).json(category);
   } catch (err) {
     next(err);
@@ -86,8 +85,94 @@ exports.createCategory = async (req, res, next) => {
 // Get all categories
 exports.getCategories = async (req, res, next) => {
   try {
-    const categories = await Category.find().sort({ createdAt: -1 });
+    const categories = await Category.find().populate('mainCategoryId', 'name slug order').sort({ createdAt: -1 });
     res.json(categories);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Get main categories only
+exports.getMainCategories = async (req, res, next) => {
+  try {
+    const MainCategory = require('../models/MainCategory');
+    const categories = await MainCategory.find({ isActive: true })
+      .sort({ order: 1, createdAt: -1 });
+    res.json(categories);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Get all subcategories with main category data
+exports.getSubcategories = async (req, res, next) => {
+  try {
+    const subcategories = await Category.find({
+      isActive: true
+    }).populate('mainCategoryId', 'name slug order').sort({ order: 1, createdAt: -1 });
+    res.json(subcategories);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Get all categories with populated main category data
+exports.getCategoriesWithMainCategory = async (req, res, next) => {
+  try {
+    const categories = await Category.find({
+      isActive: true
+    }).populate('mainCategoryId', 'name slug order').sort({ order: 1, createdAt: -1 });
+    res.json(categories);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Get subcategories by main category
+exports.getSubcategoriesByMainCategory = async (req, res, next) => {
+  try {
+    const { mainCategoryId } = req.params;
+    const subcategories = await Category.find({
+      mainCategoryId: mainCategoryId,
+      isActive: true
+    }).populate('mainCategoryId', 'name slug').sort({ order: 1, createdAt: -1 });
+    res.json(subcategories);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Get hierarchical categories (main categories with their subcategories)
+exports.getHierarchicalCategories = async (req, res, next) => {
+  try {
+    const MainCategory = require('../models/MainCategory');
+
+    // Step 1: Get all main categories from MainCategory model
+    const mainCategories = await MainCategory.find({ isActive: true })
+      .sort({ order: 1, createdAt: -1 });
+
+    // Step 2: For each main category, fetch its subcategories from Category model
+    const hierarchicalData = await Promise.all(
+      mainCategories.map(async (mainCategory) => {
+        // Get subcategories from Category model that reference this main category
+        const subcategories = await Category.find({
+          mainCategoryId: mainCategory._id
+        }).populate('mainCategoryId', 'name slug order').sort({ order: 1, createdAt: -1 });
+
+        return {
+          _id: mainCategory._id,
+          name: mainCategory.name,
+          slug: mainCategory.slug,
+          order: mainCategory.order,
+          isActive: mainCategory.isActive,
+          createdAt: mainCategory.createdAt,
+          updatedAt: mainCategory.updatedAt,
+          subcategories: subcategories
+        };
+      })
+    );
+
+    res.json(hierarchicalData);
   } catch (err) {
     next(err);
   }
@@ -241,11 +326,18 @@ exports.getCategoryFilterOptions = async (req, res, next) => {
 exports.updateCategory = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { name, slug, description, seoContent } = req.body;
+    const { name, slug, description, seoContent, mainCategoryId, order } = req.body;
 
-    // Update category debug
 
     const updates = { name, slug, description, seoContent };
+
+    // Add mainCategoryId and order to updates if provided
+    if (mainCategoryId !== undefined) {
+      updates.mainCategoryId = mainCategoryId;
+    }
+    if (order !== undefined) {
+      updates.order = order;
+    }
 
     // ✅ Handle nested metaData object (new approach)
     if (req.body.metaData && typeof req.body.metaData === 'object') {

@@ -44,7 +44,6 @@ export default function ContactPage() {
         alert('Failed to send your message. Please try again.');
       }
     } catch (error) {
-      console.error('Contact form submission error:', error);
       alert(`Failed to send your message: ${error.message || 'Please try again.'}`);
     } finally {
       setIsSubmitting(false);

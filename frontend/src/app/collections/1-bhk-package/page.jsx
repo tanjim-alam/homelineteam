@@ -55,8 +55,6 @@ export default function OneBHKPackagePage() {
     }
 
     try {
-      console.log('Sending 1BHK package configuration:', packageConfig);
-      console.log('Selected product:', selectedProduct);
 
       // Prepare product details if a product was selected
       const productDetails = selectedProduct ? {
@@ -99,7 +97,6 @@ export default function OneBHKPackagePage() {
         alert('Failed to submit your request. Please try again or contact us directly.');
       }
     } catch (e) {
-      console.error('Lead submission error:', e);
       alert('Failed to submit your request. Please try again or contact us directly.');
     } finally {
       endSubmission(formId);

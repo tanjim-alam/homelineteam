@@ -60,8 +60,6 @@ export default function WardrobesPage() {
     }
 
     try {
-      console.log('Sending wardrobe configuration:', wardrobeConfig);
-      console.log('Selected product:', selectedProduct);
 
       // Prepare product details if a product was selected
       const productDetails = selectedProduct ? {
@@ -105,7 +103,6 @@ export default function WardrobesPage() {
         alert('Failed to submit your request. Please try again or contact us directly.');
       }
     } catch (error) {
-      console.error('Lead submission error:', error);
       alert('Failed to submit your request. Please try again or contact us directly.');
     } finally {
       endSubmission(formId);

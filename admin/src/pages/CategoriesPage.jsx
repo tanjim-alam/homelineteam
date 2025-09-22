@@ -9,6 +9,7 @@ import {
   addVariantField,
   clearError
 } from '../store/slices/categorySlice'
+import api from '../api/client'
 import RichTextEditor from '../components/RichTextEditor'
 import {
   Plus,
@@ -36,6 +37,15 @@ export default function CategoriesPage() {
   const [showVariantFieldForm, setShowVariantFieldForm] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState(null)
   const [successMessage, setSuccessMessage] = useState('')
+  const [errorMessage, setErrorMessage] = useState('')
+  const [subCategories, setSubCategories] = useState([])
+  const [mainCategories, setMainCategories] = useState([])
+  const [mainCategoriesLoading, setMainCategoriesLoading] = useState(false)
+  const [showMainCategoryModal, setShowMainCategoryModal] = useState(false)
+  const [mainCategoryForm, setMainCategoryForm] = useState({
+    name: '',
+    slug: ''
+  })
 
   const [form, setForm] = useState({
     name: '',
@@ -44,6 +54,8 @@ export default function CategoriesPage() {
     image: null,
     imagePreview: null,
     seoContent: '',
+    order: 0,
+    mainCategoryId: '',
     metaData: {
       title: '',
       description: '',
@@ -73,8 +85,52 @@ export default function CategoriesPage() {
   })
 
   useEffect(() => {
-    dispatch(listCategories())
-  }, [dispatch])
+    fetchCategories()
+    fetchMainCategories()
+  }, [])
+
+  // Show all categories
+  const allCategories = subCategories
+
+
+
+
+  // Fetch all categories
+  const fetchCategories = async () => {
+    try {
+      const response = await api.get('/api/categories')
+
+      if (response.data) {
+        setSubCategories(response.data)
+      } else {
+        setSubCategories([])
+      }
+    } catch (error) {
+      setSubCategories([])
+    }
+  }
+
+  // Fetch main categories
+  const fetchMainCategories = async () => {
+    try {
+      setMainCategoriesLoading(true)
+      const response = await api.get('/api/main-categories')
+
+      if (response.data && response.data.success && Array.isArray(response.data.data)) {
+        setMainCategories(response.data.data)
+      } else {
+        setMainCategories([])
+      }
+    } catch (error) {
+      setMainCategories([])
+    } finally {
+      setMainCategoriesLoading(false)
+    }
+  }
+
+
+
+
 
   useEffect(() => {
     if (error) {
@@ -82,6 +138,47 @@ export default function CategoriesPage() {
       return () => clearTimeout(timer)
     }
   }, [error, dispatch])
+
+  const createCategory = async (formData) => {
+    try {
+      const response = await api.post('/api/categories', formData)
+
+      if (response.data) {
+        // Refresh categories
+        await fetchCategories()
+        return response.data
+      } else {
+        setErrorMessage('Failed to create category')
+        setTimeout(() => setErrorMessage(''), 5000)
+        throw new Error('Failed to create category')
+      }
+    } catch (error) {
+      setErrorMessage('Error creating category: ' + (error.response?.data?.message || error.message))
+      setTimeout(() => setErrorMessage(''), 5000)
+      throw error
+    }
+  }
+
+  // Create main category
+  const createMainCategory = async (mainCategoryData) => {
+    try {
+      const response = await api.post('/api/main-categories', mainCategoryData)
+
+      if (response.data && response.data.success) {
+        // Refresh main categories
+        await fetchMainCategories()
+        return response.data
+      } else {
+        setErrorMessage('Failed to create main category')
+        setTimeout(() => setErrorMessage(''), 5000)
+        throw new Error('Failed to create main category')
+      }
+    } catch (error) {
+      setErrorMessage('Error creating main category: ' + (error.response?.data?.message || error.message))
+      setTimeout(() => setErrorMessage(''), 5000)
+      throw error
+    }
+  }
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -93,6 +190,9 @@ export default function CategoriesPage() {
     formData.append('slug', form.slug)
     formData.append('description', form.description)
     formData.append('seoContent', form.seoContent)
+    formData.append('order', form.order.toString())
+    formData.append('mainCategoryId', form.mainCategoryId)
+    formData.append('type', 'sub')
 
     // Append SEO metadata
     formData.append('metaData[title]', form.metaData.title || '')
@@ -121,7 +221,8 @@ export default function CategoriesPage() {
           // Error handling is done by Redux
         })
     } else {
-      dispatch(createCategory(formData))
+      // Create category using new endpoint
+      createCategory(formData)
         .then(() => {
           setSuccessMessage('Category created successfully!')
           setTimeout(() => {
@@ -131,7 +232,7 @@ export default function CategoriesPage() {
           }, 2000)
         })
         .catch(() => {
-          // Error handling is done by Redux
+          // Error handling is done in createCategory
         })
     }
   }
@@ -145,6 +246,8 @@ export default function CategoriesPage() {
       image: null,
       imagePreview: category.image || null, // Set existing image as preview
       seoContent: category.seoContent || '',
+      order: category.order || 0,
+      mainCategoryId: category.mainCategoryId || '',
       metaData: {
         title: category.metaData?.title || '',
         description: category.metaData?.description || '',
@@ -210,6 +313,8 @@ export default function CategoriesPage() {
       image: null,
       imagePreview: null,
       seoContent: '',
+      order: 0,
+      mainCategoryId: '',
       metaData: {
         title: '',
         description: '',
@@ -261,6 +366,46 @@ export default function CategoriesPage() {
     setForm({ ...form, slug })
   }
 
+  // Handle main category creation
+  const handleMainCategorySubmit = async (e) => {
+    e.preventDefault()
+
+    if (!mainCategoryForm.name.trim()) {
+      setErrorMessage('Main category name is required')
+      setTimeout(() => setErrorMessage(''), 5000)
+      return
+    }
+
+    try {
+      const mainCategoryData = {
+        name: mainCategoryForm.name,
+        slug: mainCategoryForm.slug || mainCategoryForm.name.toLowerCase().replace(/\s+/g, '-')
+      }
+
+      await createMainCategory(mainCategoryData)
+
+      setSuccessMessage('Main category created successfully!')
+      setTimeout(() => setSuccessMessage(''), 3000)
+
+      // Reset form and close modal
+      setMainCategoryForm({ name: '', slug: '' })
+      setShowMainCategoryModal(false)
+    } catch (error) {
+      // Error handling is done in createMainCategory
+    }
+  }
+
+  // Generate slug for main category
+  const generateMainCategorySlug = (name) => {
+    const slug = name
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/[\s_-]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+    setMainCategoryForm({ ...mainCategoryForm, slug })
+  }
+
   return (
     <div className="space-y-8">
       {/* Header Section */}
@@ -269,15 +414,17 @@ export default function CategoriesPage() {
           <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
             Categories
           </h1>
-          <p className="text-lg text-gray-600 mt-2">Manage your product categories and organize your inventory</p>
+          <p className="text-lg text-gray-600 mt-2">Manage your product categories - add, edit, and organize your categories</p>
         </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-2xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
-        >
-          <Plus className="w-5 h-5" />
-          <span>Add Category</span>
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setShowForm(true)}
+            className="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-2xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Create Category</span>
+          </button>
+        </div>
       </div>
 
       {/* Success Alert */}
@@ -288,6 +435,19 @@ export default function CategoriesPage() {
             <div>
               <h3 className="text-sm font-semibold text-green-800">Success</h3>
               <p className="text-sm text-green-700 mt-1">{successMessage}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Error Message Alert */}
+      {errorMessage && (
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-6 mb-6">
+          <div className="flex items-center space-x-3">
+            <AlertCircle className="h-6 w-6 text-red-500 flex-shrink-0" />
+            <div>
+              <h3 className="text-sm font-semibold text-red-800">Error</h3>
+              <p className="text-sm text-red-700 mt-1">{errorMessage}</p>
             </div>
           </div>
         </div>
@@ -367,6 +527,49 @@ export default function CategoriesPage() {
                     required
                   />
                   <p className="text-xs text-gray-500 mt-1">URL-friendly version of the category name</p>
+                </div>
+
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">Main Category *</label>
+                  <div className="flex gap-2">
+                    <select
+                      value={form.mainCategoryId}
+                      onChange={(e) => setForm({ ...form, mainCategoryId: e.target.value })}
+                      className="flex-1 border border-gray-200 rounded-2xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white"
+                      required
+                      disabled={mainCategoriesLoading}
+                    >
+                      <option value="">
+                        {mainCategoriesLoading ? 'Loading main categories...' : 'Select a main category'}
+                      </option>
+                      {Array.isArray(mainCategories) && mainCategories.map((mainCategory) => (
+                        <option key={mainCategory._id} value={mainCategory._id}>
+                          {mainCategory.name}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      onClick={() => setShowMainCategoryModal(true)}
+                      className="px-4 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-2xl hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                    >
+                      <Plus className="w-5 h-5" />
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Select existing main category or create a new one</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">Display Order</label>
+                  <input
+                    type="number"
+                    value={form.order}
+                    onChange={(e) => setForm({ ...form, order: parseInt(e.target.value) || 0 })}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    min="0"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Lower numbers appear first in lists</p>
                 </div>
 
                 <div>
@@ -522,6 +725,78 @@ export default function CategoriesPage() {
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* Main Category Creation Modal */}
+      {showMainCategoryModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 p-8 w-full max-w-md">
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-green-100 to-emerald-100 rounded-xl flex items-center justify-center">
+                  <FolderOpen className="w-5 h-5 text-green-600" />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900">Create Main Category</h2>
+              </div>
+              <button
+                onClick={() => {
+                  setShowMainCategoryModal(false)
+                  setMainCategoryForm({ name: '', slug: '' })
+                }}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <form onSubmit={handleMainCategorySubmit} className="space-y-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-3">Main Category Name *</label>
+                <input
+                  type="text"
+                  value={mainCategoryForm.name}
+                  onChange={(e) => setMainCategoryForm({ ...mainCategoryForm, name: e.target.value })}
+                  onBlur={() => generateMainCategorySlug(mainCategoryForm.name)}
+                  className="w-full border border-gray-200 rounded-2xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white"
+                  placeholder="e.g., WINDOW SOLUTIONS"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-3">Slug *</label>
+                <input
+                  type="text"
+                  value={mainCategoryForm.slug}
+                  onChange={(e) => setMainCategoryForm({ ...mainCategoryForm, slug: e.target.value })}
+                  className="w-full border border-gray-200 rounded-2xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white"
+                  placeholder="e.g., window-solutions"
+                  required
+                />
+                <p className="text-xs text-gray-500 mt-1">URL-friendly version of the main category name</p>
+              </div>
+
+              <div className="flex justify-end space-x-4 pt-6 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowMainCategoryModal(false)
+                    setMainCategoryForm({ name: '', slug: '' })
+                  }}
+                  className="px-6 py-3 border-2 border-gray-200 rounded-2xl text-gray-700 hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-2xl hover:from-green-700 hover:to-emerald-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105"
+                >
+                  Create Main Category
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 
@@ -809,6 +1084,8 @@ export default function CategoriesPage() {
         </div>
       )}
 
+
+
       {/* Categories List */}
       <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
         {loading ? (
@@ -826,24 +1103,26 @@ export default function CategoriesPage() {
               ))}
             </div>
           </div>
-        ) : items.length === 0 ? (
+        ) : allCategories.length === 0 ? (
           <div className="p-12 text-center">
             <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
               <FolderOpen className="w-10 h-10 text-gray-400" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">No categories found</h3>
-            <p className="text-gray-600 mb-6">Get started by creating your first product category.</p>
-            <button
-              onClick={() => setShowForm(true)}
-              className="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-2xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200"
-            >
-              <Plus className="w-5 h-5" />
-              <span>Create Category</span>
-            </button>
+            <p className="text-gray-600 mb-6">Start by creating your first category.</p>
+            <div className="flex gap-4 justify-center">
+              <button
+                onClick={() => setShowForm(true)}
+                className="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-2xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200"
+              >
+                <Plus className="w-5 h-5" />
+                <span>Create Category</span>
+              </button>
+            </div>
           </div>
         ) : (
           <div className="divide-y divide-gray-100">
-            {items.map((category) => (
+            {allCategories.length > 0 ? allCategories.map((category) => (
               <div key={category._id} className="p-8 hover:bg-gray-50 transition-colors">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -862,8 +1141,17 @@ export default function CategoriesPage() {
                         </div>
                       )}
                       <div>
-                        <h3 className="text-2xl font-bold text-gray-900 mb-1">{category.name}</h3>
-                        <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">/{category.slug}</span>
+                        <div className="flex items-center space-x-2 mb-1">
+                          <h3 className="text-2xl font-bold text-gray-900">{category.name}</h3>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">/{category.slug}</span>
+                          {category.mainCategoryId && (
+                            <span className="text-sm text-blue-600 bg-blue-100 px-3 py-1 rounded-full">
+                              Main: {category.mainCategoryId.name || 'Unknown'}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
 
@@ -988,10 +1276,15 @@ export default function CategoriesPage() {
                   </div>
                 </div>
               </div>
-            ))}
+            )) : (
+              <div className="p-8 text-center">
+                <p className="text-gray-500">No categories found. Create your first category!</p>
+              </div>
+            )}
           </div>
         )}
       </div>
+
     </div>
   )
 }

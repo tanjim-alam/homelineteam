@@ -205,7 +205,6 @@ exports.updateProduct = async (req, res, next) => {
             }
         }
 
-        // Update product debug
 
         // Handle metadata - support both nested object and flat fields
         if (req.body.metaData && typeof req.body.metaData === 'object') {
@@ -300,6 +299,7 @@ exports.getProducts = async (req, res, next) => {
         const {
             categorySlug,
             categoryId,
+            subcategoryId,
             featured,
             limit,
             sort,
@@ -320,6 +320,7 @@ exports.getProducts = async (req, res, next) => {
 
         // Basic category filtering
         if (categoryId) filter.categoryId = categoryId;
+        if (subcategoryId) filter.categoryId = subcategoryId;
         if (categorySlug) {
             const category = await Category.findOne({ slug: categorySlug });
             if (category) filter.categoryId = category._id;
@@ -372,7 +373,6 @@ exports.getProducts = async (req, res, next) => {
                 const availabilityArray = JSON.parse(availability);
                 if (Array.isArray(availabilityArray) && availabilityArray.length > 0) {
                     // For now, we'll skip availability filtering until stock system is implemented
-                    // TODO: Implement proper stock-based availability filtering
                 }
             } catch (e) {
             }

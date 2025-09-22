@@ -54,6 +54,14 @@ const categorySchema = new mongoose.Schema(
 		metaData: metaSchema,
 		customFields: [customFieldSchema],
 		variantFields: [variantFieldSchema], // New: Define variant structure per category
+		// Reference to main category
+		mainCategoryId: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'MainCategory',
+			required: true
+		},
+		order: { type: Number, default: 0 }, // For display ordering
+		isActive: { type: Boolean, default: true }
 	},
 	{ timestamps: true }
 );

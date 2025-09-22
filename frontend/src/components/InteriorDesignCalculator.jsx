@@ -148,7 +148,6 @@ const InteriorDesignCalculator = () => {
       return;
     }
 
-    console.log('Starting lead submission...', submissionId);
     try {
       // Fetch sample products for interior design
       const sampleProducts = await api.getProducts({ limit: 3, featured: true });
@@ -195,7 +194,6 @@ const InteriorDesignCalculator = () => {
         alert(response.message || 'Failed to submit your request. Please try again or contact us directly.');
       }
     } catch (error) {
-      console.error('Lead submission error:', error);
       const errorMessage = error.message || error.error || 'Please try again or contact us directly.';
       alert(`Failed to submit your request: ${errorMessage}`);
     } finally {

@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const Admin = require('../models/Admin');
 
 function signToken(admin) {
-	const payload = { sub: admin._id, role: admin.role, email: admin.email };
+	const payload = { sub: admin._id, role: admin.role, email: admin.email, name: admin.name };
 	return jwt.sign(payload, process.env.JWT_SECRET || 'dev_secret', { expiresIn: '7d' });
 }
 

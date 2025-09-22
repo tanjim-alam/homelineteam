@@ -4,11 +4,13 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useContext } from 'react';
 import { CartContext } from '@/contexts/CartContext';
-import { Home, Search, Grid, ShoppingCart } from 'lucide-react';
+import { useUser } from '@/contexts/UserContext';
+import { Home, Search, Grid, ShoppingCart, User } from 'lucide-react';
 
 export default function BottomNavbar() {
   const pathname = usePathname();
   const { cartItems } = useContext(CartContext);
+  const { isAuthenticated } = useUser();
 
   const navItems = [
     {
@@ -35,6 +37,12 @@ export default function BottomNavbar() {
       icon: ShoppingCart,
       active: pathname === '/cart',
       badge: cartItems.length > 0 ? cartItems.length : null
+    },
+    {
+      name: isAuthenticated ? 'Profile' : 'Sign In',
+      href: isAuthenticated ? '/profile' : '/auth/login',
+      icon: User,
+      active: isAuthenticated ? pathname.startsWith('/profile') : pathname.startsWith('/auth')
     }
   ];
 
@@ -48,8 +56,8 @@ export default function BottomNavbar() {
               key={item.name}
               href={item.href}
               className={`flex flex-col items-center justify-center w-full py-1 px-1 transition-all duration-300 ${item.active
-                  ? 'text-primary-600'
-                  : 'text-gray-500 hover:text-gray-700'
+                ? 'text-primary-600'
+                : 'text-gray-500 hover:text-gray-700'
                 }`}
             >
               <div className="relative">

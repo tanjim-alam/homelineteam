@@ -14,6 +14,12 @@ const orderItemSchema = new mongoose.Schema(
 
 const orderSchema = new mongoose.Schema(
 	{
+		// User reference (optional for guest checkout)
+		user: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'User',
+			required: false
+		},
 		customer: {
 			name: { type: String, required: true },
 			email: { type: String },

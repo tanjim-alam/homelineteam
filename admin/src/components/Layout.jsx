@@ -15,7 +15,8 @@ import {
   Settings,
   Image,
   ChefHat,
-  Truck
+  Truck,
+  RefreshCw
 } from 'lucide-react'
 
 const Sidebar = ({ isOpen, onClose }) => {
@@ -32,6 +33,8 @@ const Sidebar = ({ isOpen, onClose }) => {
     { path: '/2bhk-packages', label: '2BHK Packages', icon: Home },
     { path: '/delivery-partners', label: 'Delivery Partners', icon: Truck },
     { path: '/orders', label: 'Orders', icon: ShoppingCart },
+    { path: '/users', label: 'Users', icon: User },
+    { path: '/returns', label: 'Returns & Exchanges', icon: RefreshCw },
     { path: '/hero-section', label: 'Hero Section', icon: Image },
     { path: '/leads', label: 'Leads', icon: User },
   ]
@@ -125,6 +128,8 @@ const Header = ({ onMenuClick }) => {
       '/2bhk-packages': '2BHK Packages',
       '/delivery-partners': 'Delivery Partners',
       '/orders': 'Orders',
+      '/users': 'Users',
+      '/returns': 'Returns & Exchanges',
       '/hero-section': 'Hero Section',
       '/leads': 'Leads'
     }

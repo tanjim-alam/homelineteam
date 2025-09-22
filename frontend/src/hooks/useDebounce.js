@@ -22,10 +22,9 @@ export function useSubmissionLock() {
 
   const startSubmission = () => {
     if (isSubmitting) {
-      console.log('Already submitting, ignoring duplicate request');
       return false;
     }
-    
+
     const id = `sub_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     setSubmissionId(id);
     setIsSubmitting(true);

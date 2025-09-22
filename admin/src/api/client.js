@@ -2,7 +2,6 @@ import axios from 'axios';
 import config from '../config/config';
 
 
-// "https://homelineteam-production.up.railway.app
 const api = axios.create({
   baseURL: config.API_BASE_URL || "https://homelineteam-production.up.railway.app",
   withCredentials: true,
@@ -42,9 +41,8 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    // Log authentication errors for debugging
+    // Handle authentication errors
     if (error.response?.status === 401) {
-      console.log('Authentication error - clearing stored token');
       localStorage.removeItem('auth_token');
     }
     return Promise.reject(error);

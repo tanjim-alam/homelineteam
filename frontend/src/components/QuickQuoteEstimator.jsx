@@ -85,7 +85,6 @@ export default function QuickQuoteEstimator({ className = '' }) {
         alert('Failed to submit request. Please try again.');
       }
     } catch (err) {
-      console.error('Lead submission error:', err);
       alert(`Failed to submit request: ${err.message || 'Please try again.'}`);
     } finally {
       endSubmission(formId);

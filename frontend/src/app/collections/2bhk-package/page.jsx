@@ -92,8 +92,6 @@ export default function TwoBHKPackagePage() {
     }
 
     try {
-      console.log('Sending 2BHK package configuration:', packageConfig);
-      console.log('Selected product:', selectedProduct);
 
       // Prepare product details if a product was selected
       const productDetails = selectedProduct ? {
@@ -139,7 +137,6 @@ export default function TwoBHKPackagePage() {
         alert('Failed to submit your request. Please try again or contact us directly.');
       }
     } catch (error) {
-      console.error('Lead submission error:', error);
       alert('Failed to submit your request. Please try again or contact us directly.');
     } finally {
       endSubmission(formId);

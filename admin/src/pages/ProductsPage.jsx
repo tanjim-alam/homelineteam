@@ -7,6 +7,8 @@ import apiClient from '../api/client';
 export default function ProductsPage() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [mainCategories, setMainCategories] = useState([]);
+  const [subcategories, setSubcategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
@@ -16,7 +18,8 @@ export default function ProductsPage() {
   const [successMessage, setSuccessMessage] = useState('');
 
   const [form, setForm] = useState({
-    categoryId: '',
+    subcategoryId: '',
+    mainCategoryId: '',
     name: '',
     slug: '',
     basePrice: '',
@@ -92,6 +95,7 @@ export default function ProductsPage() {
 
   const fetchCategories = async () => {
     try {
+      // Fetch all categories
       const response = await apiClient.get('/api/categories');
       let data = response;
       if (response && response.data) {
@@ -99,19 +103,48 @@ export default function ProductsPage() {
       }
       if (Array.isArray(data)) {
         setCategories(data);
+        setMainCategories(data.filter(cat => cat.type === 'main'));
+        setSubcategories(data.filter(cat => cat.type === 'sub'));
       } else if (data && typeof data === 'object') {
         if (Array.isArray(data.categories)) {
           setCategories(data.categories);
+          setMainCategories(data.categories.filter(cat => cat.type === 'main'));
+          setSubcategories(data.categories.filter(cat => cat.type === 'sub'));
         } else if (Array.isArray(data.items)) {
           setCategories(data.items);
+          setMainCategories(data.items.filter(cat => cat.type === 'main'));
+          setSubcategories(data.items.filter(cat => cat.type === 'sub'));
         } else {
           setCategories([]);
+          setMainCategories([]);
+          setSubcategories([]);
         }
       } else {
         setCategories([]);
+        setMainCategories([]);
+        setSubcategories([]);
       }
     } catch (err) {
       setCategories([]);
+      setMainCategories([]);
+      setSubcategories([]);
+    }
+  };
+
+  const fetchSubcategories = async (mainCategoryId) => {
+    try {
+      const response = await apiClient.get(`/api/categories/subcategories/${mainCategoryId}`);
+      let data = response;
+      if (response && response.data) {
+        data = response.data;
+      }
+      if (Array.isArray(data)) {
+        setSubcategories(data);
+      } else {
+        setSubcategories([]);
+      }
+    } catch (err) {
+      setSubcategories([]);
     }
   };
 
@@ -124,6 +157,30 @@ export default function ProductsPage() {
       }
       setSelectedCategory(data);
     } catch (err) {
+      setSelectedCategory(null);
+    }
+  };
+
+  const handleMainCategoryChange = (mainCategoryId) => {
+    setForm({
+      ...form,
+      mainCategoryId,
+      subcategoryId: '', // Reset subcategory when main category changes
+      dynamicFields: {}
+    });
+    if (mainCategoryId) {
+      fetchSubcategories(mainCategoryId);
+    } else {
+      setSubcategories([]);
+      setSelectedCategory(null);
+    }
+  };
+
+  const handleSubcategoryChange = (subcategoryId) => {
+    setForm({ ...form, subcategoryId, dynamicFields: {} });
+    if (subcategoryId) {
+      fetchCategoryDetails(subcategoryId);
+    } else {
       setSelectedCategory(null);
     }
   };
@@ -229,7 +286,8 @@ export default function ProductsPage() {
 
   const resetForm = () => {
     setForm({
-      categoryId: '',
+      subcategoryId: '',
+      mainCategoryId: '',
       name: '',
       slug: '',
       basePrice: '',
@@ -287,7 +345,8 @@ export default function ProductsPage() {
 
     try {
       const formData = new FormData();
-      formData.append('categoryId', form.categoryId);
+      formData.append('subcategoryId', form.subcategoryId);
+      formData.append('mainCategoryId', form.mainCategoryId);
       formData.append('name', form.name);
       formData.append('slug', form.slug);
       formData.append('basePrice', form.basePrice);
@@ -353,7 +412,8 @@ export default function ProductsPage() {
   const handleEdit = (product) => {
     setEditingProduct(product);
     setForm({
-      categoryId: product.categoryId,
+      subcategoryId: product.subcategoryId || '',
+      mainCategoryId: product.mainCategoryId || '',
       name: product.name,
       slug: product.slug,
       basePrice: product.basePrice || product.price || '',
@@ -377,8 +437,13 @@ export default function ProductsPage() {
     // Store existing images separately
     setExistingImages(product.mainImages || []);
 
-    if (product.categoryId) {
-      fetchCategoryDetails(product.categoryId);
+    // Load subcategories if main category is set
+    if (product.mainCategoryId) {
+      fetchSubcategories(product.mainCategoryId);
+    }
+
+    if (product.subcategoryId) {
+      fetchCategoryDetails(product.subcategoryId);
     }
 
     setShowForm(true);
@@ -700,22 +765,43 @@ export default function ProductsPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <label className="block text-sm font-semibold text-gray-700">
-                        Category *
+                        Main Category *
                       </label>
                       <select
-                        value={form.categoryId}
-                        onChange={(e) => handleCategoryChange(e.target.value)}
+                        value={form.mainCategoryId}
+                        onChange={(e) => handleMainCategoryChange(e.target.value)}
                         className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 bg-white"
                         required
                       >
-                        <option value="">Choose a category</option>
-                        {categories.map((category) => (
+                        <option value="">Choose a main category</option>
+                        {mainCategories.map((category) => (
                           <option key={category._id} value={category._id}>
                             {category.name}
                           </option>
                         ))}
                       </select>
-                      <p className="text-xs text-gray-500">Select the category that best fits your product</p>
+                      <p className="text-xs text-gray-500">Select the main category for your product</p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-sm font-semibold text-gray-700">
+                        Subcategory *
+                      </label>
+                      <select
+                        value={form.subcategoryId}
+                        onChange={(e) => handleSubcategoryChange(e.target.value)}
+                        className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 bg-white"
+                        required
+                        disabled={!form.mainCategoryId}
+                      >
+                        <option value="">Choose a subcategory</option>
+                        {subcategories.map((category) => (
+                          <option key={category._id} value={category._id}>
+                            {category.name}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="text-xs text-gray-500">Select the specific subcategory for your product</p>
                     </div>
 
                     <div className="space-y-2">

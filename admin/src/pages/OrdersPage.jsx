@@ -4,10 +4,11 @@ import {
   listOrders,
   getOrderById,
   updateOrderStatus,
+  updatePaymentStatus,
   clearError
 } from '../store/slices/orderSlice'
 import apiClient from '../api/client'
-import { Truck, Package, Clock, CheckCircle, XCircle, User, Phone, Mail, RefreshCw } from 'lucide-react'
+import { Truck, Package, Clock, CheckCircle, XCircle, User, Phone, Mail, RefreshCw, CreditCard, DollarSign, Calendar, MapPin } from 'lucide-react'
 
 export default function OrdersPage() {
   const dispatch = useDispatch()
@@ -30,6 +31,11 @@ export default function OrdersPage() {
     estimatedDelivery: '',
     notes: ''
   })
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [paymentForm, setPaymentForm] = useState({
+    paymentStatus: '',
+    notes: ''
+  })
 
   useEffect(() => {
     dispatch(listOrders())
@@ -44,6 +50,29 @@ export default function OrdersPage() {
 
   const handleStatusUpdate = (orderId, newStatus) => {
     dispatch(updateOrderStatus({ id: orderId, status: newStatus }))
+  }
+
+  const handlePaymentStatusUpdate = (orderId, paymentStatus, notes = '') => {
+    dispatch(updatePaymentStatus({ id: orderId, paymentStatus, notes }))
+  }
+
+  const handleOpenPaymentModal = (order) => {
+    setSelectedOrder(order)
+    setPaymentForm({
+      paymentStatus: order.paymentStatus || 'pending',
+      notes: ''
+    })
+    setShowPaymentModal(true)
+  }
+
+  const handlePaymentSubmit = (e) => {
+    e.preventDefault()
+    if (selectedOrder && paymentForm.paymentStatus) {
+      handlePaymentStatusUpdate(selectedOrder._id, paymentForm.paymentStatus, paymentForm.notes)
+      setShowPaymentModal(false)
+      setSelectedOrder(null)
+      setPaymentForm({ paymentStatus: '', notes: '' })
+    }
   }
 
   const handleRefresh = () => {
@@ -96,16 +125,37 @@ export default function OrdersPage() {
   const getStatusColor = (status) => {
     const statusConfig = {
       pending: 'bg-yellow-100 text-yellow-800',
-      processing: 'bg-blue-100 text-blue-800',
-      completed: 'bg-green-100 text-green-800',
+      confirmed: 'bg-blue-100 text-blue-800',
+      delivered: 'bg-green-100 text-green-800',
       cancelled: 'bg-red-100 text-red-800',
       shipped: 'bg-purple-100 text-purple-800'
     }
     return statusConfig[status] || statusConfig.pending
   }
 
+  const getPaymentMethodInfo = (paymentMethod) => {
+    const methods = {
+      cod: { name: 'Cash on Delivery', icon: '💰', color: 'bg-green-100 text-green-800' },
+      card: { name: 'Credit/Debit Card', icon: '💳', color: 'bg-blue-100 text-blue-800' },
+      upi: { name: 'UPI', icon: '📱', color: 'bg-purple-100 text-purple-800' },
+      netbanking: { name: 'Net Banking', icon: '🏦', color: 'bg-indigo-100 text-indigo-800' },
+      wallet: { name: 'Digital Wallet', icon: '👛', color: 'bg-orange-100 text-orange-800' }
+    }
+    return methods[paymentMethod] || { name: paymentMethod?.toUpperCase() || 'Unknown', icon: '❓', color: 'bg-gray-100 text-gray-800' }
+  }
+
+  const getPaymentStatusColor = (status) => {
+    const statusConfig = {
+      pending: 'bg-yellow-100 text-yellow-800',
+      paid: 'bg-green-100 text-green-800',
+      failed: 'bg-red-100 text-red-800',
+      refunded: 'bg-gray-100 text-gray-800'
+    }
+    return statusConfig[status] || statusConfig.pending
+  }
+
   const getStatusOptions = (currentStatus) => {
-    const allStatuses = ['pending', 'processing', 'shipped', 'completed', 'cancelled']
+    const allStatuses = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled']
     return allStatuses.filter(status => status !== currentStatus)
   }
 
@@ -132,7 +182,7 @@ export default function OrdersPage() {
       value={order.status}
       onChange={(e) => handleStatusUpdate(order._id, e.target.value)}
       disabled={updateLoading}
-      className="px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
+      className="px-3 py-2 text-xs border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/80 backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed"
     >
       <option value={order.status}>
         {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
@@ -237,22 +287,22 @@ export default function OrdersPage() {
               <button
                 onClick={handleRefresh}
                 disabled={loading}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center gap-2 text-sm font-medium"
+                className="group relative px-6 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 hover:from-blue-600 hover:to-blue-700 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center gap-2"
               >
-                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`w-4 h-4 group-hover:scale-110 transition-transform ${loading ? 'animate-spin' : ''}`} />
                 Refresh
               </button>
               <label className="text-sm font-medium text-gray-700">Filter by Status:</label>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="px-4 py-2.5 text-sm border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/80 backdrop-blur-sm"
               >
                 <option value="all">All Orders</option>
                 <option value="pending">Pending</option>
-                <option value="processing">Processing</option>
+                <option value="confirmed">Confirmed</option>
                 <option value="shipped">Shipped</option>
-                <option value="completed">Completed</option>
+                <option value="delivered">Delivered</option>
                 <option value="cancelled">Cancelled</option>
               </select>
             </div>
@@ -279,7 +329,7 @@ export default function OrdersPage() {
                         <OrderStatusBadge status={order.status} />
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3 text-sm">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-3 text-sm">
                         <div>
                           <p className="text-gray-600">Customer</p>
                           <p className="font-medium text-gray-900">
@@ -288,12 +338,32 @@ export default function OrdersPage() {
                           {order.customer?.email && (
                             <p className="text-gray-500">{order.customer.email}</p>
                           )}
+                          {order.customer?.phone && (
+                            <p className="text-gray-500">{order.customer.phone}</p>
+                          )}
                         </div>
                         <div>
                           <p className="text-gray-600">Amount</p>
                           <p className="font-medium text-green-600 text-lg">
                             ₹{order.total || 0}
                           </p>
+                          <p className="text-xs text-gray-500">
+                            Subtotal: ₹{order.subtotal || 0}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600">Payment</p>
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">{getPaymentMethodInfo(order.paymentMethod).icon}</span>
+                            <div>
+                              <p className="font-medium text-gray-900 text-xs">
+                                {getPaymentMethodInfo(order.paymentMethod).name}
+                              </p>
+                              <span className={`px-2 py-1 text-xs rounded-full ${getPaymentStatusColor(order.paymentStatus)}`}>
+                                {order.paymentStatus?.toUpperCase() || 'PENDING'}
+                              </span>
+                            </div>
+                          </div>
                         </div>
                         <div>
                           <p className="text-gray-600">Date</p>
@@ -386,7 +456,7 @@ export default function OrdersPage() {
                     <div className="flex flex-col space-y-2 ml-4">
                       <button
                         onClick={() => handleViewOrder(order)}
-                        className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        className="group relative px-4 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 hover:from-blue-600 hover:to-blue-700 transform hover:scale-105 transition-all duration-200"
                       >
                         View Details
                       </button>
@@ -394,18 +464,18 @@ export default function OrdersPage() {
                       {!order.deliveryPartner?.partnerId ? (
                         <button
                           onClick={() => handleAssignOrder(order)}
-                          className="px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+                          className="group relative px-4 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-green-500 to-green-600 rounded-xl shadow-lg shadow-green-500/25 hover:shadow-xl hover:shadow-green-500/30 hover:from-green-600 hover:to-green-700 transform hover:scale-105 transition-all duration-200 flex items-center gap-2"
                         >
-                          <Truck className="w-4 h-4" />
+                          <Truck className="w-4 h-4 group-hover:scale-110 transition-transform" />
                           Assign Partner
                         </button>
                       ) : (
                         <div className="text-center">
-                          <p className="text-xs text-gray-600 mb-1">Delivery Status</p>
+                          <p className="text-xs text-gray-600 mb-2 font-medium">Delivery Status</p>
                           <select
                             value={order.deliveryPartner.deliveryStatus}
                             onChange={(e) => handleDeliveryStatusUpdate(order._id, e.target.value)}
-                            className="text-xs border border-gray-300 rounded px-2 py-1"
+                            className="text-xs border-2 border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/80 backdrop-blur-sm"
                           >
                             <option value="assigned">Assigned</option>
                             <option value="picked_up">Picked Up</option>
@@ -418,9 +488,17 @@ export default function OrdersPage() {
                       )}
 
                       <div className="text-center">
-                        <p className="text-xs text-gray-600 mb-1">Update Status</p>
+                        <p className="text-xs text-gray-600 mb-2 font-medium">Update Status</p>
                         <StatusUpdateDropdown order={order} />
                       </div>
+
+                      <button
+                        onClick={() => handleOpenPaymentModal(order)}
+                        className="group relative px-4 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/30 hover:from-purple-600 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 flex items-center gap-2"
+                      >
+                        <CreditCard className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                        Payment
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -462,45 +540,153 @@ export default function OrdersPage() {
             </div>
 
             {currentOrder ? (
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-2">Customer Information</h4>
-                    <div className="bg-gray-50 p-3 rounded-lg">
-                      <p><span className="font-medium">Name:</span> {currentOrder.customer?.name || 'Guest User'}</p>
-                      <p><span className="font-medium">Email:</span> {currentOrder.customer?.email || 'N/A'}</p>
-                      <p><span className="font-medium">Phone:</span> {currentOrder.customer?.phone || 'N/A'}</p>
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-2">Order Information</h4>
-                    <div className="bg-gray-50 p-3 rounded-lg">
-                      <p><span className="font-medium">Status:</span> <OrderStatusBadge status={currentOrder.status} /></p>
-                      <p><span className="font-medium">Total:</span> ₹{currentOrder.total || 0}</p>
-                      <p><span className="font-medium">Payment Method:</span> {currentOrder.paymentMethod?.toUpperCase() || 'N/A'}</p>
-                      <p><span className="font-medium">Payment Status:</span>
-                        <span className={`ml-1 ${currentOrder.paymentStatus === 'paid' ? 'text-green-600' : 'text-yellow-600'}`}>
-                          {currentOrder.paymentStatus?.toUpperCase() || 'PENDING'}
-                        </span>
+              <div className="space-y-6">
+                {/* Order Header */}
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        Order #{currentOrder.orderNumber || currentOrder._id.slice(-8).toUpperCase()}
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        Placed on {new Date(currentOrder.createdAt).toLocaleDateString()} at {new Date(currentOrder.createdAt).toLocaleTimeString()}
                       </p>
-                      <p><span className="font-medium">Date:</span> {new Date(currentOrder.createdAt).toLocaleDateString()}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-green-600">₹{currentOrder.total || 0}</p>
+                      <OrderStatusBadge status={currentOrder.status} />
                     </div>
                   </div>
                 </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Customer Information */}
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                      <User className="w-5 h-5" />
+                      Customer Information
+                    </h4>
+                    <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-gray-700">Name:</span>
+                        <span className="text-gray-900">{currentOrder.customer?.name || 'Guest User'}</span>
+                      </div>
+                      {currentOrder.customer?.email && (
+                        <div className="flex items-center gap-2">
+                          <Mail className="w-4 h-4 text-gray-500" />
+                          <span className="text-gray-700">{currentOrder.customer.email}</span>
+                        </div>
+                      )}
+                      {currentOrder.customer?.phone && (
+                        <div className="flex items-center gap-2">
+                          <Phone className="w-4 h-4 text-gray-500" />
+                          <span className="text-gray-700">{currentOrder.customer.phone}</span>
+                        </div>
+                      )}
+                      {currentOrder.user && (
+                        <div className="mt-3 p-2 bg-blue-50 rounded border border-blue-200">
+                          <p className="text-xs text-blue-700 font-medium">Registered User</p>
+                          <p className="text-xs text-blue-600">User ID: {currentOrder.user._id || currentOrder.user}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Payment Information */}
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                      <CreditCard className="w-5 h-5" />
+                      Payment Information
+                    </h4>
+                    <div className="bg-gray-50 p-4 rounded-lg space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-gray-700">Method:</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">{getPaymentMethodInfo(currentOrder.paymentMethod).icon}</span>
+                          <span className="text-gray-900">{getPaymentMethodInfo(currentOrder.paymentMethod).name}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-gray-700">Status:</span>
+                        <span className={`px-3 py-1 text-sm rounded-full ${getPaymentStatusColor(currentOrder.paymentStatus)}`}>
+                          {currentOrder.paymentStatus?.toUpperCase() || 'PENDING'}
+                        </span>
+                      </div>
+                      {currentOrder.paymentDetails?.transactionId && (
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-gray-700">Transaction ID:</span>
+                          <span className="text-xs font-mono text-gray-600">{currentOrder.paymentDetails.transactionId}</span>
+                        </div>
+                      )}
+                      {currentOrder.paymentDetails?.paidAt && (
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-gray-700">Paid At:</span>
+                          <span className="text-sm text-gray-600">
+                            {new Date(currentOrder.paymentDetails.paidAt).toLocaleString()}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Order Summary */}
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                    <DollarSign className="w-5 h-5" />
+                    Order Summary
+                  </h4>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div>
+                        <p className="text-gray-600">Subtotal</p>
+                        <p className="font-medium text-gray-900">₹{currentOrder.subtotal || 0}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-600">Shipping</p>
+                        <p className="font-medium text-gray-900">₹{currentOrder.shipping || 0}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-600">Tax (GST)</p>
+                        <p className="font-medium text-gray-900">₹{currentOrder.tax || 0}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-600">Total</p>
+                        <p className="font-bold text-green-600 text-lg">₹{currentOrder.total || 0}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Order Items */}
                 {currentOrder.items && currentOrder.items.length > 0 && (
                   <div>
-                    <h4 className="font-medium text-gray-900 mb-2">Order Items</h4>
-                    <div className="bg-gray-50 p-3 rounded-lg">
+                    <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                      <Package className="w-5 h-5" />
+                      Order Items ({currentOrder.items.length})
+                    </h4>
+                    <div className="bg-gray-50 rounded-lg overflow-hidden">
                       {currentOrder.items.map((item, index) => (
-                        <div key={index} className="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
-                          <div>
-                            <p className="font-medium">{item.name || `Item ${index + 1}`}</p>
-                            <p className="text-sm text-gray-600">SKU: {item.sku || 'N/A'}</p>
+                        <div key={index} className="flex justify-between items-center p-4 border-b border-gray-200 last:border-b-0 hover:bg-gray-100 transition-colors">
+                          <div className="flex-1">
+                            <p className="font-medium text-gray-900">{item.name || `Item ${index + 1}`}</p>
+                            {item.selectedOptions && Object.keys(item.selectedOptions).length > 0 && (
+                              <p className="text-sm text-gray-600 mt-1">
+                                {Object.entries(item.selectedOptions).map(([key, value]) => `${key}: ${value}`).join(', ')}
+                              </p>
+                            )}
+                            {item.image && (
+                              <div className="mt-2">
+                                <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded border" />
+                              </div>
+                            )}
                           </div>
-                          <div className="text-right">
-                            <p className="font-medium">₹{item.price || 0}</p>
+                          <div className="text-right ml-4">
+                            <p className="font-medium text-gray-900">₹{item.price || 0}</p>
                             <p className="text-sm text-gray-600">Qty: {item.quantity || 1}</p>
+                            <p className="text-sm font-medium text-green-600">
+                              Total: ₹{((item.price || 0) * (item.quantity || 1)).toFixed(2)}
+                            </p>
                           </div>
                         </div>
                       ))}
@@ -508,13 +694,28 @@ export default function OrdersPage() {
                   </div>
                 )}
 
+                {/* Shipping Address */}
                 {currentOrder.customer && (
                   <div>
-                    <h4 className="font-medium text-gray-900 mb-2">Shipping Address</h4>
-                    <div className="bg-gray-50 p-3 rounded-lg">
-                      <p>{currentOrder.customer.address}</p>
-                      <p>{currentOrder.customer.city}, {currentOrder.customer.state} {currentOrder.customer.zip}</p>
-                      <p>{currentOrder.customer.country || 'India'}</p>
+                    <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                      <MapPin className="w-5 h-5" />
+                      Shipping Address
+                    </h4>
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <div className="space-y-1">
+                        <p className="font-medium text-gray-900">{currentOrder.customer.name}</p>
+                        <p className="text-gray-700">{currentOrder.customer.address}</p>
+                        <p className="text-gray-700">
+                          {currentOrder.customer.city}, {currentOrder.customer.state} {currentOrder.customer.zip}
+                        </p>
+                        <p className="text-gray-700">{currentOrder.customer.country || 'India'}</p>
+                        {currentOrder.customer.notes && (
+                          <div className="mt-2 p-2 bg-yellow-50 rounded border border-yellow-200">
+                            <p className="text-xs text-yellow-700 font-medium">Special Instructions:</p>
+                            <p className="text-xs text-yellow-600">{currentOrder.customer.notes}</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -525,12 +726,12 @@ export default function OrdersPage() {
                       setShowOrderDetails(false)
                       setSelectedOrder(null)
                     }}
-                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="group relative px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border-2 border-gray-300 rounded-xl hover:border-gray-400 hover:bg-gray-50 transform hover:scale-105 transition-all duration-200"
                   >
                     Close
                   </button>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-600">Update Status:</span>
+                  <div className="flex items-center space-x-3">
+                    <span className="text-sm font-medium text-gray-600">Update Status:</span>
                     <StatusUpdateDropdown order={currentOrder} />
                   </div>
                 </div>
@@ -574,7 +775,7 @@ export default function OrdersPage() {
                 <select
                   value={assignmentForm.partnerId}
                   onChange={(e) => setAssignmentForm({ ...assignmentForm, partnerId: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/80 backdrop-blur-sm"
                   required
                 >
                   <option value="">Choose a partner...</option>
@@ -594,7 +795,7 @@ export default function OrdersPage() {
                   type="number"
                   value={assignmentForm.deliveryFee}
                   onChange={(e) => setAssignmentForm({ ...assignmentForm, deliveryFee: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/80 backdrop-blur-sm"
                   placeholder="0"
                 />
               </div>
@@ -607,7 +808,7 @@ export default function OrdersPage() {
                   type="date"
                   value={assignmentForm.estimatedDelivery}
                   onChange={(e) => setAssignmentForm({ ...assignmentForm, estimatedDelivery: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/80 backdrop-blur-sm"
                 />
               </div>
 
@@ -618,7 +819,7 @@ export default function OrdersPage() {
                 <textarea
                   value={assignmentForm.notes}
                   onChange={(e) => setAssignmentForm({ ...assignmentForm, notes: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/80 backdrop-blur-sm"
                   rows={3}
                   placeholder="Special delivery instructions..."
                 />
@@ -628,29 +829,117 @@ export default function OrdersPage() {
                 <button
                   type="button"
                   onClick={() => setShowAssignModal(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  className="group relative px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border-2 border-gray-300 rounded-xl hover:border-gray-400 hover:bg-gray-50 transform hover:scale-105 transition-all duration-200"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={assigning || !assignmentForm.partnerId}
-                  className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                  className="group relative px-6 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-green-500 to-green-600 rounded-xl shadow-lg shadow-green-500/25 hover:shadow-xl hover:shadow-green-500/30 hover:from-green-600 hover:to-green-700 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center gap-2"
                 >
                   {assigning ? (
-                    <>
+                    <div className="flex items-center gap-2">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                       Assigning...
-                    </>
+                    </div>
                   ) : (
                     <>
-                      <Truck className="w-4 h-4" />
+                      <Truck className="w-4 h-4 group-hover:scale-110 transition-transform" />
                       Assign Partner
                     </>
                   )}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Status Update Modal */}
+      {showPaymentModal && selectedOrder && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">Update Payment Status</h3>
+              <button
+                onClick={() => setShowPaymentModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <XCircle className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-600">Order #{selectedOrder._id.slice(-8).toUpperCase()}</p>
+                <p className="text-sm font-medium text-gray-900">
+                  {selectedOrder.customer?.name} - ₹{selectedOrder.total}
+                </p>
+                <p className="text-xs text-gray-500">
+                  Payment Method: {getPaymentMethodInfo(selectedOrder.paymentMethod).name}
+                </p>
+              </div>
+
+              <form onSubmit={handlePaymentSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Payment Status
+                  </label>
+                  <select
+                    value={paymentForm.paymentStatus}
+                    onChange={(e) => setPaymentForm({ ...paymentForm, paymentStatus: e.target.value })}
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                    required
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="paid">Paid</option>
+                    <option value="failed">Failed</option>
+                    <option value="refunded">Refunded</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Notes (Optional)
+                  </label>
+                  <textarea
+                    value={paymentForm.notes}
+                    onChange={(e) => setPaymentForm({ ...paymentForm, notes: e.target.value })}
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                    rows={3}
+                    placeholder="Add notes about payment status change..."
+                  />
+                </div>
+
+                <div className="flex justify-end space-x-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowPaymentModal(false)}
+                    className="group relative px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border-2 border-gray-300 rounded-xl hover:border-gray-400 hover:bg-gray-50 transform hover:scale-105 transition-all duration-200"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={updateLoading}
+                    className="group relative px-6 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/30 hover:from-purple-600 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center gap-2"
+                  >
+                    {updateLoading ? (
+                      <div className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Updating...
+                      </div>
+                    ) : (
+                      <>
+                        <CreditCard className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                        Update Payment
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}

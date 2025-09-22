@@ -9,8 +9,6 @@ import {
   LogIn,
   Home,
   AlertCircle,
-  CheckCircle2,
-  XCircle,
   Loader2
 } from 'lucide-react'
 
@@ -21,8 +19,6 @@ export default function LoginPage() {
     email: '',
     password: ''
   })
-  const [corsTest, setCorsTest] = useState(null)
-
   useEffect(() => {
     if (error) {
       const timer = setTimeout(() => dispatch(clearError()), 5000)
@@ -33,16 +29,6 @@ export default function LoginPage() {
   const handleSubmit = (e) => {
     e.preventDefault()
     dispatch(login(form))
-  }
-
-  const testCors = async () => {
-    try {
-      setCorsTest('Testing...')
-      const response = await api.get('/api/cors-test')
-      setCorsTest(`✅ CORS Working! ${response.data.message}`)
-    } catch (err) {
-      setCorsTest(`❌ CORS Error: ${err.message}`)
-    }
   }
 
   return (
@@ -65,28 +51,6 @@ export default function LoginPage() {
           <p className="text-lg text-gray-600 mt-3">Sign in to your admin account</p>
         </div>
 
-        {/* CORS Test Button */}
-        <div className="text-center">
-          <button
-            onClick={testCors}
-            className="px-6 py-3 bg-white/80 backdrop-blur-sm text-gray-700 rounded-2xl hover:bg-white hover:shadow-lg transition-all duration-200 text-sm font-medium border border-gray-200/50"
-          >
-            Test CORS Connection
-          </button>
-          {corsTest && (
-            <div className={`mt-3 inline-flex items-center space-x-2 px-3 py-2 rounded-xl text-sm font-medium ${corsTest.includes('✅')
-                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                : 'bg-red-50 text-red-700 border border-red-200'
-              }`}>
-              {corsTest.includes('✅') ? (
-                <CheckCircle2 className="w-4 h-4" />
-              ) : (
-                <XCircle className="w-4 h-4" />
-              )}
-              <span>{corsTest}</span>
-            </div>
-          )}
-        </div>
 
         {/* Login Form */}
         <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/20 p-8">

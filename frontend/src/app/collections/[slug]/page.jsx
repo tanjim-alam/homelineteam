@@ -55,7 +55,24 @@ export default function CategoryPage() {
           sort: sortBy,
           ...filters
         });
-        setProducts(productsData);
+
+        // Handle different possible data structures
+        let productsArray = [];
+        if (productsData && Array.isArray(productsData)) {
+          // If API returns array directly
+          productsArray = productsData;
+        } else if (productsData && productsData.products && Array.isArray(productsData.products)) {
+          // If API returns { products: [...] }
+          productsArray = productsData.products;
+        } else if (productsData && productsData.data && Array.isArray(productsData.data)) {
+          // If API returns { data: [...] }
+          productsArray = productsData.data;
+        } else if (productsData && productsData.success && productsData.data && Array.isArray(productsData.data)) {
+          // If API returns { success: true, data: [...] }
+          productsArray = productsData.data;
+        }
+
+        setProducts(productsArray);
 
       } catch (err) {
         setError(err.message);
@@ -94,7 +111,23 @@ export default function CategoryPage() {
             ...filters
           });
 
-          setProducts(productsData);
+          // Handle different possible data structures
+          let productsArray = [];
+          if (productsData && Array.isArray(productsData)) {
+            // If API returns array directly
+            productsArray = productsData;
+          } else if (productsData && productsData.products && Array.isArray(productsData.products)) {
+            // If API returns { products: [...] }
+            productsArray = productsData.products;
+          } else if (productsData && productsData.data && Array.isArray(productsData.data)) {
+            // If API returns { data: [...] }
+            productsArray = productsData.data;
+          } else if (productsData && productsData.success && productsData.data && Array.isArray(productsData.data)) {
+            // If API returns { success: true, data: [...] }
+            productsArray = productsData.data;
+          }
+
+          setProducts(productsArray);
         } catch (err) {
           // Handle error silently or show user-friendly message
         }
@@ -582,9 +615,23 @@ export default function CategoryPage() {
                   ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3'
                   : 'grid-cols-1'
                   }`}>
-                  {products.map((product) => (
-                    <ProductCard key={product._id} product={product} />
-                  ))}
+                  {Array.isArray(products) && products.length > 0 ? (
+                    products.map((product) => (
+                      <ProductCard key={product._id} product={product} />
+                    ))
+                  ) : (
+                    <div className="col-span-full flex flex-col items-center justify-center py-12 text-center">
+                      <div className="text-gray-500 text-lg mb-4">
+                        {Array.isArray(products) ? 'No products found in this category' : 'Loading products...'}
+                      </div>
+                      <Link
+                        href="/collections"
+                        className="text-primary-600 hover:text-primary-700 font-medium"
+                      >
+                        Browse All Categories
+                      </Link>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

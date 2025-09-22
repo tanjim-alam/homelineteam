@@ -27,7 +27,6 @@ export const config = {
         PRODUCTS: '/api/products',
         ORDERS: '/api/orders',
         HEALTH: '/api/health',
-        CORS_TEST: '/api/cors-test',
     },
 
     // Default Values

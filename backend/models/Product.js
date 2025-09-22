@@ -51,14 +51,14 @@ const productSchema = new mongoose.Schema(
 // Generate SKU for variants based on dynamic fields
 productSchema.methods.generateVariantSKU = function (variant) {
 	const baseSlug = this.slug.substring(0, 3).toUpperCase();
-	
+
 	// Create SKU from variant fields
 	const fieldValues = Object.values(variant.fields || {});
 	const fieldCodes = fieldValues.map(value => {
 		// Take first 2 characters of each field value
 		return String(value).substring(0, 2).toUpperCase();
 	});
-	
+
 	return `${baseSlug}-${fieldCodes.join('-')}`;
 };
 

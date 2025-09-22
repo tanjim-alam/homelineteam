@@ -231,3 +231,8 @@ module.exports = mongoose.model('DeliveryPartner', deliveryPartnerSchema);
 
 
 
+
+
+
+
+
