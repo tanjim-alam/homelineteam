@@ -2,7 +2,7 @@
 export const config = {
     // API Configuration
     // API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://homelineteam-production.up.railway.app',
-    API_BASE_URL: 'https://homelineteam-production.up.railway.app',
+    API_BASE_URL: 'https://homelineteam-19e5.vercel.app',
     // App Configuration
     APP_NAME: import.meta.env.VITE_APP_NAME || 'HomeLine Admin',
 

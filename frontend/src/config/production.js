@@ -4,10 +4,10 @@
 // https://homelineteam-production.up.railway.app
 export const config = {
   // API Configuration
-  API_BASE_URL: "https://homelineteam-production.up.railway.app" ||
+  API_BASE_URL: "https://homelineteam-19e5.vercel.app" ||
     (typeof window !== 'undefined' && window.location.hostname === 'localhost'
       ? 'http://localhost:5000'
-      : 'https://homelineteam-production.up.railway.app'),
+      : 'https://homelineteam-19e5.vercel.app'),
 
   // Environment
   NODE_ENV: process.env.NODE_ENV || 'production',
