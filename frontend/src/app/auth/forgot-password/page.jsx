@@ -284,7 +284,7 @@ export default function ForgotPasswordPage() {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full btn-primary py-3 px-4 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed font-semibold transition-all duration-200"
+                                className="w-full btn-primary cursor-pointer py-3 px-4 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed font-semibold transition-all duration-200"
                             >
                                 {loading ? 'Sending...' : 'Send Reset Token'}
                             </button>

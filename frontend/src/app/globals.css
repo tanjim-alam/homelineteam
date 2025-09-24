@@ -136,7 +136,7 @@ body {
 
 /* Custom Component Classes */
 .btn-primary {
-  @apply bg-gradient-to-r from-primary-600 to-primary-700 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 hover:from-primary-700 hover:to-primary-700;
+  @apply bg-gradient-to-r from-primary-600 to-primary-700 text-white font-semibold px-6 py-3 rounded-xl cursor-pointer shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 hover:from-primary-700 hover:to-primary-700;
 }
 
 .bg-primary {

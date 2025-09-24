@@ -196,7 +196,7 @@ export default function LoginPage() {
                                 <button
                                     type="submit"
                                     disabled={loading || isSubmittingRef.current}
-                                    className="btn-primary w-full py-3 px-4 rounded-xl shadow-lg shadow-primary-500/25 hover:shadow-xl hover:shadow-primary-500/30 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none font-semibold flex items-center justify-center gap-2"
+                                    className="btn-primary cursor-pointer w-full py-3 px-4 rounded-xl shadow-lg shadow-primary-500/25 hover:shadow-xl hover:shadow-primary-500/30 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none font-semibold flex items-center justify-center gap-2"
                                 >
                                     {loading ? (
                                         <>

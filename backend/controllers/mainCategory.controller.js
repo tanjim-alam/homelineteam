@@ -111,7 +111,7 @@ const getMainCategoryById = async (req, res) => {
 const updateMainCategory = async (req, res) => {
     try {
         const { id } = req.params
-        const { name, order, isActive } = req.body
+        const { name, slug, order, isActive } = req.body
 
         const mainCategory = await MainCategory.findById(id)
         if (!mainCategory) {
@@ -121,26 +121,27 @@ const updateMainCategory = async (req, res) => {
             })
         }
 
-        // Check if name is being changed and if it conflicts
-        if (name && name !== mainCategory.name) {
+        // Check if name or slug is being changed and if it conflicts
+        if ((name && name !== mainCategory.name) || (slug && slug !== mainCategory.slug)) {
             const existingCategory = await MainCategory.findOne({
                 _id: { $ne: id },
                 $or: [
-                    { name: { $regex: new RegExp(`^${name}$`, 'i') } },
-                    { slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') }
+                    { name: { $regex: new RegExp(`^${name || mainCategory.name}$`, 'i') } },
+                    { slug: slug || name?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') }
                 ]
             })
 
             if (existingCategory) {
                 return res.status(400).json({
                     success: false,
-                    message: 'Main category with this name already exists'
+                    message: 'Main category with this name or slug already exists'
                 })
             }
         }
 
         const updateData = {}
         if (name !== undefined) updateData.name = name
+        if (slug !== undefined) updateData.slug = slug
         if (order !== undefined) updateData.order = order
         if (isActive !== undefined) updateData.isActive = isActive
 
@@ -172,19 +173,23 @@ const deleteMainCategory = async (req, res) => {
         // Check if main category has subcategories
         const subcategories = await Category.find({ mainCategoryId: id })
         if (subcategories.length > 0) {
-            return res.status(400).json({
-                success: false,
-                message: 'Cannot delete main category with existing subcategories'
+            // Check if any of these subcategories have products
+            const subcategoryIds = subcategories.map(cat => cat._id)
+            const products = await Product.find({
+                categoryId: { $in: subcategoryIds }
             })
-        }
 
-        // Check if main category has products
-        const products = await Product.find({ mainCategoryId: id })
-        if (products.length > 0) {
-            return res.status(400).json({
-                success: false,
-                message: 'Cannot delete main category with existing products'
-            })
+            if (products.length > 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Cannot delete main category with existing products'
+                })
+            } else {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Cannot delete main category with existing subcategories'
+                })
+            }
         }
 
         const mainCategory = await MainCategory.findByIdAndDelete(id)

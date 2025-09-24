@@ -42,6 +42,7 @@ export default function CategoriesPage() {
   const [mainCategories, setMainCategories] = useState([])
   const [mainCategoriesLoading, setMainCategoriesLoading] = useState(false)
   const [showMainCategoryModal, setShowMainCategoryModal] = useState(false)
+  const [editingMainCategory, setEditingMainCategory] = useState(null)
   const [mainCategoryForm, setMainCategoryForm] = useState({
     name: '',
     slug: ''
@@ -180,6 +181,48 @@ export default function CategoriesPage() {
     }
   }
 
+  // Update main category
+  const updateMainCategory = async (id, mainCategoryData) => {
+    try {
+      const response = await api.put(`/api/main-categories/${id}`, mainCategoryData)
+
+      if (response.data && response.data.success) {
+        // Refresh main categories
+        await fetchMainCategories()
+        return response.data
+      } else {
+        setErrorMessage('Failed to update main category')
+        setTimeout(() => setErrorMessage(''), 5000)
+        throw new Error('Failed to update main category')
+      }
+    } catch (error) {
+      setErrorMessage('Error updating main category: ' + (error.response?.data?.message || error.message))
+      setTimeout(() => setErrorMessage(''), 5000)
+      throw error
+    }
+  }
+
+  // Delete main category
+  const deleteMainCategory = async (id) => {
+    try {
+      const response = await api.delete(`/api/main-categories/${id}`)
+
+      if (response.data && response.data.success) {
+        // Refresh main categories
+        await fetchMainCategories()
+        return response.data
+      } else {
+        setErrorMessage('Failed to delete main category')
+        setTimeout(() => setErrorMessage(''), 5000)
+        throw new Error('Failed to delete main category')
+      }
+    } catch (error) {
+      setErrorMessage('Error deleting main category: ' + (error.response?.data?.message || error.message))
+      setTimeout(() => setErrorMessage(''), 5000)
+      throw error
+    }
+  }
+
   const handleSubmit = (e) => {
     e.preventDefault()
 
@@ -290,9 +333,15 @@ export default function CategoriesPage() {
     openFormAndScrollToTop()
   }
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this category?')) {
-      dispatch(deleteCategory(id))
+      try {
+        await dispatch(deleteCategory(id)).unwrap()
+        // Refresh the category list after successful deletion
+        await fetchCategories()
+      } catch (error) {
+        console.error('Failed to delete category:', error)
+      }
     }
   }
 
@@ -398,7 +447,7 @@ export default function CategoriesPage() {
     setForm({ ...form, slug })
   }
 
-  // Handle main category creation
+  // Handle main category creation/update
   const handleMainCategorySubmit = async (e) => {
     e.preventDefault()
 
@@ -409,21 +458,61 @@ export default function CategoriesPage() {
     }
 
     try {
-      const mainCategoryData = {
-        name: mainCategoryForm.name,
-        slug: mainCategoryForm.slug || mainCategoryForm.name.toLowerCase().replace(/\s+/g, '-')
+      let slug = mainCategoryForm.slug
+
+      // If slug is empty, generate it from name
+      if (!slug || !slug.trim()) {
+        slug = mainCategoryForm.name.toLowerCase().replace(/\s+/g, '-')
       }
 
-      await createMainCategory(mainCategoryData)
+      const mainCategoryData = {
+        name: mainCategoryForm.name,
+        slug: slug
+      }
 
-      setSuccessMessage('Main category created successfully!')
+      if (editingMainCategory) {
+        await updateMainCategory(editingMainCategory._id, mainCategoryData)
+        setSuccessMessage('Main category updated successfully!')
+      } else {
+        await createMainCategory(mainCategoryData)
+        setSuccessMessage('Main category created successfully!')
+      }
+
       setTimeout(() => setSuccessMessage(''), 3000)
 
       // Reset form and close modal
       setMainCategoryForm({ name: '', slug: '' })
+      setEditingMainCategory(null)
       setShowMainCategoryModal(false)
     } catch (error) {
-      // Error handling is done in createMainCategory
+      // Error handling is done in createMainCategory/updateMainCategory
+    }
+  }
+
+  // Handle edit main category
+  const handleEditMainCategory = (mainCategory) => {
+    setEditingMainCategory(mainCategory)
+    setMainCategoryForm({
+      name: mainCategory.name,
+      slug: mainCategory.slug
+    })
+    setShowMainCategoryModal(true)
+  }
+
+  // Handle delete main category
+  const handleDeleteMainCategory = async (id) => {
+    const mainCategory = mainCategories.find(mc => mc._id === id)
+    const confirmMessage = `Are you sure you want to delete the main category "${mainCategory?.name}"?\n\nThis action cannot be undone and will fail if:\n• The main category has subcategories\n• The main category has products\n\nDo you want to continue?`
+
+    if (window.confirm(confirmMessage)) {
+      try {
+        await deleteMainCategory(id)
+        setSuccessMessage('Main category deleted successfully!')
+        setTimeout(() => setSuccessMessage(''), 3000)
+      } catch (error) {
+        // Error handling is done in deleteMainCategory
+        console.error('Delete main category error:', error)
+      }
     }
   }
 
@@ -436,6 +525,13 @@ export default function CategoriesPage() {
       .replace(/[\s_-]+/g, '-')
       .replace(/^-+|-+$/g, '')
     setMainCategoryForm({ ...mainCategoryForm, slug })
+  }
+
+  // Check if main category can be deleted
+  const canDeleteMainCategory = (mainCategoryId) => {
+    // Check if any subcategories exist for this main category
+    const hasSubcategories = subCategories.some(cat => cat.mainCategoryId === mainCategoryId)
+    return !hasSubcategories
   }
 
   return (
@@ -781,12 +877,15 @@ export default function CategoriesPage() {
                   <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-emerald-200 rounded-2xl flex items-center justify-center">
                     <FolderOpen className="w-6 h-6 text-green-600" />
                   </div>
-                  <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-green-900 to-emerald-900 bg-clip-text text-transparent">Create Main Category</h2>
+                  <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-green-900 to-emerald-900 bg-clip-text text-transparent">
+                    {editingMainCategory ? 'Edit Main Category' : 'Create Main Category'}
+                  </h2>
                 </div>
                 <button
                   onClick={() => {
                     setShowMainCategoryModal(false)
                     setMainCategoryForm({ name: '', slug: '' })
+                    setEditingMainCategory(null)
                   }}
                   className="p-3 text-gray-400 hover:text-gray-600 hover:bg-white/50 rounded-2xl transition-all duration-200"
                 >
@@ -827,6 +926,7 @@ export default function CategoriesPage() {
                     onClick={() => {
                       setShowMainCategoryModal(false)
                       setMainCategoryForm({ name: '', slug: '' })
+                      setEditingMainCategory(null)
                     }}
                     className="px-8 py-4 border-2 border-gray-200 rounded-2xl text-gray-700 hover:border-gray-300 hover:bg-white/50 transition-all duration-200 font-semibold"
                   >
@@ -836,13 +936,131 @@ export default function CategoriesPage() {
                     type="submit"
                     className="px-10 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-2xl hover:from-green-700 hover:to-emerald-700 transition-all duration-200 font-bold shadow-xl hover:shadow-2xl transform hover:scale-105"
                   >
-                    Create Main Category
+                    {editingMainCategory ? 'Update Main Category' : 'Create Main Category'}
                   </button>
                 </div>
               </form>
             </div>
           </div>
         )}
+
+        {/* Main Categories Management Section */}
+        <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 overflow-hidden">
+          <div className="p-8 border-b border-white/20 bg-gradient-to-r from-green-50/50 to-emerald-50/50">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-emerald-200 rounded-2xl flex items-center justify-center">
+                  <FolderOpen className="w-6 h-6 text-green-600" />
+                </div>
+                <div>
+                  <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-green-900 to-emerald-900 bg-clip-text text-transparent">
+                    Main Categories
+                  </h2>
+                  <p className="text-gray-600 mt-1 text-lg">Manage your main categories</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-100 to-emerald-100 rounded-2xl">
+                  <FolderOpen size={20} className="text-green-600" />
+                  <span className="font-bold text-green-700">{mainCategories.length} main categories</span>
+                </div>
+                <button
+                  onClick={() => {
+                    setEditingMainCategory(null)
+                    setMainCategoryForm({ name: '', slug: '' })
+                    setShowMainCategoryModal(true)
+                  }}
+                  className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 rounded-2xl font-bold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 flex items-center gap-3"
+                >
+                  <Plus size={20} />
+                  Add Main Category
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-8">
+            {mainCategoriesLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+              </div>
+            ) : mainCategories.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <FolderOpen className="w-12 h-12 text-gray-400" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">No main categories found</h3>
+                <p className="text-gray-600 mb-8 text-lg">Start by creating your first main category.</p>
+                <button
+                  onClick={() => {
+                    setEditingMainCategory(null)
+                    setMainCategoryForm({ name: '', slug: '' })
+                    setShowMainCategoryModal(true)
+                  }}
+                  className="inline-flex items-center space-x-2 px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold rounded-2xl hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                >
+                  <Plus className="w-6 h-6" />
+                  <span>Create Main Category</span>
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {mainCategories.map((mainCategory) => (
+                  <div key={mainCategory._id} className="bg-white/50 backdrop-blur-sm rounded-2xl border border-white/30 p-6 shadow-lg hover:shadow-xl transition-all duration-200">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">{mainCategory.name}</h3>
+                        <p className="text-sm text-gray-600 bg-white/50 backdrop-blur-sm px-3 py-1 rounded-full font-medium">
+                          /{mainCategory.slug}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleEditMainCategory(mainCategory)}
+                          className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-xl transition-all duration-200"
+                          title="Edit main category"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteMainCategory(mainCategory._id)}
+                          className={`p-2 rounded-xl transition-all duration-200 ${canDeleteMainCategory(mainCategory._id)
+                              ? 'text-red-600 hover:text-red-700 hover:bg-red-50'
+                              : 'text-gray-400 cursor-not-allowed'
+                            }`}
+                          title={
+                            canDeleteMainCategory(mainCategory._id)
+                              ? 'Delete main category'
+                              : 'Cannot delete: has subcategories or products'
+                          }
+                          disabled={!canDeleteMainCategory(mainCategory._id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between text-sm text-gray-500">
+                      <div className="flex items-center gap-2">
+                        <span>Order: {mainCategory.order || 0}</span>
+                        {!canDeleteMainCategory(mainCategory._id) && (
+                          <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">
+                            Has subcategories
+                          </span>
+                        )}
+                      </div>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${mainCategory.isActive
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-gray-100 text-gray-800'
+                        }`}>
+                        {mainCategory.isActive ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Custom Field Form */}
         {showCustomFieldForm && selectedCategory && (

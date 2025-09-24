@@ -870,7 +870,7 @@ exports.deleteUser = async (req, res, next) => {
         res.json({
             success: true,
             message: 'User deleted successfully',
-            deletedUserId: id
+            _id: id
         });
     } catch (error) {
         next(error);

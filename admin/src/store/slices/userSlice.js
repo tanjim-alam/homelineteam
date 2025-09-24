@@ -93,7 +93,12 @@ const slice = createSlice({
             .addCase(deleteUser.pending, (s) => { s.deleteLoading = true; s.error = null; })
             .addCase(deleteUser.fulfilled, (s, a) => {
                 s.deleteLoading = false;
+                // Remove the deleted user from the items array
                 s.items = s.items.filter(item => item._id !== a.payload._id);
+                // Clear current user if it was the deleted user
+                if (s.currentUser && s.currentUser._id === a.payload._id) {
+                    s.currentUser = null;
+                }
                 s.error = null;
             })
             .addCase(deleteUser.rejected, (s, a) => {

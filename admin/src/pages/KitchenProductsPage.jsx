@@ -20,6 +20,7 @@ export default function KitchenProductsPage() {
         mrp: '',
         discount: '',
         mainImages: [],
+        imagePreviews: [], // For preview URLs
         category: 'modular-kitchen',
         defaultLayout: null,
         defaultMaterials: [],
@@ -113,9 +114,32 @@ export default function KitchenProductsPage() {
         setForm({ ...form, slug });
     };
 
+    const handleImageChange = (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length > 0) {
+            // Create preview URLs for all selected files
+            const previews = files.map(file => URL.createObjectURL(file));
+            setForm({
+                ...form,
+                mainImages: files,
+                imagePreviews: previews
+            });
+        }
+    };
+
+    const removeImagePreview = (index) => {
+        const newFiles = form.mainImages.filter((_, i) => i !== index);
+        const newPreviews = form.imagePreviews.filter((_, i) => i !== index);
+        setForm({
+            ...form,
+            mainImages: newFiles,
+            imagePreviews: newPreviews
+        });
+    };
+
     const resetForm = () => {
         setForm({
-            name: '', slug: '', description: '', basePrice: '', mrp: '', discount: '', mainImages: [],
+            name: '', slug: '', description: '', basePrice: '', mrp: '', discount: '', mainImages: [], imagePreviews: [],
             category: 'modular-kitchen', defaultLayout: null, defaultMaterials: [], defaultAppliances: [], defaultFeatures: [],
             availableLayouts: [], availableMaterials: [], availableAppliances: [], availableFeatures: [],
             hasVariants: false, variants: [], variantOptions: {}, dynamicFields: {},
@@ -187,7 +211,8 @@ export default function KitchenProductsPage() {
             basePrice: item.basePrice || '',
             mrp: item.mrp || '',
             discount: item.discount || '',
-            mainImages: [],
+            mainImages: [], // Start with empty array for new uploads
+            imagePreviews: [], // Start with empty array for new previews
             category: item.category || 'modular-kitchen',
             defaultLayout: item.defaultLayout || null,
             defaultMaterials: item.defaultMaterials || [],
@@ -214,6 +239,12 @@ export default function KitchenProductsPage() {
             tags: Array.isArray(item.tags) ? item.tags.join(', ') : (item.tags || '')
         });
         setShowForm(true);
+
+        // Scroll to top when edit form opens
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
     };
 
     const handleDelete = async (id) => {
@@ -247,7 +278,14 @@ export default function KitchenProductsPage() {
                             <p className="text-lg text-gray-600">Manage your dynamic kitchen catalog with ease</p>
                         </div>
                         <button
-                            onClick={() => setShowForm(true)}
+                            onClick={() => {
+                                setShowForm(true);
+                                // Scroll to top when form opens
+                                window.scrollTo({
+                                    top: 0,
+                                    behavior: 'smooth'
+                                });
+                            }}
                             className="bg-gradient-to-r from-orange-600 to-amber-600 text-white px-8 py-4 rounded-2xl font-bold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 flex items-center gap-3"
                         >
                             <Plus size={20} />
@@ -699,13 +737,11 @@ export default function KitchenProductsPage() {
                                     <label className="block text-sm font-bold text-gray-700">Upload Images</label>
                                     <div className="border-2 border-dashed border-gray-300 rounded-3xl p-8 text-center hover:border-pink-400 transition-all duration-200 bg-white/50 backdrop-blur-sm hover:bg-white/70">
                                         <input
+                                            key={editing ? `edit-${editing._id}` : 'new-kitchen-product'}
                                             type="file"
                                             multiple
                                             accept="image/*"
-                                            onChange={(e) => {
-                                                const files = Array.from(e.target.files || []);
-                                                setForm({ ...form, mainImages: files });
-                                            }}
+                                            onChange={handleImageChange}
                                             className="hidden"
                                             id="image-upload"
                                         />
@@ -717,12 +753,74 @@ export default function KitchenProductsPage() {
                                                     </svg>
                                                 </div>
                                                 <div>
-                                                    <p className="text-lg font-semibold text-gray-900">Click to upload product images</p>
-                                                    <p className="text-sm text-gray-500 mt-2">Upload multiple images for your kitchen product gallery</p>
+                                                    <p className="text-lg font-semibold text-gray-900">
+                                                        {editing ? 'Click to add new images' : 'Click to upload product images'}
+                                                    </p>
+                                                    <p className="text-sm text-gray-500 mt-2">
+                                                        {editing ?
+                                                            'Replace existing images (optional)' :
+                                                            'Upload multiple images for your kitchen product gallery'
+                                                        }
+                                                    </p>
                                                 </div>
                                             </div>
                                         </label>
                                     </div>
+
+                                    {/* New Image Previews */}
+                                    {form.imagePreviews && form.imagePreviews.length > 0 && (
+                                        <div className="mt-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-200/50 shadow-lg">
+                                            <p className="text-sm font-bold text-blue-700 mb-4">New images to upload:</p>
+                                            <div className="flex flex-wrap gap-4">
+                                                {form.imagePreviews.map((preview, index) => (
+                                                    <div key={index} className="relative group">
+                                                        <img
+                                                            src={preview}
+                                                            alt={`Preview ${index + 1}`}
+                                                            className="w-24 h-24 object-cover rounded-2xl border-2 border-blue-200 shadow-lg"
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeImagePreview(index)}
+                                                            className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full flex items-center justify-center hover:from-red-600 hover:to-pink-600 transition-all duration-200 shadow-lg"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                            </svg>
+                                                        </button>
+                                                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-2xl transition-all duration-200 flex items-center justify-center">
+                                                            <span className="text-white text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                                                New
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Existing Images Display (for editing) */}
+                                    {editing && editing.mainImages && editing.mainImages.length > 0 && (
+                                        <div className="mt-6 p-6 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl border border-gray-200/50 shadow-lg">
+                                            <p className="text-sm font-bold text-gray-700 mb-4">Current images:</p>
+                                            <div className="flex flex-wrap gap-4">
+                                                {editing.mainImages.map((img, index) => (
+                                                    <div key={index} className="relative group">
+                                                        <img
+                                                            src={img}
+                                                            alt={`Current image ${index + 1}`}
+                                                            className="w-24 h-24 object-cover rounded-2xl border-2 border-gray-200 shadow-lg"
+                                                        />
+                                                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-2xl transition-all duration-200 flex items-center justify-center">
+                                                            <span className="text-white text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                                                Current
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -797,7 +895,14 @@ export default function KitchenProductsPage() {
                                 Start building your kitchen catalog by adding your first kitchen product. It's easy and takes just a few minutes!
                             </p>
                             <button
-                                onClick={() => setShowForm(true)}
+                                onClick={() => {
+                                    setShowForm(true);
+                                    // Scroll to top when form opens
+                                    window.scrollTo({
+                                        top: 0,
+                                        behavior: 'smooth'
+                                    });
+                                }}
                                 className="bg-gradient-to-r from-orange-600 to-amber-600 text-white px-10 py-5 rounded-2xl font-bold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 flex items-center gap-3 mx-auto"
                             >
                                 <Plus size={24} />

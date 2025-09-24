@@ -172,7 +172,7 @@ export default function VerifyEmailPage() {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full btn-primary py-3 px-4 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed font-semibold transition-all duration-200"
+                                className="w-full btn-primary py-3 cursor-pointer px-4 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed font-semibold transition-all duration-200"
                             >
                                 {loading ? 'Verifying...' : 'Verify Email'}
                             </button>
@@ -182,7 +182,7 @@ export default function VerifyEmailPage() {
                                     type="button"
                                     onClick={handleResendOTP}
                                     disabled={loading}
-                                    className="text-primary-600 hover:text-primary-800 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                                    className="text-primary-600 cursor-pointer hover:text-primary-800 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                                 >
                                     Resend Code
                                 </button>

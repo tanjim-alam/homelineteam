@@ -20,6 +20,7 @@ export default function TwoBHKPackagePage() {
         mrp: '',
         discount: '',
         mainImages: [],
+        imagePreviews: [], // For preview URLs
         category: '2bhk-package',
         kitchenLayout: 'l-shape',
         wardrobe1Type: '3-door',
@@ -130,9 +131,32 @@ export default function TwoBHKPackagePage() {
         setForm({ ...form, slug });
     };
 
+    const handleImageChange = (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length > 0) {
+            // Create preview URLs for all selected files
+            const previews = files.map(file => URL.createObjectURL(file));
+            setForm({
+                ...form,
+                mainImages: files,
+                imagePreviews: previews
+            });
+        }
+    };
+
+    const removeImagePreview = (index) => {
+        const newFiles = form.mainImages.filter((_, i) => i !== index);
+        const newPreviews = form.imagePreviews.filter((_, i) => i !== index);
+        setForm({
+            ...form,
+            mainImages: newFiles,
+            imagePreviews: newPreviews
+        });
+    };
+
     const resetForm = () => {
         setForm({
-            name: '', slug: '', description: '', basePrice: '', mrp: '', discount: '', mainImages: [],
+            name: '', slug: '', description: '', basePrice: '', mrp: '', discount: '', mainImages: [], imagePreviews: [],
             category: '2bhk-package', kitchenLayout: 'l-shape', wardrobe1Type: '3-door', wardrobe2Type: '4-door',
             materials: [], features: [], inclusions: [],
             availableLayouts: [], availableWardrobeTypes: [], availableMaterials: [], availableFeatures: [],
@@ -215,7 +239,8 @@ export default function TwoBHKPackagePage() {
             basePrice: item.basePrice || '',
             mrp: item.mrp || '',
             discount: item.discount || '',
-            mainImages: [],
+            mainImages: [], // Start with empty array for new uploads
+            imagePreviews: [], // Start with empty array for new previews
             category: item.category || '2bhk-package',
             kitchenLayout: item.kitchenLayout || 'l-shape',
             wardrobe1Type: item.wardrobe1Type || '3-door',
@@ -252,6 +277,12 @@ export default function TwoBHKPackagePage() {
             tags: Array.isArray(item.tags) ? item.tags.join(', ') : (item.tags || '')
         });
         setShowForm(true);
+
+        // Scroll to top when edit form opens
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
     };
 
     const handleDelete = async (id) => {
@@ -285,7 +316,14 @@ export default function TwoBHKPackagePage() {
                             <p className="text-lg text-gray-600">Manage complete 2BHK interior design packages</p>
                         </div>
                         <button
-                            onClick={() => setShowForm(true)}
+                            onClick={() => {
+                                setShowForm(true);
+                                // Scroll to top when form opens
+                                window.scrollTo({
+                                    top: 0,
+                                    behavior: 'smooth'
+                                });
+                            }}
                             className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-2xl font-bold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 flex items-center gap-3"
                         >
                             <Plus size={20} />
@@ -642,8 +680,8 @@ export default function TwoBHKPackagePage() {
                                                             });
                                                         }}
                                                         className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 ${form.packageMetadata.suitableFor.includes(option)
-                                                                ? 'bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow-violet-200'
-                                                                : 'bg-white/50 backdrop-blur-sm border border-gray-200 hover:border-violet-300 hover:bg-violet-50/50 text-gray-700'
+                                                            ? 'bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow-violet-200'
+                                                            : 'bg-white/50 backdrop-blur-sm border border-gray-200 hover:border-violet-300 hover:bg-violet-50/50 text-gray-700'
                                                             }`}
                                                     >
                                                         {option}
@@ -673,8 +711,8 @@ export default function TwoBHKPackagePage() {
                                                             });
                                                         }}
                                                         className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 ${form.packageMetadata.style.includes(option)
-                                                                ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-purple-200'
-                                                                : 'bg-white/50 backdrop-blur-sm border border-gray-200 hover:border-purple-300 hover:bg-purple-50/50 text-gray-700'
+                                                            ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-purple-200'
+                                                            : 'bg-white/50 backdrop-blur-sm border border-gray-200 hover:border-purple-300 hover:bg-purple-50/50 text-gray-700'
                                                             }`}
                                                     >
                                                         {option}
@@ -705,8 +743,8 @@ export default function TwoBHKPackagePage() {
                                                         });
                                                     }}
                                                     className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 ${form.packageMetadata.colorScheme.includes(option)
-                                                            ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-pink-200'
-                                                            : 'bg-white/50 backdrop-blur-sm border border-gray-200 hover:border-pink-300 hover:bg-pink-50/50 text-gray-700'
+                                                        ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-pink-200'
+                                                        : 'bg-white/50 backdrop-blur-sm border border-gray-200 hover:border-pink-300 hover:bg-pink-50/50 text-gray-700'
                                                         }`}
                                                 >
                                                     {option}
@@ -758,32 +796,94 @@ export default function TwoBHKPackagePage() {
                                     <h3 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-pink-900 to-rose-900 bg-clip-text text-transparent">Package Images</h3>
                                 </div>
 
-                                <div className="space-y-6">
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-4">Upload Package Images</label>
-                                        <div className="relative">
-                                            <input
-                                                type="file"
-                                                multiple
-                                                accept="image/*"
-                                                className="w-full border-2 border-dashed border-pink-300 rounded-2xl px-6 py-8 focus:ring-4 focus:ring-pink-500/20 focus:border-pink-500 transition-all duration-200 bg-white/50 backdrop-blur-sm hover:bg-white/70 focus:bg-white shadow-lg cursor-pointer"
-                                                onChange={(e) => {
-                                                    const files = Array.from(e.target.files || []);
-                                                    setForm({ ...form, mainImages: files });
-                                                }}
-                                            />
-                                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                                <div className="text-center">
-                                                    <svg className="w-12 h-12 text-pink-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                <div className="space-y-3">
+                                    <label className="block text-sm font-bold text-gray-700">Upload Images</label>
+                                    <div className="border-2 border-dashed border-gray-300 rounded-3xl p-8 text-center hover:border-pink-400 transition-all duration-200 bg-white/50 backdrop-blur-sm hover:bg-white/70">
+                                        <input
+                                            key={editing ? `edit-${editing._id}` : 'new-2bhk-package'}
+                                            type="file"
+                                            multiple
+                                            accept="image/*"
+                                            onChange={handleImageChange}
+                                            className="hidden"
+                                            id="package-image-upload"
+                                        />
+                                        <label htmlFor="package-image-upload" className="cursor-pointer">
+                                            <div className="flex flex-col items-center gap-4">
+                                                <div className="w-16 h-16 bg-gradient-to-br from-pink-100 to-rose-200 rounded-2xl flex items-center justify-center shadow-lg">
+                                                    <svg className="w-8 h-8 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                                     </svg>
-                                                    <p className="text-sm font-medium text-gray-600">Click to upload images or drag and drop</p>
-                                                    <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 10MB each</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-lg font-semibold text-gray-900">
+                                                        {editing ? 'Click to add new images' : 'Click to upload package images'}
+                                                    </p>
+                                                    <p className="text-sm text-gray-500 mt-2">
+                                                        {editing ?
+                                                            'Replace existing images (optional)' :
+                                                            'Upload multiple images for your 2BHK package gallery'
+                                                        }
+                                                    </p>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <p className="text-xs text-gray-500 font-medium mt-3">Upload high-quality images showcasing your 2BHK package</p>
+                                        </label>
                                     </div>
+
+                                    {/* New Image Previews */}
+                                    {form.imagePreviews && form.imagePreviews.length > 0 && (
+                                        <div className="mt-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-200/50 shadow-lg">
+                                            <p className="text-sm font-bold text-blue-700 mb-4">New images to upload:</p>
+                                            <div className="flex flex-wrap gap-4">
+                                                {form.imagePreviews.map((preview, index) => (
+                                                    <div key={index} className="relative group">
+                                                        <img
+                                                            src={preview}
+                                                            alt={`Preview ${index + 1}`}
+                                                            className="w-24 h-24 object-cover rounded-2xl border-2 border-blue-200 shadow-lg"
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeImagePreview(index)}
+                                                            className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full flex items-center justify-center hover:from-red-600 hover:to-pink-600 transition-all duration-200 shadow-lg"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                            </svg>
+                                                        </button>
+                                                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-2xl transition-all duration-200 flex items-center justify-center">
+                                                            <span className="text-white text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                                                New
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Existing Images Display (for editing) */}
+                                    {editing && editing.mainImages && editing.mainImages.length > 0 && (
+                                        <div className="mt-6 p-6 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl border border-gray-200/50 shadow-lg">
+                                            <p className="text-sm font-bold text-gray-700 mb-4">Current images:</p>
+                                            <div className="flex flex-wrap gap-4">
+                                                {editing.mainImages.map((img, index) => (
+                                                    <div key={index} className="relative group">
+                                                        <img
+                                                            src={img}
+                                                            alt={`Current image ${index + 1}`}
+                                                            className="w-24 h-24 object-cover rounded-2xl border-2 border-gray-200 shadow-lg"
+                                                        />
+                                                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-2xl transition-all duration-200 flex items-center justify-center">
+                                                            <span className="text-white text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                                                Current
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 

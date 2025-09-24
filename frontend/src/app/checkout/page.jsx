@@ -155,7 +155,7 @@ export default function CheckoutPage() {
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Your cart is empty</h1>
             <p className="text-gray-600 mb-6">Please add some products to your cart before checkout.</p>
-            <Link href="/cart" className="btn-primary px-6 py-3">
+            <Link href="/cart" className="btn-primary px-6 py-3 cursor-pointer">
               Go to Cart
             </Link>
           </div>
@@ -194,10 +194,10 @@ export default function CheckoutPage() {
               You need to be logged in to place an order. Please sign in to continue with your purchase.
             </p>
             <div className="flex gap-4 justify-center">
-              <Link href="/auth/login" className="btn-primary px-6 py-3">
+              <Link href="/auth/login" className="btn-primary px-6 py-3 cursor-pointer">
                 Sign In
               </Link>
-              <Link href="/auth/register" className="btn-secondary px-6 py-3">
+              <Link href="/auth/register" className="btn-secondary px-6 py-3 cursor-pointer">
                 Create Account
               </Link>
             </div>
@@ -275,7 +275,7 @@ export default function CheckoutPage() {
           type="text"
           value={formData.address}
           onChange={(e) => handleInputChange('address', e.target.value)}
-          className="w-full px-4 pt-6 pb-2 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-300 bg-white/80 backdrop-blur-sm peer placeholder-transparent"
+          className="w-full px-4 pt-6 pb-2 border-2 text-gray-700 border-gray-200 rounded-xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-300 bg-white/80 backdrop-blur-sm peer placeholder-transparent"
           placeholder="House/Flat number, Street, Area"
           required
         />
@@ -290,7 +290,7 @@ export default function CheckoutPage() {
             type="text"
             value={formData.city}
             onChange={(e) => handleInputChange('city', e.target.value)}
-            className="w-full px-4 pt-6 pb-2 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-300 bg-white/80 backdrop-blur-sm peer placeholder-transparent"
+            className="w-full px-4 pt-6 pb-2 border-2 text-gray-700 border-gray-200 rounded-xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-300 bg-white/80 backdrop-blur-sm peer placeholder-transparent"
             placeholder="Mumbai"
             required
           />
@@ -303,7 +303,7 @@ export default function CheckoutPage() {
             type="text"
             value={formData.state}
             onChange={(e) => handleInputChange('state', e.target.value)}
-            className="w-full px-4 pt-6 pb-2 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-300 bg-white/80 backdrop-blur-sm peer placeholder-transparent"
+            className="w-full px-4 pt-6 pb-2 border-2 text-gray-700 border-gray-200 rounded-xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-300 bg-white/80 backdrop-blur-sm peer placeholder-transparent"
             placeholder="Maharashtra"
             required
           />
@@ -316,7 +316,7 @@ export default function CheckoutPage() {
             type="text"
             value={formData.pincode}
             onChange={(e) => handleInputChange('pincode', e.target.value)}
-            className="w-full px-4 pt-6 pb-2 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-300 bg-white/80 backdrop-blur-sm peer placeholder-transparent"
+            className="w-full px-4 pt-6 pb-2 border-2 text-gray-700 border-gray-200 rounded-xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-300 bg-white/80 backdrop-blur-sm peer placeholder-transparent"
             placeholder="400001"
             required
           />
@@ -333,7 +333,7 @@ export default function CheckoutPage() {
             id="saveInfo"
             checked={formData.saveInfo}
             onChange={(e) => handleInputChange('saveInfo', e.target.checked)}
-            className="w-5 h-5 text-primary-600 border-2 border-gray-300 rounded-lg focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-300"
+            className="w-5 h-5 text-primary-600 border-2 text-gray-700 border-gray-300 rounded-lg focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-300"
           />
         </div>
         <label htmlFor="saveInfo" className="text-sm font-medium text-gray-700 cursor-pointer">
@@ -502,7 +502,7 @@ export default function CheckoutPage() {
                 placeholder="1234 5678 9012 3456"
                 value={formData.cardNumber}
                 onChange={(e) => handleInputChange('cardNumber', e.target.value)}
-                className="w-full px-4 pt-6 pb-2 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-300 bg-white/80 backdrop-blur-sm peer placeholder-transparent"
+                className="w-full px-4 pt-6 pb-2 border-2 border-gray-200 text-gray-700 rounded-xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-300 bg-white/80 backdrop-blur-sm peer placeholder-transparent"
                 required
               />
               <label className="absolute left-4 top-2 text-xs font-semibold text-gray-500 transition-all duration-300 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-xs peer-focus:text-primary-600 peer-focus:font-bold">
@@ -515,7 +515,7 @@ export default function CheckoutPage() {
                 placeholder="John Doe"
                 value={formData.cardName}
                 onChange={(e) => handleInputChange('cardName', e.target.value)}
-                className="w-full px-4 pt-6 pb-2 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-300 bg-white/80 backdrop-blur-sm peer placeholder-transparent"
+                className="w-full px-4 pt-6 pb-2 border-2 border-gray-200 text-gray-700 rounded-xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-300 bg-white/80 backdrop-blur-sm peer placeholder-transparent"
                 required
               />
               <label className="absolute left-4 top-2 text-xs font-semibold text-gray-500 transition-all duration-300 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-xs peer-focus:text-primary-600 peer-focus:font-bold">
@@ -529,7 +529,7 @@ export default function CheckoutPage() {
                   placeholder="MM/YY"
                   value={formData.expiry}
                   onChange={(e) => handleInputChange('expiry', e.target.value)}
-                  className="w-full px-4 pt-6 pb-2 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-300 bg-white/80 backdrop-blur-sm peer placeholder-transparent"
+                  className="w-full px-4 pt-6 pb-2 border-2 border-gray-200 text-gray-700 rounded-xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-300 bg-white/80 backdrop-blur-sm peer placeholder-transparent"
                   required
                 />
                 <label className="absolute left-4 top-2 text-xs font-semibold text-gray-500 transition-all duration-300 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-xs peer-focus:text-primary-600 peer-focus:font-bold">
@@ -542,7 +542,7 @@ export default function CheckoutPage() {
                   placeholder="123"
                   value={formData.cvv}
                   onChange={(e) => handleInputChange('cvv', e.target.value)}
-                  className="w-full px-4 pt-6 pb-2 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-300 bg-white/80 backdrop-blur-sm peer placeholder-transparent"
+                  className="w-full px-4 pt-6 pb-2 border-2 border-gray-200 text-gray-700 rounded-xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-300 bg-white/80 backdrop-blur-sm peer placeholder-transparent"
                   required
                 />
                 <label className="absolute left-4 top-2 text-xs font-semibold text-gray-500 transition-all duration-300 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-xs peer-focus:text-primary-600 peer-focus:font-bold">
@@ -563,7 +563,7 @@ export default function CheckoutPage() {
               placeholder="yourname@paytm"
               value={formData.upiId}
               onChange={(e) => handleInputChange('upiId', e.target.value)}
-              className="w-full px-4 pt-6 pb-2 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-300 bg-white/80 backdrop-blur-sm peer placeholder-transparent"
+              className="w-full px-4 pt-6 pb-2 border-2 border-gray-200 text-gray-700 rounded-xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-300 bg-white/80 backdrop-blur-sm peer placeholder-transparent"
               required
             />
             <label className="absolute left-4 top-2 text-xs font-semibold text-gray-500 transition-all duration-300 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-xs peer-focus:text-primary-600 peer-focus:font-bold">
@@ -684,15 +684,15 @@ export default function CheckoutPage() {
       )}
 
       <div className="flex gap-4 justify-center">
-        <Link href="/" className="btn-primary px-8 py-3">
+        <Link href="/" className="btn-primary px-8 py-3 cursor-pointer">
           Continue Shopping
         </Link>
         {isAuthenticated && (
-          <Link href="/my-orders" className="btn-secondary px-8 py-3">
+          <Link href="/my-orders" className="btn-secondary px-8 py-3 cursor-pointer">
             View My Orders
           </Link>
         )}
-        <Link href="/collections" className="btn-secondary px-8 py-3">
+        <Link href="/collections" className="btn-secondary px-8 py-3 cursor-pointer">
           Browse Products
         </Link>
       </div>
@@ -807,7 +807,7 @@ export default function CheckoutPage() {
                       <div className="mt-10">
                         <button
                           onClick={() => setActiveStep(2)}
-                          className="w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white py-4 rounded-xl font-semibold text-lg shadow-lg shadow-primary-500/25 hover:shadow-xl hover:shadow-primary-500/30 transition-all duration-300 transform hover:scale-105"
+                          className="w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white py-4 rounded-xl font-semibold text-lg shadow-lg shadow-primary-500/25 hover:shadow-xl hover:shadow-primary-500/30 transition-all duration-300 transform hover:scale-105 cursor-pointer"
                         >
                           Continue to Payment
                         </button>
@@ -825,14 +825,14 @@ export default function CheckoutPage() {
                       <div className="mt-10 flex gap-4">
                         <button
                           onClick={() => setActiveStep(1)}
-                          className="flex-1 bg-gray-100 text-gray-700 py-4 rounded-xl font-semibold text-lg hover:bg-gray-200 transition-all duration-300"
+                          className="flex-1 bg-gray-100 text-gray-700 py-4 rounded-xl font-semibold text-lg hover:bg-gray-200 transition-all duration-300 cursor-pointer"
                         >
                           Back to Shipping
                         </button>
                         <button
                           onClick={handleSubmit}
                           disabled={isProcessing}
-                          className="flex-1 bg-gradient-to-r from-primary-500 to-primary-600 text-white py-4 rounded-xl font-semibold text-lg shadow-lg shadow-primary-500/25 hover:shadow-xl hover:shadow-primary-500/30 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
+                          className="flex-1 bg-gradient-to-r from-primary-500 to-primary-600 text-white py-4 rounded-xl font-semibold text-lg shadow-lg shadow-primary-500/25 hover:shadow-xl hover:shadow-primary-500/30 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2 cursor-pointer"
                         >
                           {isProcessing ? (
                             <>

@@ -26,8 +26,8 @@ export const updateCategory = createAsyncThunk('categories/update', async ({ id,
 
 export const deleteCategory = createAsyncThunk('categories/delete', async (id, { rejectWithValue }) => {
   try {
-    await api.delete(`/api/categories/${id}`);
-    return id;
+    const res = await api.delete(`/api/categories/${id}`);
+    return res.data;
   } catch (err) {
     return rejectWithValue(err.response?.data?.message || 'Delete failed');
   }
@@ -116,7 +116,12 @@ const slice = createSlice({
       .addCase(deleteCategory.pending, (s) => { s.deleteLoading = true; s.error = null; })
       .addCase(deleteCategory.fulfilled, (s, a) => {
         s.deleteLoading = false;
-        s.items = s.items.filter(item => item._id !== a.payload);
+        // Remove the deleted category from the items array
+        s.items = s.items.filter(item => item._id !== a.payload._id);
+        // Clear current category if it was the deleted category
+        if (s.currentCategory && s.currentCategory._id === a.payload._id) {
+          s.currentCategory = null;
+        }
         s.error = null;
       })
       .addCase(deleteCategory.rejected, (s, a) => {

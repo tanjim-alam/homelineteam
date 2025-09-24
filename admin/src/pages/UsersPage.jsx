@@ -95,7 +95,13 @@ export default function UsersPage() {
 
     const handleDeleteUser = async (user) => {
         if (window.confirm(`Are you sure you want to delete user ${user.name}?`)) {
-            dispatch(deleteUser(user._id))
+            try {
+                await dispatch(deleteUser(user._id)).unwrap()
+                // Refresh the user list after successful deletion
+                dispatch(listUsers())
+            } catch (error) {
+                console.error('Failed to delete user:', error)
+            }
         }
     }
 

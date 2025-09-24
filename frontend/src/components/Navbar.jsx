@@ -110,20 +110,7 @@ export default function Navbar() {
     <>
       <nav className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-40">
         <div className="container-custom">
-          {/* Top Bar */}
-          {/* <div className="hidden lg:flex items-center justify-between py-2 text-sm text-gray-600 border-b border-gray-100">
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
-              <Phone className="w-4 h-4" />
-              <span>+91 98765 43210</span>
-            </div>
-            <span>Free Shipping on Orders Above ₹500</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <span>30-Day Return Policy</span>
-            <span>Secure Checkout</span>
-          </div>
-        </div> */}
+
 
           {/* Main Navigation */}
           <div className="flex items-center justify-between py-3">

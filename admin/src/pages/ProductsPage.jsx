@@ -309,7 +309,7 @@ export default function ProductsPage() {
 
     try {
       const formData = new FormData();
-      formData.append('subcategoryId', form.subcategoryId);
+      formData.append('categoryId', form.subcategoryId);
       formData.append('name', form.name);
       formData.append('slug', form.slug);
       formData.append('basePrice', form.basePrice);
@@ -375,7 +375,7 @@ export default function ProductsPage() {
   const handleEdit = (product) => {
     setEditingProduct(product);
     setForm({
-      subcategoryId: product.subcategoryId || '',
+      subcategoryId: product.categoryId || product.subcategoryId || '',
       name: product.name,
       slug: product.slug,
       basePrice: product.basePrice || product.price || '',
@@ -400,11 +400,17 @@ export default function ProductsPage() {
     setExistingImages(product.mainImages || []);
 
     // Load subcategory details if subcategory is set
-    if (product.subcategoryId) {
-      fetchCategoryDetails(product.subcategoryId);
+    if (product.categoryId || product.subcategoryId) {
+      fetchCategoryDetails(product.categoryId || product.subcategoryId);
     }
 
     setShowForm(true);
+
+    // Scroll to top when edit form opens
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
   };
 
   const handleDelete = async (id) => {
@@ -621,7 +627,14 @@ export default function ProductsPage() {
               <p className="text-lg text-gray-600">Manage your product catalog with ease</p>
             </div>
             <button
-              onClick={() => setShowForm(true)}
+              onClick={() => {
+                setShowForm(true);
+                // Scroll to top when form opens
+                window.scrollTo({
+                  top: 0,
+                  behavior: 'smooth'
+                });
+              }}
               className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-2xl font-bold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 flex items-center gap-3"
             >
               <Plus size={20} />
@@ -1730,7 +1743,14 @@ export default function ProductsPage() {
                 Start building your product catalog by adding your first product. It's easy and takes just a few minutes!
               </p>
               <button
-                onClick={() => setShowForm(true)}
+                onClick={() => {
+                  setShowForm(true);
+                  // Scroll to top when form opens
+                  window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                  });
+                }}
                 className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-10 py-5 rounded-2xl font-bold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 flex items-center gap-3 mx-auto"
               >
                 <Plus size={24} />
@@ -1853,7 +1873,7 @@ export default function ProductsPage() {
                         </div>
                         <div className="flex items-center gap-2 text-sm text-gray-600">
                           <span className="font-medium">Category:</span>
-                          <span>{categories.find(c => c._id === product.subcategoryId)?.name || 'Uncategorized'}</span>
+                          <span>{categories.find(c => c._id === (product.categoryId || product.subcategoryId))?.name || 'Uncategorized'}</span>
                         </div>
                       </div>
 
