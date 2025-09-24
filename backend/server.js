@@ -27,19 +27,15 @@ const orderRoutes = require('./routes/order.routes');
 const heroSectionRoutes = require('./routes/heroSection.routes');
 const leadRoutes = require('./routes/lead.routes');
 const userRoutes = require('./routes/user.routes');
-const returnRoutes = require('./routes/return.routes');
 const analyticsRoutes = require('./routes/analytics.routes');
+const returnRoutes = require('./routes/return.routes');
 
 // Middlewares
 const { notFoundHandler, errorHandler } = require('./middlewares/error.middleware');
 
 const app = express();
 
-// Security & misc
-// Security & misc
-app.use(helmet());
-
-// CORS configuration - simplified
+// CORS configuration - must be first
 const corsOptions = {
 	origin: function (origin, callback) {
 
@@ -94,10 +90,13 @@ const corsOptions = {
 		'Authorization',
 		'X-Requested-With',
 		'Accept',
-		'Origin'
+		'Origin',
+		'Access-Control-Request-Method',
+		'Access-Control-Request-Headers'
 	],
 	exposedHeaders: ['Set-Cookie', 'Authorization'],
-	optionsSuccessStatus: 200
+	optionsSuccessStatus: 200,
+	preflightContinue: false
 };
 
 // const corsOptions = {
@@ -106,7 +105,23 @@ const corsOptions = {
 // 	allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
 // };
 
+// Apply CORS first
 app.use(cors(corsOptions));
+
+// CORS preflight handling - simplified approach
+app.use((req, res, next) => {
+	if (req.method === 'OPTIONS') {
+		res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+		res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+		res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+		res.header('Access-Control-Allow-Credentials', 'true');
+		return res.status(200).end();
+	}
+	next();
+});
+
+// Security & misc
+app.use(helmet());
 app.use(morgan('dev'));
 app.use(express.json({ limit: config.MAX_REQUEST_SIZE }));
 app.use(express.urlencoded({ extended: true }));
@@ -121,6 +136,27 @@ const authLimiter = rateLimit({
 // Health check
 app.get('/api/health', (req, res) => {
 	return res.json({ ok: true, service: 'homelineteam-backend', timestamp: new Date().toISOString() });
+});
+
+// CORS test endpoint
+app.get('/api/cors-test', (req, res) => {
+	res.json({
+		message: 'CORS test successful',
+		origin: req.headers.origin,
+		method: req.method,
+		timestamp: new Date().toISOString()
+	});
+});
+
+// CORS test PATCH endpoint
+app.patch('/api/cors-test', (req, res) => {
+	res.json({
+		message: 'CORS PATCH test successful',
+		origin: req.headers.origin,
+		method: req.method,
+		body: req.body,
+		timestamp: new Date().toISOString()
+	});
 });
 
 
@@ -155,11 +191,11 @@ app.use('/api/1bhk-packages', oneBHKPackageRoutes);
 app.use('/api/2bhk-packages', twoBHKPackageRoutes);
 app.use('/api/delivery-partners', deliveryPartnerRoutes);
 app.use('/api/orders', orderRoutes);
-app.use('/api/returns', returnRoutes);
 
 app.use('/api/hero-section', heroSectionRoutes);
 app.use('/api/leads', leadRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/returns', returnRoutes);
 
 // 404 and error handlers
 app.use(notFoundHandler);

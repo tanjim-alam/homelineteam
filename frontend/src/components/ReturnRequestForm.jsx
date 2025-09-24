@@ -24,7 +24,26 @@ const ReturnRequestForm = ({ order, onClose, onSuccess }) => {
         items: [],
         exchangeItems: [],
         customerNotes: '',
-        images: []
+        images: [],
+        bankAccount: {
+            accountHolderName: '',
+            accountNumber: '',
+            bankName: '',
+            ifscCode: '',
+            branchName: '',
+            accountType: 'savings'
+        },
+        shippingAddress: {
+            fullName: '',
+            phone: '',
+            address: '',
+            city: '',
+            state: '',
+            zipCode: '',
+            country: 'India',
+            landmark: '',
+            addressType: 'home'
+        }
     });
 
     const [loading, setLoading] = useState(false);
@@ -80,6 +99,24 @@ const ReturnRequestForm = ({ order, onClose, onSuccess }) => {
                 };
             });
             setSelectedItems(autoSelectedItems);
+
+            // Pre-fill shipping address with order shipping address if available
+            if (order.shippingAddress) {
+                setFormData(prev => ({
+                    ...prev,
+                    shippingAddress: {
+                        fullName: order.shippingAddress.fullName || '',
+                        phone: order.shippingAddress.phone || '',
+                        address: order.shippingAddress.address || '',
+                        city: order.shippingAddress.city || '',
+                        state: order.shippingAddress.state || '',
+                        zipCode: order.shippingAddress.zipCode || '',
+                        country: order.shippingAddress.country || 'India',
+                        landmark: order.shippingAddress.landmark || '',
+                        addressType: order.shippingAddress.addressType || 'home'
+                    }
+                }));
+            }
         }
     }, [order]);
 
@@ -186,6 +223,26 @@ const ReturnRequestForm = ({ order, onClose, onSuccess }) => {
                 return;
             }
 
+            // Validate bank account information for returns
+            if (formData.type === 'return') {
+                const { accountHolderName, accountNumber, bankName, ifscCode } = formData.bankAccount;
+                if (!accountHolderName || !accountNumber || !bankName || !ifscCode) {
+                    setError('Please provide all required bank account information for refund processing');
+                    setLoading(false);
+                    return;
+                }
+            }
+
+            // Validate shipping address information for returns
+            if (formData.type === 'return') {
+                const { fullName, phone, address, city, state, zipCode } = formData.shippingAddress;
+                if (!fullName || !phone || !address || !city || !state || !zipCode) {
+                    setError('Please provide all required shipping address information for return processing');
+                    setLoading(false);
+                    return;
+                }
+            }
+
             const returnData = {
                 orderId: order._id,
                 type: formData.type,
@@ -195,7 +252,9 @@ const ReturnRequestForm = ({ order, onClose, onSuccess }) => {
                 images: formData.images.map(img => ({
                     url: img.preview,
                     caption: img.caption
-                }))
+                })),
+                bankAccount: formData.bankAccount,
+                shippingAddress: formData.shippingAddress
             };
 
             const response = await apiService.createReturnRequest(returnData);
@@ -248,7 +307,7 @@ const ReturnRequestForm = ({ order, onClose, onSuccess }) => {
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
             {/* Header Section */}
-            <div className="inset-0 bg-gradient-to-br from-primary-900 via-primary-800 to-primary-700 text-white">
+            <div className="inset-0 bg-primary text-white">
                 <div className="container-custom py-12">
                     <div className="flex items-center gap-4 mb-6">
                         <button
@@ -607,6 +666,297 @@ const ReturnRequestForm = ({ order, onClose, onSuccess }) => {
                             className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-gray-700"
                         />
                     </div>
+
+                    {/* Bank Account Information */}
+                    {formData.type === 'return' && (
+                        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg shadow-gray-200/50 border border-gray-100 p-8">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="w-10 h-10 bg-gradient-to-r from-green-600 to-green-700 rounded-xl flex items-center justify-center">
+                                    <Package className="w-5 h-5 text-white" />
+                                </div>
+                                <h2 className="text-xl font-bold text-gray-900">Bank Account Information</h2>
+                            </div>
+                            <p className="text-gray-600 mb-6 text-lg">Provide your bank account details for refund processing</p>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        Account Holder Name *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={formData.bankAccount.accountHolderName}
+                                        onChange={(e) => setFormData(prev => ({
+                                            ...prev,
+                                            bankAccount: { ...prev.bankAccount, accountHolderName: e.target.value }
+                                        }))}
+                                        placeholder="Enter account holder name"
+                                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-gray-700"
+                                        required
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        Bank Name *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={formData.bankAccount.bankName}
+                                        onChange={(e) => setFormData(prev => ({
+                                            ...prev,
+                                            bankAccount: { ...prev.bankAccount, bankName: e.target.value }
+                                        }))}
+                                        placeholder="Enter bank name"
+                                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-gray-700"
+                                        required
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        Account Number *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={formData.bankAccount.accountNumber}
+                                        onChange={(e) => setFormData(prev => ({
+                                            ...prev,
+                                            bankAccount: { ...prev.bankAccount, accountNumber: e.target.value }
+                                        }))}
+                                        placeholder="Enter account number"
+                                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-gray-700 font-mono"
+                                        required
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        IFSC Code *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={formData.bankAccount.ifscCode}
+                                        onChange={(e) => setFormData(prev => ({
+                                            ...prev,
+                                            bankAccount: { ...prev.bankAccount, ifscCode: e.target.value.toUpperCase() }
+                                        }))}
+                                        placeholder="Enter IFSC code"
+                                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-gray-700 font-mono"
+                                        required
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        Branch Name
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={formData.bankAccount.branchName}
+                                        onChange={(e) => setFormData(prev => ({
+                                            ...prev,
+                                            bankAccount: { ...prev.bankAccount, branchName: e.target.value }
+                                        }))}
+                                        placeholder="Enter branch name"
+                                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-gray-700"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        Account Type *
+                                    </label>
+                                    <select
+                                        value={formData.bankAccount.accountType}
+                                        onChange={(e) => setFormData(prev => ({
+                                            ...prev,
+                                            bankAccount: { ...prev.bankAccount, accountType: e.target.value }
+                                        }))}
+                                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-gray-700"
+                                        required
+                                    >
+                                        <option value="savings">Savings Account</option>
+                                        <option value="current">Current Account</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Shipping Address Information */}
+                    {formData.type === 'return' && (
+                        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg shadow-gray-200/50 border border-gray-100 p-8">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-purple-700 rounded-xl flex items-center justify-center">
+                                    <Package className="w-5 h-5 text-white" />
+                                </div>
+                                <h2 className="text-xl font-bold text-gray-900">Return Shipping Address</h2>
+                            </div>
+                            <p className="text-gray-600 mb-6 text-lg">Provide your address where we should send the return pickup</p>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        Full Name *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={formData.shippingAddress.fullName}
+                                        onChange={(e) => setFormData(prev => ({
+                                            ...prev,
+                                            shippingAddress: { ...prev.shippingAddress, fullName: e.target.value }
+                                        }))}
+                                        placeholder="Enter your full name"
+                                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-gray-700"
+                                        required
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        Phone Number *
+                                    </label>
+                                    <input
+                                        type="tel"
+                                        value={formData.shippingAddress.phone}
+                                        onChange={(e) => setFormData(prev => ({
+                                            ...prev,
+                                            shippingAddress: { ...prev.shippingAddress, phone: e.target.value }
+                                        }))}
+                                        placeholder="Enter your phone number"
+                                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-gray-700"
+                                        required
+                                    />
+                                </div>
+
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        Address *
+                                    </label>
+                                    <textarea
+                                        value={formData.shippingAddress.address}
+                                        onChange={(e) => setFormData(prev => ({
+                                            ...prev,
+                                            shippingAddress: { ...prev.shippingAddress, address: e.target.value }
+                                        }))}
+                                        placeholder="Enter your complete address"
+                                        rows={3}
+                                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-gray-700"
+                                        required
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        City *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={formData.shippingAddress.city}
+                                        onChange={(e) => setFormData(prev => ({
+                                            ...prev,
+                                            shippingAddress: { ...prev.shippingAddress, city: e.target.value }
+                                        }))}
+                                        placeholder="Enter your city"
+                                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-gray-700"
+                                        required
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        State *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={formData.shippingAddress.state}
+                                        onChange={(e) => setFormData(prev => ({
+                                            ...prev,
+                                            shippingAddress: { ...prev.shippingAddress, state: e.target.value }
+                                        }))}
+                                        placeholder="Enter your state"
+                                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-gray-700"
+                                        required
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        ZIP Code *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={formData.shippingAddress.zipCode}
+                                        onChange={(e) => setFormData(prev => ({
+                                            ...prev,
+                                            shippingAddress: { ...prev.shippingAddress, zipCode: e.target.value }
+                                        }))}
+                                        placeholder="Enter your ZIP code"
+                                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-gray-700"
+                                        required
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        Country *
+                                    </label>
+                                    <select
+                                        value={formData.shippingAddress.country}
+                                        onChange={(e) => setFormData(prev => ({
+                                            ...prev,
+                                            shippingAddress: { ...prev.shippingAddress, country: e.target.value }
+                                        }))}
+                                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-gray-700"
+                                        required
+                                    >
+                                        <option value="India">India</option>
+                                        <option value="United States">United States</option>
+                                        <option value="United Kingdom">United Kingdom</option>
+                                        <option value="Canada">Canada</option>
+                                        <option value="Australia">Australia</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        Landmark
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={formData.shippingAddress.landmark}
+                                        onChange={(e) => setFormData(prev => ({
+                                            ...prev,
+                                            shippingAddress: { ...prev.shippingAddress, landmark: e.target.value }
+                                        }))}
+                                        placeholder="Enter nearby landmark (optional)"
+                                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-gray-700"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        Address Type *
+                                    </label>
+                                    <select
+                                        value={formData.shippingAddress.addressType}
+                                        onChange={(e) => setFormData(prev => ({
+                                            ...prev,
+                                            shippingAddress: { ...prev.shippingAddress, addressType: e.target.value }
+                                        }))}
+                                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-gray-700"
+                                        required
+                                    >
+                                        <option value="home">Home</option>
+                                        <option value="office">Office</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Image Upload */}
                     <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg shadow-gray-200/50 border border-gray-100 p-8">

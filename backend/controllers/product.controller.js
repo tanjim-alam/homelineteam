@@ -300,6 +300,7 @@ exports.getProducts = async (req, res, next) => {
             categorySlug,
             categoryId,
             subcategoryId,
+            mainCategorySlug,
             featured,
             limit,
             sort,
@@ -320,8 +321,51 @@ exports.getProducts = async (req, res, next) => {
 
         // Basic category filtering
         if (categoryId) filter.categoryId = categoryId;
-        if (subcategoryId) filter.categoryId = subcategoryId;
-        if (categorySlug) {
+        if (subcategoryId) {
+            // If we have mainCategorySlug, validate the hierarchical relationship
+            if (mainCategorySlug) {
+                const MainCategory = require('../models/MainCategory');
+                const mainCategory = await MainCategory.findOne({ slug: mainCategorySlug });
+                if (mainCategory) {
+                    // Verify that the subcategory belongs to this main category
+                    const category = await Category.findOne({
+                        _id: subcategoryId,
+                        mainCategoryId: mainCategory._id
+                    });
+                    if (category) {
+                        filter.categoryId = subcategoryId;
+                    } else {
+                        // If subcategory doesn't belong to main category, return empty results
+                        return res.json([]);
+                    }
+                } else {
+                    filter.categoryId = subcategoryId;
+                }
+            } else {
+                filter.categoryId = subcategoryId;
+            }
+        }
+
+        // Hierarchical category filtering
+        if (categorySlug && mainCategorySlug) {
+            // Find the main category first
+            const MainCategory = require('../models/MainCategory');
+            const mainCategory = await MainCategory.findOne({ slug: mainCategorySlug });
+            if (mainCategory) {
+                // Find the subcategory that belongs to this main category
+                const category = await Category.findOne({
+                    slug: categorySlug,
+                    mainCategoryId: mainCategory._id
+                });
+                if (category) {
+                    filter.categoryId = category._id;
+                } else {
+                    // If subcategory doesn't belong to main category, return empty results
+                    return res.json([]);
+                }
+            }
+        } else if (categorySlug) {
+            // Fallback to simple category filtering
             const category = await Category.findOne({ slug: categorySlug });
             if (category) filter.categoryId = category._id;
         }

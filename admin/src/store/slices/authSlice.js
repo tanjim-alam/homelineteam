@@ -33,13 +33,14 @@ export const fetchMe = createAsyncThunk('auth/me', async (_, { rejectWithValue }
 
 const authSlice = createSlice({
   name: 'auth',
-  initialState: { user: null, loading: false, error: null },
+  initialState: { user: null, loading: true, error: null },
   reducers: {
     clearError: (state) => {
       state.error = null;
     },
     clearAuth: (state) => {
       state.user = null;
+      state.loading = false;
       state.error = null;
       localStorage.removeItem('auth_token');
     }
@@ -49,7 +50,9 @@ const authSlice = createSlice({
       .addCase(login.pending, (state) => { state.loading = true; state.error = null; })
       .addCase(login.fulfilled, (state, action) => { state.loading = false; state.user = action.payload; })
       .addCase(login.rejected, (state, action) => { state.loading = false; state.error = action.payload; })
-      .addCase(fetchMe.fulfilled, (state, action) => { state.user = action.payload; })
+      .addCase(fetchMe.pending, (state) => { state.loading = true; state.error = null; })
+      .addCase(fetchMe.fulfilled, (state, action) => { state.loading = false; state.user = action.payload; })
+      .addCase(fetchMe.rejected, (state, action) => { state.loading = false; state.user = null; })
       .addCase(logout.fulfilled, (state) => { state.user = null; });
   },
 });

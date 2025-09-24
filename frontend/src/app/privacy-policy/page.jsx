@@ -396,18 +396,17 @@ export default function PrivacyPolicy() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-primary-50 to-red-50">
             {/* Hero Section */}
-            <div className="relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800"></div>
+            <div className="relative overflow-hidden bg-primary">
+                <div className="absolute inset-0 bg-primary"></div>
                 <div className="absolute inset-0 bg-black/20"></div>
 
                 {/* Background Pattern */}
                 <div className="absolute inset-0 opacity-10">
-                    <div className="absolute top-0 left-0 w-full h-full" style={{
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-                    }}></div>
+                    <div className="absolute top-0 left-0 w-full h-full bg-primary"
+                    ></div>
                 </div>
 
-                <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
+                <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 bg-primary">
                     <div className="text-center text-white">
                         <div className="inline-flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-full px-6 py-3 mb-8">
                             <Shield className="w-6 h-6" />

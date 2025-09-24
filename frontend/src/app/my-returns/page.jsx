@@ -124,7 +124,7 @@ const MyReturnsPage = () => {
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
             {/* Header Section */}
-            <div className="inset-0 bg-gradient-to-br from-primary-900 via-primary-800 to-primary-700 text-white">
+            <div className="inset-0 bg-primary text-white">
                 <div className="container-custom py-12">
                     <div className="flex items-center gap-4 mb-6">
                         <button

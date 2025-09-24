@@ -29,8 +29,8 @@ function createUserToken(user) {
 
 // Email transporter configuration
 const createEmailTransporter = () => {
-    const emailUser = process.env.EMAIL_USER || 'tanjim11alam@gmail.com';
-    const emailPass = process.env.EMAIL_PASS || 'heomrbwqxaaxhppj';
+    const emailUser = process.env.EMAIL_USER || 'ahaanwell@gmail.com';
+    const emailPass = process.env.EMAIL_PASS || 'qwbnsavibnsvdwma';
 
 
     return nodemailer.createTransport({
@@ -48,7 +48,7 @@ const sendOTPEmail = async (email, otp) => {
         const transporter = createEmailTransporter();
 
         const mailOptions = {
-            from: process.env.EMAIL_FROM || process.env.EMAIL_USER || 'tanjim11alam@gmail.com',
+            from: 'noreply@homelineteams.com',
             to: email,
             subject: 'Email Verification OTP - HomeLine Teams',
             html: `

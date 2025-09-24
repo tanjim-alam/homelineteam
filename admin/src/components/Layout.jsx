@@ -34,9 +34,9 @@ const Sidebar = ({ isOpen, onClose }) => {
     { path: '/delivery-partners', label: 'Delivery Partners', icon: Truck },
     { path: '/orders', label: 'Orders', icon: ShoppingCart },
     { path: '/users', label: 'Users', icon: User },
-    { path: '/returns', label: 'Returns & Exchanges', icon: RefreshCw },
     { path: '/hero-section', label: 'Hero Section', icon: Image },
     { path: '/leads', label: 'Leads', icon: User },
+    { path: '/returns', label: 'Returns & Exchanges', icon: RefreshCw },
   ]
 
   return (
@@ -129,9 +129,9 @@ const Header = ({ onMenuClick }) => {
       '/delivery-partners': 'Delivery Partners',
       '/orders': 'Orders',
       '/users': 'Users',
-      '/returns': 'Returns & Exchanges',
       '/hero-section': 'Hero Section',
-      '/leads': 'Leads'
+      '/leads': 'Leads',
+      '/returns': 'Returns & Exchanges'
     }
     return titles[currentPath] || 'Admin Panel'
   }

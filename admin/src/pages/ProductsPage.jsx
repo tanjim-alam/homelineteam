@@ -7,7 +7,6 @@ import apiClient from '../api/client';
 export default function ProductsPage() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [mainCategories, setMainCategories] = useState([]);
   const [subcategories, setSubcategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -19,7 +18,6 @@ export default function ProductsPage() {
 
   const [form, setForm] = useState({
     subcategoryId: '',
-    mainCategoryId: '',
     name: '',
     slug: '',
     basePrice: '',
@@ -95,7 +93,8 @@ export default function ProductsPage() {
 
   const fetchCategories = async () => {
     try {
-      // Fetch all categories
+      // Fetch all subcategories using the main categories endpoint
+      // The /api/categories endpoint returns subcategories (Category model)
       const response = await apiClient.get('/api/categories');
       let data = response;
       if (response && response.data) {
@@ -103,50 +102,29 @@ export default function ProductsPage() {
       }
       if (Array.isArray(data)) {
         setCategories(data);
-        setMainCategories(data.filter(cat => cat.type === 'main'));
-        setSubcategories(data.filter(cat => cat.type === 'sub'));
+        setSubcategories(data); // All categories from /api/categories are subcategories
       } else if (data && typeof data === 'object') {
         if (Array.isArray(data.categories)) {
           setCategories(data.categories);
-          setMainCategories(data.categories.filter(cat => cat.type === 'main'));
-          setSubcategories(data.categories.filter(cat => cat.type === 'sub'));
+          setSubcategories(data.categories);
         } else if (Array.isArray(data.items)) {
           setCategories(data.items);
-          setMainCategories(data.items.filter(cat => cat.type === 'main'));
-          setSubcategories(data.items.filter(cat => cat.type === 'sub'));
+          setSubcategories(data.items);
         } else {
           setCategories([]);
-          setMainCategories([]);
           setSubcategories([]);
         }
       } else {
         setCategories([]);
-        setMainCategories([]);
         setSubcategories([]);
       }
     } catch (err) {
       setCategories([]);
-      setMainCategories([]);
       setSubcategories([]);
     }
   };
 
-  const fetchSubcategories = async (mainCategoryId) => {
-    try {
-      const response = await apiClient.get(`/api/categories/subcategories/${mainCategoryId}`);
-      let data = response;
-      if (response && response.data) {
-        data = response.data;
-      }
-      if (Array.isArray(data)) {
-        setSubcategories(data);
-      } else {
-        setSubcategories([]);
-      }
-    } catch (err) {
-      setSubcategories([]);
-    }
-  };
+  // Removed fetchSubcategories - subcategories are now loaded directly from fetchCategories
 
   const fetchCategoryDetails = async (categoryId) => {
     try {
@@ -161,20 +139,7 @@ export default function ProductsPage() {
     }
   };
 
-  const handleMainCategoryChange = (mainCategoryId) => {
-    setForm({
-      ...form,
-      mainCategoryId,
-      subcategoryId: '', // Reset subcategory when main category changes
-      dynamicFields: {}
-    });
-    if (mainCategoryId) {
-      fetchSubcategories(mainCategoryId);
-    } else {
-      setSubcategories([]);
-      setSelectedCategory(null);
-    }
-  };
+  // Removed handleMainCategoryChange - no longer needed
 
   const handleSubcategoryChange = (subcategoryId) => {
     setForm({ ...form, subcategoryId, dynamicFields: {} });
@@ -287,7 +252,6 @@ export default function ProductsPage() {
   const resetForm = () => {
     setForm({
       subcategoryId: '',
-      mainCategoryId: '',
       name: '',
       slug: '',
       basePrice: '',
@@ -346,7 +310,6 @@ export default function ProductsPage() {
     try {
       const formData = new FormData();
       formData.append('subcategoryId', form.subcategoryId);
-      formData.append('mainCategoryId', form.mainCategoryId);
       formData.append('name', form.name);
       formData.append('slug', form.slug);
       formData.append('basePrice', form.basePrice);
@@ -413,7 +376,6 @@ export default function ProductsPage() {
     setEditingProduct(product);
     setForm({
       subcategoryId: product.subcategoryId || '',
-      mainCategoryId: product.mainCategoryId || '',
       name: product.name,
       slug: product.slug,
       basePrice: product.basePrice || product.price || '',
@@ -437,11 +399,7 @@ export default function ProductsPage() {
     // Store existing images separately
     setExistingImages(product.mainImages || []);
 
-    // Load subcategories if main category is set
-    if (product.mainCategoryId) {
-      fetchSubcategories(product.mainCategoryId);
-    }
-
+    // Load subcategory details if subcategory is set
     if (product.subcategoryId) {
       fetchCategoryDetails(product.subcategoryId);
     }
@@ -494,7 +452,7 @@ export default function ProductsPage() {
   };
 
   const addVariant = () => {
-    const selectedCategory = categories.find(cat => cat._id === form.categoryId);
+    const selectedCategory = categories.find(cat => cat._id === form.subcategoryId);
     if (!selectedCategory || !selectedCategory.variantFields) {
       alert('Please select a category with variant fields first');
       return;
@@ -651,55 +609,58 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
-      {/* Modern Header */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-50">
-        <div className="px-6 py-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      <div className="p-6 max-w-7xl mx-auto space-y-8">
+        {/* Modern Header */}
+        <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Product Management</h1>
-              <p className="text-gray-600">Manage your product catalog with ease</p>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent mb-2">
+                Product Management
+              </h1>
+              <p className="text-lg text-gray-600">Manage your product catalog with ease</p>
             </div>
             <button
               onClick={() => setShowForm(true)}
-              className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-all duration-300 transform hover:scale-105 flex items-center gap-3"
+              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-2xl font-bold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 flex items-center gap-3"
             >
               <Plus size={20} />
               Add New Product
             </button>
           </div>
         </div>
-      </div>
 
-      <div className="py-6 space-y-6">
-
+        {/* Modern Success Alert */}
         {successMessage && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-green-50/80 backdrop-blur-sm border border-green-200/50 rounded-3xl p-6 mb-6 shadow-xl">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-green-100 to-emerald-200 rounded-2xl flex items-center justify-center">
+                <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <div className="ml-3">
-                <p className="text-sm text-green-800">{successMessage}</p>
+              <div>
+                <h3 className="text-sm font-bold text-green-800">Success</h3>
+                <p className="text-sm text-green-700 mt-1">{successMessage}</p>
               </div>
             </div>
           </div>
         )}
 
+        {/* Modern Error Alert */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-red-50/80 backdrop-blur-sm border border-red-200/50 rounded-3xl p-6 mb-6 shadow-xl">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-red-100 to-pink-200 rounded-2xl flex items-center justify-center">
+                <svg className="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                 </svg>
               </div>
-              <div className="ml-3">
-                <p className="text-sm text-red-800">{error}</p>
+              <div>
+                <h3 className="text-sm font-bold text-red-800">Error</h3>
+                <p className="text-sm text-red-700 mt-1">{error}</p>
                 {error.includes('backend server') && (
-                  <div className="mt-2 text-xs text-red-700">
+                  <div className="mt-3 text-xs text-red-700 space-y-1">
                     <p>• Make sure the backend server is running on port 5000</p>
                     <p>• Check the terminal for any error messages</p>
                     <p>• Try refreshing the page after starting the server</p>
@@ -725,22 +686,27 @@ export default function ProductsPage() {
               </div>
             )}
 
-            <div className="p-6 border-b border-gray-100/50 bg-gradient-to-r from-gray-50/50 to-white/50">
+            <div className="p-8 border-b border-white/20 bg-gradient-to-r from-blue-50/50 to-indigo-50/50">
               <div className="flex justify-between items-center">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">
-                    {editingProduct ? 'Edit Product' : 'Add New Product'}
-                  </h2>
-                  <p className="text-gray-600 mt-1">
-                    {editingProduct ? 'Update your product information' : 'Create a new product for your catalog'}
-                  </p>
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-purple-200 rounded-2xl flex items-center justify-center">
+                    <Package className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent">
+                      {editingProduct ? 'Edit Product' : 'Add New Product'}
+                    </h2>
+                    <p className="text-gray-600 mt-1 text-lg">
+                      {editingProduct ? 'Update your product information' : 'Create a new product for your catalog'}
+                    </p>
+                  </div>
                 </div>
                 <button
                   onClick={() => {
                     setShowForm(false);
                     resetForm();
                   }}
-                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all duration-200"
+                  className="p-3 text-gray-400 hover:text-gray-600 hover:bg-white/50 rounded-2xl transition-all duration-200"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -752,60 +718,39 @@ export default function ProductsPage() {
             <div className="p-8">
               <form onSubmit={handleSubmit} className="space-y-8">
                 {/* Basic Information Section */}
-                <div className="bg-gradient-to-r from-blue-50/50 to-indigo-50/50 rounded-2xl p-6 border border-blue-100/50">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="bg-gradient-to-r from-blue-50/50 to-indigo-50/50 rounded-3xl p-8 border border-blue-100/50 shadow-lg">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-indigo-200 rounded-2xl flex items-center justify-center">
+                      <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900">Basic Information</h3>
+                    <h3 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent">Basic Information</h3>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="block text-sm font-semibold text-gray-700">
-                        Main Category *
-                      </label>
-                      <select
-                        value={form.mainCategoryId}
-                        onChange={(e) => handleMainCategoryChange(e.target.value)}
-                        className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 bg-white"
-                        required
-                      >
-                        <option value="">Choose a main category</option>
-                        {mainCategories.map((category) => (
-                          <option key={category._id} value={category._id}>
-                            {category.name}
-                          </option>
-                        ))}
-                      </select>
-                      <p className="text-xs text-gray-500">Select the main category for your product</p>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="block text-sm font-semibold text-gray-700">
-                        Subcategory *
+                  <div className="grid grid-cols-1 gap-8">
+                    <div className="space-y-3">
+                      <label className="block text-sm font-bold text-gray-700">
+                        Category *
                       </label>
                       <select
                         value={form.subcategoryId}
                         onChange={(e) => handleSubcategoryChange(e.target.value)}
-                        className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 bg-white"
+                        className="w-full border-2 border-gray-200 rounded-2xl px-6 py-4 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 bg-white/50 backdrop-blur-sm hover:bg-white/70 focus:bg-white shadow-lg"
                         required
-                        disabled={!form.mainCategoryId}
                       >
-                        <option value="">Choose a subcategory</option>
+                        <option value="">Choose a category</option>
                         {subcategories.map((category) => (
                           <option key={category._id} value={category._id}>
                             {category.name}
                           </option>
                         ))}
                       </select>
-                      <p className="text-xs text-gray-500">Select the specific subcategory for your product</p>
+                      <p className="text-xs text-gray-500 font-medium">Select the category for your product</p>
                     </div>
 
-                    <div className="space-y-2">
-                      <label className="block text-sm font-semibold text-gray-700">
+                    <div className="space-y-3">
+                      <label className="block text-sm font-bold text-gray-700">
                         Product Name *
                       </label>
                       <input
@@ -813,83 +758,83 @@ export default function ProductsPage() {
                         value={form.name}
                         onChange={(e) => setForm({ ...form, name: e.target.value })}
                         onBlur={() => generateSlug(form.name)}
-                        className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 bg-white"
+                        className="w-full border-2 border-gray-200 rounded-2xl px-6 py-4 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 bg-white/50 backdrop-blur-sm hover:bg-white/70 focus:bg-white shadow-lg"
                         placeholder="Enter your product name"
                         required
                       />
-                      <p className="text-xs text-gray-500">This will be the main title of your product</p>
+                      <p className="text-xs text-gray-500 font-medium">This will be the main title of your product</p>
                     </div>
 
-                    <div className="md:col-span-2 space-y-2">
-                      <label className="block text-sm font-semibold text-gray-700">
+                    <div className="md:col-span-2 space-y-3">
+                      <label className="block text-sm font-bold text-gray-700">
                         Product URL (Slug) *
                       </label>
                       <input
                         type="text"
                         value={form.slug}
                         onChange={(e) => setForm({ ...form, slug: e.target.value })}
-                        className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 bg-white"
+                        className="w-full border-2 border-gray-200 rounded-2xl px-6 py-4 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 bg-white/50 backdrop-blur-sm hover:bg-white/70 focus:bg-white shadow-lg"
                         placeholder="product-url-slug"
                         required
                       />
-                      <p className="text-xs text-gray-500">This creates the URL for your product page (auto-generated from name)</p>
+                      <p className="text-xs text-gray-500 font-medium">This creates the URL for your product page (auto-generated from name)</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Pricing Section */}
-                <div className="bg-gradient-to-r from-green-50/50 to-emerald-50/50 rounded-2xl p-6 border border-green-100/50">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 bg-green-100 rounded-lg">
-                      <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="bg-gradient-to-r from-green-50/50 to-emerald-50/50 rounded-3xl p-8 border border-green-100/50 shadow-lg">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-emerald-200 rounded-2xl flex items-center justify-center">
+                      <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                       </svg>
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900">Pricing & Offers</h3>
+                    <h3 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-green-900 to-emerald-900 bg-clip-text text-transparent">Pricing & Offers</h3>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="space-y-2">
-                      <label className="block text-sm font-semibold text-gray-700">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div className="space-y-3">
+                      <label className="block text-sm font-bold text-gray-700">
                         Selling Price *
                       </label>
                       <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <span className="text-gray-500 text-sm">₹</span>
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                          <span className="text-gray-500 text-sm font-medium">₹</span>
                         </div>
                         <input
                           type="number"
                           value={form.basePrice}
                           onChange={(e) => setForm({ ...form, basePrice: e.target.value })}
-                          className="w-full border-2 border-gray-200 rounded-xl pl-8 pr-4 py-3 focus:ring-4 focus:ring-green-500/20 focus:border-green-500 transition-all duration-200 bg-white"
+                          className="w-full border-2 border-gray-200 rounded-2xl pl-10 pr-6 py-4 focus:ring-4 focus:ring-green-500/20 focus:border-green-500 transition-all duration-200 bg-white/50 backdrop-blur-sm hover:bg-white/70 focus:bg-white shadow-lg"
                           placeholder="0"
                           required
                         />
                       </div>
-                      <p className="text-xs text-gray-500">The price customers will pay</p>
+                      <p className="text-xs text-gray-500 font-medium">The price customers will pay</p>
                     </div>
 
-                    <div className="space-y-2">
-                      <label className="block text-sm font-semibold text-gray-700">
+                    <div className="space-y-3">
+                      <label className="block text-sm font-bold text-gray-700">
                         MRP (Optional)
                       </label>
                       <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <span className="text-gray-500 text-sm">₹</span>
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                          <span className="text-gray-500 text-sm font-medium">₹</span>
                         </div>
                         <input
                           type="number"
                           value={form.mrp}
                           onChange={(e) => setForm({ ...form, mrp: e.target.value })}
-                          className="w-full border-2 border-gray-200 rounded-xl pl-8 pr-4 py-3 focus:ring-4 focus:ring-green-500/20 focus:border-green-500 transition-all duration-200 bg-white"
+                          className="w-full border-2 border-gray-200 rounded-2xl pl-10 pr-6 py-4 focus:ring-4 focus:ring-green-500/20 focus:border-green-500 transition-all duration-200 bg-white/50 backdrop-blur-sm hover:bg-white/70 focus:bg-white shadow-lg"
                           placeholder="0"
                         />
                       </div>
-                      <p className="text-xs text-gray-500">Original price before discount</p>
+                      <p className="text-xs text-gray-500 font-medium">Original price before discount</p>
                     </div>
 
-                    <div className="space-y-2">
-                      <label className="block text-sm font-semibold text-gray-700">
+                    <div className="space-y-3">
+                      <label className="block text-sm font-bold text-gray-700">
                         Discount % (Optional)
                       </label>
                       <div className="relative">
@@ -897,16 +842,16 @@ export default function ProductsPage() {
                           type="number"
                           value={form.discount}
                           onChange={(e) => setForm({ ...form, discount: e.target.value })}
-                          className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-4 focus:ring-green-500/20 focus:border-green-500 transition-all duration-200 bg-white"
+                          className="w-full border-2 border-gray-200 rounded-2xl px-6 py-4 focus:ring-4 focus:ring-green-500/20 focus:border-green-500 transition-all duration-200 bg-white/50 backdrop-blur-sm hover:bg-white/70 focus:bg-white shadow-lg"
                           placeholder="0"
                           min="0"
                           max="100"
                         />
-                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                          <span className="text-gray-500 text-sm">%</span>
+                        <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                          <span className="text-gray-500 text-sm font-medium">%</span>
                         </div>
                       </div>
-                      <p className="text-xs text-gray-500">Percentage off MRP</p>
+                      <p className="text-xs text-gray-500 font-medium">Percentage off MRP</p>
                     </div>
                   </div>
 
@@ -931,36 +876,36 @@ export default function ProductsPage() {
                 </div>
 
                 {/* Description & Images Section */}
-                <div className="bg-gradient-to-r from-purple-50/50 to-pink-50/50 rounded-2xl p-6 border border-purple-100/50">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 bg-purple-100 rounded-lg">
-                      <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="bg-gradient-to-r from-purple-50/50 to-pink-50/50 rounded-3xl p-8 border border-purple-100/50 shadow-lg">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-pink-200 rounded-2xl flex items-center justify-center">
+                      <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900">Description & Images</h3>
+                    <h3 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-purple-900 to-pink-900 bg-clip-text text-transparent">Description & Images</h3>
                   </div>
 
-                  <div className="space-y-6">
-                    <div className="space-y-2">
-                      <label className="block text-sm font-semibold text-gray-700">
+                  <div className="space-y-8">
+                    <div className="space-y-3">
+                      <label className="block text-sm font-bold text-gray-700">
                         Product Description
                       </label>
                       <textarea
                         value={form.description}
                         onChange={(e) => setForm({ ...form, description: e.target.value })}
                         rows={4}
-                        className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-4 focus:ring-purple-500/20 focus:border-purple-500 transition-all duration-200 bg-white"
+                        className="w-full border-2 border-gray-200 rounded-2xl px-6 py-4 focus:ring-4 focus:ring-purple-500/20 focus:border-purple-500 transition-all duration-200 bg-white/50 backdrop-blur-sm hover:bg-white/70 focus:bg-white shadow-lg"
                         placeholder="Describe your product in detail. What makes it special? What are its key features?"
                       />
-                      <p className="text-xs text-gray-500">Help customers understand what they're buying</p>
+                      <p className="text-xs text-gray-500 font-medium">Help customers understand what they're buying</p>
                     </div>
 
-                    <div className="space-y-2">
-                      <label className="block text-sm font-semibold text-gray-700">
+                    <div className="space-y-3">
+                      <label className="block text-sm font-bold text-gray-700">
                         Product Images {!editingProduct && '*'}
                       </label>
-                      <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-purple-400 transition-colors duration-200">
+                      <div className="border-2 border-dashed border-gray-300 rounded-3xl p-8 text-center hover:border-purple-400 transition-all duration-200 bg-white/50 backdrop-blur-sm hover:bg-white/70">
                         <input
                           key={editingProduct ? `edit-${editingProduct._id}` : 'new-product'}
                           type="file"
@@ -972,17 +917,17 @@ export default function ProductsPage() {
                           required={!editingProduct}
                         />
                         <label htmlFor="image-upload" className="cursor-pointer">
-                          <div className="flex flex-col items-center gap-3">
-                            <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                              <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div className="flex flex-col items-center gap-4">
+                            <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-pink-200 rounded-2xl flex items-center justify-center shadow-lg">
+                              <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                               </svg>
                             </div>
                             <div>
-                              <p className="text-sm font-medium text-gray-900">
+                              <p className="text-lg font-semibold text-gray-900">
                                 {editingProduct ? 'Click to add new images' : 'Click to upload product images'}
                               </p>
-                              <p className="text-xs text-gray-500 mt-1">
+                              <p className="text-sm text-gray-500 mt-2">
                                 {editingProduct ?
                                   'Replace existing images (optional)' :
                                   'Upload multiple images for your product gallery'
@@ -995,27 +940,27 @@ export default function ProductsPage() {
 
                       {/* New Image Previews */}
                       {form.imagePreviews && form.imagePreviews.length > 0 && (
-                        <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
-                          <p className="text-sm font-medium text-blue-700 mb-3">New images to upload:</p>
-                          <div className="flex flex-wrap gap-3">
+                        <div className="mt-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-200/50 shadow-lg">
+                          <p className="text-sm font-bold text-blue-700 mb-4">New images to upload:</p>
+                          <div className="flex flex-wrap gap-4">
                             {form.imagePreviews.map((preview, index) => (
                               <div key={index} className="relative group">
                                 <img
                                   src={preview}
                                   alt={`Preview ${index + 1}`}
-                                  className="w-20 h-20 object-cover rounded-lg border-2 border-blue-200"
+                                  className="w-24 h-24 object-cover rounded-2xl border-2 border-blue-200 shadow-lg"
                                 />
                                 <button
                                   type="button"
                                   onClick={() => removeImagePreview(index)}
-                                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                                  className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full flex items-center justify-center hover:from-red-600 hover:to-pink-600 transition-all duration-200 shadow-lg"
                                 >
                                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                   </svg>
                                 </button>
-                                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-lg transition-all duration-200 flex items-center justify-center">
-                                  <span className="text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-2xl transition-all duration-200 flex items-center justify-center">
+                                  <span className="text-white text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                                     New
                                   </span>
                                 </div>
@@ -1026,18 +971,18 @@ export default function ProductsPage() {
                       )}
 
                       {editingProduct && existingImages && existingImages.length > 0 && (
-                        <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                          <p className="text-sm font-medium text-gray-700 mb-3">Current images:</p>
-                          <div className="flex flex-wrap gap-3">
+                        <div className="mt-6 p-6 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl border border-gray-200/50 shadow-lg">
+                          <p className="text-sm font-bold text-gray-700 mb-4">Current images:</p>
+                          <div className="flex flex-wrap gap-4">
                             {existingImages.map((img, index) => (
                               <div key={index} className="relative group">
                                 <img
                                   src={img}
                                   alt={`Current image ${index + 1}`}
-                                  className="w-20 h-20 object-cover rounded-lg border-2 border-gray-200"
+                                  className="w-24 h-24 object-cover rounded-2xl border-2 border-gray-200 shadow-lg"
                                 />
-                                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-lg transition-all duration-200 flex items-center justify-center">
-                                  <span className="text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-2xl transition-all duration-200 flex items-center justify-center">
+                                  <span className="text-white text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                                     Current
                                   </span>
                                 </div>
@@ -1698,30 +1643,30 @@ export default function ProductsPage() {
                 </div>
 
                 {/* Form Buttons */}
-                <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
+                <div className="flex justify-end gap-6 pt-8 border-t border-white/20">
                   <button
                     type="button"
                     onClick={() => {
                       setShowForm(false);
                       resetForm();
                     }}
-                    className="px-6 py-3 border-2 border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-medium"
+                    className="px-8 py-4 border-2 border-gray-200 rounded-2xl text-gray-700 hover:bg-white/50 hover:border-gray-300 transition-all duration-200 font-semibold"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={createLoading || updateLoading}
-                    className="px-8 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-semibold shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 flex items-center gap-2"
+                    className="px-10 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-bold shadow-xl hover:shadow-2xl transform hover:scale-105 disabled:transform-none flex items-center gap-3"
                   >
                     {createLoading || updateLoading ? (
                       <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
                         Saving...
                       </>
                     ) : (
                       <>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                         {editingProduct ? 'Update Product' : 'Create Product'}
@@ -1736,28 +1681,33 @@ export default function ProductsPage() {
 
         {/* Modern Products Table */}
         <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 overflow-hidden">
-          <div className="p-6 border-b border-gray-100/50 bg-gradient-to-r from-gray-50/50 to-white/50">
+          <div className="p-8 border-b border-white/20 bg-gradient-to-r from-blue-50/50 to-indigo-50/50">
             <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-2xl font-bold text-gray-900">
-                  Your Products
-                </h3>
-                <p className="text-gray-600 mt-1">
-                  {Array.isArray(products) ? products.length : 0} products in your catalog
-                </p>
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-indigo-200 rounded-2xl flex items-center justify-center">
+                  <Package className="w-6 h-6 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent">
+                    Your Products
+                  </h3>
+                  <p className="text-gray-600 mt-1 text-lg">
+                    {Array.isArray(products) ? products.length : 0} products in your catalog
+                  </p>
+                </div>
               </div>
               <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-full">
-                  <Package className="w-4 h-4 text-blue-600" />
-                  <span className="text-blue-700 font-medium text-sm">
+                <div className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-2xl shadow-lg">
+                  <Package className="w-5 h-5 text-blue-600" />
+                  <span className="text-blue-700 font-bold text-sm">
                     {products.filter(p => p.hasVariants).length} with variants
                   </span>
                 </div>
-                <div className="flex items-center gap-2 px-3 py-2 bg-green-50 rounded-full">
-                  <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                <div className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-green-100 to-emerald-100 rounded-2xl shadow-lg">
+                  <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  <span className="text-green-700 font-medium text-sm">
+                  <span className="text-green-700 font-bold text-sm">
                     {products.filter(p => p.metaData?.title).length} optimized
                   </span>
                 </div>
@@ -1767,23 +1717,23 @@ export default function ProductsPage() {
 
           {loading ? (
             <div className="p-12 text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-4 text-gray-600 font-medium">Loading your products...</p>
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-600 border-t-transparent mx-auto"></div>
+              <p className="mt-6 text-gray-600 font-semibold text-lg">Loading your products...</p>
             </div>
           ) : !Array.isArray(products) || products.length === 0 ? (
             <div className="p-12 text-center">
-              <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-blue-200 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                <Package className="w-12 h-12 text-blue-600" />
+              <div className="w-28 h-28 bg-gradient-to-br from-blue-100 to-indigo-200 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-xl">
+                <Package className="w-14 h-14 text-blue-600" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">No products yet</h3>
-              <p className="text-gray-600 mb-8 max-w-md mx-auto">
+              <h3 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent mb-4">No products yet</h3>
+              <p className="text-gray-600 mb-10 max-w-lg mx-auto text-lg">
                 Start building your product catalog by adding your first product. It's easy and takes just a few minutes!
               </p>
               <button
                 onClick={() => setShowForm(true)}
-                className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-8 py-4 rounded-xl font-semibold shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-all duration-300 transform hover:scale-105 flex items-center gap-3 mx-auto"
+                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-10 py-5 rounded-2xl font-bold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 flex items-center gap-3 mx-auto"
               >
-                <Plus size={20} />
+                <Plus size={24} />
                 Create Your First Product
               </button>
             </div>
@@ -1827,144 +1777,132 @@ export default function ProductsPage() {
                 </div>
               )}
 
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
-                    <tr>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        <div className="flex items-center gap-2">
+              {/* Modern Products Grid */}
+              <div className="p-8">
+                {/* Select All Header */}
+                <div className="mb-6 p-4 bg-gradient-to-r from-blue-50/50 to-indigo-50/50 rounded-2xl border border-blue-100/50">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      checked={selectedProducts.length === products.length && products.length > 0}
+                      onChange={(e) => handleSelectAll(e.target.checked)}
+                    />
+                    <span className="text-lg font-bold text-gray-900">
+                      Select All Products ({products.length} total)
+                    </span>
+                  </div>
+                </div>
+
+                {/* Products Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {products.map((product) => (
+                    <div key={product._id} className="group bg-white/50 backdrop-blur-sm rounded-3xl border border-white/30 p-6 hover:bg-white/70 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                      {/* Product Header */}
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center gap-3">
                           <input
                             type="checkbox"
-                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                            checked={selectedProducts.length === products.length && products.length > 0}
-                            onChange={(e) => handleSelectAll(e.target.checked)}
+                            className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            checked={selectedProducts.includes(product._id)}
+                            onChange={(e) => handleProductSelect(product._id, e.target.checked)}
                           />
-                          Product
+                          <div className="flex-shrink-0 h-16 w-16 rounded-2xl overflow-hidden bg-gray-100 shadow-lg">
+                            {product.mainImages && product.mainImages.length > 0 ? (
+                              <img
+                                className="h-16 w-16 object-cover"
+                                src={product.mainImages[0]}
+                                alt={product.name}
+                              />
+                            ) : (
+                              <div className="h-16 w-16 flex items-center justify-center">
+                                <ImageIcon size={24} className="text-gray-400" />
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Category
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Price & Offers
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Created
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {products.map((product) => (
-                      <tr key={product._id} className="hover:bg-gray-50 transition-colors duration-200">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center gap-4">
-                            <input
-                              type="checkbox"
-                              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                              checked={selectedProducts.includes(product._id)}
-                              onChange={(e) => handleProductSelect(product._id, e.target.checked)}
-                            />
-                            <div className="flex items-center gap-3">
-                              <div className="flex-shrink-0 h-12 w-12 rounded-xl overflow-hidden bg-gray-100">
-                                {product.mainImages && product.mainImages.length > 0 ? (
-                                  <img
-                                    className="h-12 w-12 object-cover"
-                                    src={product.mainImages[0]}
-                                    alt={product.name}
-                                  />
-                                ) : (
-                                  <div className="h-12 w-12 flex items-center justify-center">
-                                    <ImageIcon size={20} className="text-gray-400" />
-                                  </div>
-                                )}
-                              </div>
-                              <div>
-                                <div className="text-sm font-semibold text-gray-900 max-w-xs truncate">
-                                  {product.name}
-                                </div>
-                                <div className="text-xs text-gray-500">
-                                  ID: {product.slug}
-                                </div>
-                              </div>
+                        <div className="flex flex-col gap-2">
+                          {product.hasVariants && (
+                            <div className="inline-flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 text-xs font-bold rounded-full border border-blue-200">
+                              <Package size={12} />
+                              {product.variants?.length || 0} variants
                             </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">
-                            {categories.find(c => c._id === product.categoryId)?.name || 'Uncategorized'}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="space-y-1">
-                            <div className="text-sm font-semibold text-gray-900">
+                          )}
+                          {product.metaData?.title && (
+                            <div className="inline-flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 text-xs font-bold rounded-full border border-green-200">
+                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                              </svg>
+                              SEO Ready
+                            </div>
+                          )}
+                          {!product.hasVariants && !product.metaData?.title && (
+                            <div className="inline-flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-600 text-xs font-bold rounded-full border border-gray-200">
+                              Basic
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Product Info */}
+                      <div className="mb-4">
+                        <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2">{product.name}</h3>
+                        <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                          <span className="font-medium">SKU:</span>
+                          <span>{product.slug}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <span className="font-medium">Category:</span>
+                          <span>{categories.find(c => c._id === product.subcategoryId)?.name || 'Uncategorized'}</span>
+                        </div>
+                      </div>
+
+                      {/* Pricing */}
+                      <div className="mb-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl border border-green-100/50">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="text-2xl font-bold text-gray-900">
                               ₹{product.basePrice || product.price || 0}
                             </div>
                             {product.mrp && product.mrp > (product.basePrice || product.price) && (
-                              <div className="text-xs text-gray-500 line-through">
+                              <div className="text-sm text-gray-500 line-through">
                                 MRP: ₹{product.mrp}
                               </div>
                             )}
-                            {product.discount && product.discount > 0 && (
-                              <div className="text-xs text-green-600 font-medium">
-                                {product.discount}% OFF
-                              </div>
-                            )}
                           </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex flex-col gap-1">
-                            {product.hasVariants && (
-                              <div className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full w-fit">
-                                <Package size={12} />
-                                {product.variants?.length || 0} variants
-                              </div>
-                            )}
-                            {product.metaData?.title && (
-                              <div className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full w-fit">
-                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                </svg>
-                                SEO Ready
-                              </div>
-                            )}
-                            {!product.hasVariants && !product.metaData?.title && (
-                              <div className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full w-fit">
-                                Basic
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(product.createdAt).toLocaleDateString()}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => handleEdit(product)}
-                              className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors duration-200 text-xs font-medium"
-                            >
-                              <Edit size={14} />
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => handleDelete(product._id)}
-                              className="inline-flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors duration-200 text-xs font-medium"
-                            >
-                              <Trash2 size={14} />
-                              Delete
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                          {product.discount && product.discount > 0 && (
+                            <div className="px-3 py-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-sm font-bold rounded-full">
+                              {product.discount}% OFF
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Created Date */}
+                      <div className="mb-4 text-sm text-gray-500">
+                        Created: {new Date(product.createdAt).toLocaleDateString()}
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => handleEdit(product)}
+                          className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center gap-2"
+                        >
+                          <Edit size={16} />
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(product._id)}
+                          className="flex-1 px-4 py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl font-semibold hover:from-red-600 hover:to-pink-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center gap-2"
+                        >
+                          <Trash2 size={16} />
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </>
           )}

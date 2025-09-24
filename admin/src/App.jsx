@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { fetchMe } from './store/slices/authSlice'
 import Layout from './components/Layout'
+import AuthLoading from './components/AuthLoading'
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import CategoriesPage from './pages/CategoriesPage'
@@ -14,9 +15,9 @@ import TwoBHKPackagePage from './pages/TwoBHKPackagePage'
 import DeliveryPartnerPage from './pages/DeliveryPartnerPage'
 import OrdersPage from './pages/OrdersPage'
 import UsersPage from './pages/UsersPage'
-import ReturnsPage from './pages/ReturnsPage'
 import HeroSectionPage from './pages/HeroSectionPage'
 import LeadsPage from './pages/LeadsPage'
+import ReturnsPage from './pages/ReturnsPage'
 
 function ProtectedRoute({ children }) {
   const user = useSelector((s) => s.auth.user)
@@ -26,12 +27,18 @@ function ProtectedRoute({ children }) {
 
 function App() {
   const dispatch = useDispatch()
-  const { user } = useSelector((s) => s.auth)
+  const { user, loading } = useSelector((s) => s.auth)
 
   useEffect(() => {
     dispatch(fetchMe())
   }, [dispatch])
 
+  // Show loading screen while verifying authentication
+  if (loading) {
+    return <AuthLoading />
+  }
+
+  // Show login page if not authenticated
   if (!user) {
     return <LoginPage />
   }
@@ -49,9 +56,9 @@ function App() {
         <Route path="/delivery-partners" element={<ProtectedRoute><DeliveryPartnerPage /></ProtectedRoute>} />
         <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
         <Route path="/users" element={<ProtectedRoute><UsersPage /></ProtectedRoute>} />
-        <Route path="/returns" element={<ProtectedRoute><ReturnsPage /></ProtectedRoute>} />
         <Route path="/hero-section" element={<ProtectedRoute><HeroSectionPage /></ProtectedRoute>} />
         <Route path="/leads" element={<ProtectedRoute><LeadsPage /></ProtectedRoute>} />
+        <Route path="/returns" element={<ProtectedRoute><ReturnsPage /></ProtectedRoute>} />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

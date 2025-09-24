@@ -133,7 +133,7 @@ export default function MyOrdersPage() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
             {/* Header Section */}
-            <div className="inset-0 bg-gradient-to-br from-primary-900 via-primary-800 to-primary-700 text-white">
+            <div className="inset-0 bg-primary text-white">
                 <div className="container-custom py-12">
                     <div className="flex items-center gap-4 mb-6">
                         <Link
@@ -333,7 +333,7 @@ export default function MyOrdersPage() {
                                             </div>
                                             <Link
                                                 href={`/return-request?orderId=${order._id}`}
-                                                className="group relative px-6 py-3 text-sm font-semibold text-white bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 hover:from-blue-600 hover:to-indigo-700 transform hover:scale-105 transition-all duration-200 flex items-center gap-2"
+                                                className="group relative px-6 py-3 text-sm font-semibold text-white btn-primary rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 hover:from-blue-600 hover:to-indigo-700 transform hover:scale-105 transition-all duration-200 flex items-center gap-2"
                                             >
                                                 <RefreshCw className="w-4 h-4 group-hover:scale-110 transition-transform" />
                                                 Return/Exchange

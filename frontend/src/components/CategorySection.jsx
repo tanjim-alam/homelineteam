@@ -13,7 +13,8 @@ export default function CategorySection() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const data = await api.getCategories();
+        // Use hierarchical categories to get proper mainCategory/subcategory structure
+        const data = await api.getHierarchicalCategories();
 
         // Handle different possible data structures
         let categoriesData = [];
@@ -28,12 +29,28 @@ export default function CategorySection() {
           categoriesData = data.data;
         }
 
+        // Flatten the hierarchical structure to get all subcategories
+        const flattenedCategories = [];
+        categoriesData.forEach(mainCategory => {
+          if (mainCategory.subcategories && mainCategory.subcategories.length > 0) {
+            mainCategory.subcategories.forEach(subcategory => {
+              flattenedCategories.push({
+                ...subcategory,
+                mainCategory: {
+                  _id: mainCategory._id,
+                  name: mainCategory.name,
+                  slug: mainCategory.slug
+                }
+              });
+            });
+          }
+        });
 
-        if (categoriesData.length > 0) {
-          setCategories(categoriesData);
+        if (flattenedCategories.length > 0) {
+          setCategories(flattenedCategories);
         } else {
-          // No fallback data - show empty state
-          setCategories([]);
+          // Fallback to main categories if no subcategories
+          setCategories(categoriesData);
         }
       } catch (error) {
         setCategories([]);
@@ -94,7 +111,7 @@ export default function CategorySection() {
           {categories.map((category, index) => (
             <Link
               key={category._id}
-              href={`/collections/${category.slug}`}
+              href={category.mainCategory ? `/${category.mainCategory.slug}/${category.slug}` : `/collections/${category.slug}`}
               className="group block"
             >
               <div className="relative text-center">
@@ -151,6 +168,11 @@ export default function CategorySection() {
                   <h3 className="font-bold text-gray-900 text-sm sm:text-base lg:text-lg mb-1 sm:mb-2 group-hover:text-primary-600 transition-colors duration-300">
                     {category.name}
                   </h3>
+                  {category.mainCategory && (
+                    <p className="text-xs text-gray-500 mb-1 font-medium">
+                      {category.mainCategory.name}
+                    </p>
+                  )}
 
                   <p className="text-gray-600 text-xs sm:text-sm leading-relaxed mb-2 sm:mb-3 line-clamp-2 px-1 sm:px-2">
                     {category.description}

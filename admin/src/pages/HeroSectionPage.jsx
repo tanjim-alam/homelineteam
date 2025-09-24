@@ -312,516 +312,549 @@ const HeroSectionPage = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-lg">Loading...</div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-12">
+          <div className="flex items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <span className="ml-4 text-lg text-gray-600 font-medium">Loading hero section...</span>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Hero Section Management</h1>
-        <button
-          onClick={saveChanges}
-          disabled={saving}
-          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
-        >
-          <Save className="w-4 h-4" />
-          {saving ? 'Saving...' : 'Save Changes'}
-        </button>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex space-x-1 mb-6 bg-gray-100 p-1 rounded-lg">
-        <button
-          onClick={() => setActiveTab('mobile-background')}
-          className={`px-4 py-2 rounded-md transition-colors ${activeTab === 'mobile-background'
-              ? 'bg-white text-blue-600 shadow-sm'
-              : 'text-gray-600 hover:text-gray-800'
-            }`}
-        >
-          Mobile Background Images
-        </button>
-        <button
-          onClick={() => setActiveTab('desktop-background')}
-          className={`px-4 py-2 rounded-md transition-colors ${activeTab === 'desktop-background'
-              ? 'bg-white text-blue-600 shadow-sm'
-              : 'text-gray-600 hover:text-gray-800'
-            }`}
-        >
-          Desktop Background Images
-        </button>
-        <button
-          onClick={() => setActiveTab('categories')}
-          className={`px-4 py-2 rounded-md transition-colors ${activeTab === 'categories'
-              ? 'bg-white text-blue-600 shadow-sm'
-              : 'text-gray-600 hover:text-gray-800'
-            }`}
-        >
-          Categories
-        </button>
-        <button
-          onClick={() => setActiveTab('settings')}
-          className={`px-4 py-2 rounded-md transition-colors ${activeTab === 'settings'
-              ? 'bg-white text-blue-600 shadow-sm'
-              : 'text-gray-600 hover:text-gray-800'
-            }`}
-        >
-          Slider Settings
-        </button>
-      </div>
-
-      {/* Mobile Background Images Tab */}
-      {activeTab === 'mobile-background' && (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      <div className="p-6 max-w-7xl mx-auto space-y-8">
+        {/* Modern Header */}
+        <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-8">
+          <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-semibold">Mobile Background Images</h2>
-              <p className="text-sm text-gray-600 mt-1">These images are used for the mobile hero section and desktop right side slider</p>
-              <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-xs text-blue-800">
-                  <strong>Mobile:</strong> Images slide automatically with configurable timing in Slider Settings<br />
-                  <strong>Desktop Right Side:</strong> Same images displayed in the right side slider
-                </p>
-              </div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent mb-2">
+                Hero Section Management
+              </h1>
+              <p className="text-lg text-gray-600">Manage hero section images, categories, and slider settings</p>
             </div>
-            <label className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 cursor-pointer flex items-center gap-2">
-              <Upload className="w-4 h-4" />
-              Upload Image
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => e.target.files[0] && handleImageUpload('mobile-background', e.target.files[0])}
-                disabled={uploading}
-              />
-            </label>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {heroData.mobileBackgroundImages.map((image, index) => (
-              <div key={index} className="border rounded-lg p-4 bg-white shadow-sm">
-                <div className="aspect-video bg-gray-100 rounded-lg mb-3 overflow-hidden">
-                  <img
-                    src={image.imageUrl}
-                    alt={image.altText}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-
-                <div className="space-y-3">
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={image.altText}
-                      onChange={(e) => updateMobileBackgroundImage(index, 'altText', e.target.value)}
-                      className="w-full px-3 py-2 border rounded-md"
-                      placeholder="Alt text"
-                    />
-                    {savingItems.has(`mobile-bg-${index}`) && (
-                      <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
-                        <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={image.isActive}
-                          onChange={(e) => updateMobileBackgroundImage(index, 'isActive', e.target.checked)}
-                        />
-                        Active
-                      </label>
-                      {image.isActive && (
-                        <div className="flex items-center gap-1 text-xs text-green-600">
-                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          <span>Used on Mobile & Desktop Right Side</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex gap-1">
-                      {index > 0 && (
-                        <button
-                          onClick={() => reorderImages('mobile-background', index, index - 1)}
-                          className="p-1 text-gray-600 hover:text-blue-600"
-                        >
-                          <ArrowUp className="w-4 h-4" />
-                        </button>
-                      )}
-                      {index < heroData.mobileBackgroundImages.length - 1 && (
-                        <button
-                          onClick={() => reorderImages('mobile-background', index, index + 1)}
-                          className="p-1 text-gray-600 hover:text-blue-600"
-                        >
-                          <ArrowDown className="w-4 h-4" />
-                        </button>
-                      )}
-                      <button
-                        onClick={() => deleteImage('mobile-background', index)}
-                        className="p-1 text-red-600 hover:text-red-800"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
+            <div className="flex items-center gap-4">
+              <button
+                onClick={saveChanges}
+                disabled={saving}
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-2xl font-bold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              >
+                <Save className={`w-5 h-5 ${saving ? 'animate-pulse' : ''}`} />
+                {saving ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
           </div>
         </div>
-      )}
 
-      {/* Desktop Background Images Tab */}
-      {activeTab === 'desktop-background' && (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h2 className="text-xl font-semibold">Desktop Background Images</h2>
-              <p className="text-sm text-gray-600 mt-1">These images are used for the main desktop hero background</p>
-              <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-xs text-blue-800">
-                  <strong>Desktop Main Background:</strong> Images slide automatically every 5 seconds with navigation dots<br />
-                  <strong>Full Screen:</strong> Covers the entire desktop hero section with dark overlay
-                </p>
-              </div>
-            </div>
-            <label className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 cursor-pointer flex items-center gap-2">
-              <Upload className="w-4 h-4" />
-              Upload Image
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => e.target.files[0] && handleImageUpload('desktop-background', e.target.files[0])}
-                disabled={uploading}
-              />
-            </label>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {heroData.desktopBackgroundImages.map((image, index) => (
-              <div key={index} className="border rounded-lg p-4 bg-white shadow-sm">
-                <div className="aspect-video bg-gray-100 rounded-lg mb-3 overflow-hidden">
-                  <img
-                    src={image.imageUrl}
-                    alt={image.altText}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-
-                <div className="space-y-3">
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={image.altText}
-                      onChange={(e) => updateDesktopBackgroundImage(index, 'altText', e.target.value)}
-                      className="w-full px-3 py-2 border rounded-md"
-                      placeholder="Alt text"
-                    />
-                    {savingItems.has(`desktop-bg-${index}`) && (
-                      <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
-                        <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={image.isActive}
-                          onChange={(e) => updateDesktopBackgroundImage(index, 'isActive', e.target.checked)}
-                        />
-                        Active
-                      </label>
-                      {image.isActive && (
-                        <div className="flex items-center gap-1 text-xs text-green-600">
-                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          <span>Used on Desktop Main Background</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex gap-1">
-                      {index > 0 && (
-                        <button
-                          onClick={() => reorderImages('desktop-background', index, index - 1)}
-                          className="p-1 text-gray-600 hover:text-blue-600"
-                        >
-                          <ArrowUp className="w-4 h-4" />
-                        </button>
-                      )}
-                      {index < heroData.desktopBackgroundImages.length - 1 && (
-                        <button
-                          onClick={() => reorderImages('desktop-background', index, index + 1)}
-                          className="p-1 text-gray-600 hover:text-blue-600"
-                        >
-                          <ArrowDown className="w-4 h-4" />
-                        </button>
-                      )}
-                      <button
-                        onClick={() => deleteImage('desktop-background', index)}
-                        className="p-1 text-red-600 hover:text-red-800"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
+        {/* Modern Tabs */}
+        <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-2">
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setActiveTab('mobile-background')}
+              className={`px-6 py-3 rounded-2xl font-bold transition-all duration-300 flex items-center gap-2 ${activeTab === 'mobile-background'
+                ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-xl shadow-blue-500/25'
+                : 'text-gray-600 hover:text-gray-800 hover:bg-white/50'
+                }`}
+            >
+              📱 Mobile Background
+            </button>
+            <button
+              onClick={() => setActiveTab('desktop-background')}
+              className={`px-6 py-3 rounded-2xl font-bold transition-all duration-300 flex items-center gap-2 ${activeTab === 'desktop-background'
+                ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-xl shadow-blue-500/25'
+                : 'text-gray-600 hover:text-gray-800 hover:bg-white/50'
+                }`}
+            >
+              🖥️ Desktop Background
+            </button>
+            <button
+              onClick={() => setActiveTab('categories')}
+              className={`px-6 py-3 rounded-2xl font-bold transition-all duration-300 flex items-center gap-2 ${activeTab === 'categories'
+                ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-xl shadow-blue-500/25'
+                : 'text-gray-600 hover:text-gray-800 hover:bg-white/50'
+                }`}
+            >
+              🏷️ Categories
+            </button>
+            <button
+              onClick={() => setActiveTab('settings')}
+              className={`px-6 py-3 rounded-2xl font-bold transition-all duration-300 flex items-center gap-2 ${activeTab === 'settings'
+                ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-xl shadow-blue-500/25'
+                : 'text-gray-600 hover:text-gray-800 hover:bg-white/50'
+                }`}
+            >
+              ⚙️ Slider Settings
+            </button>
           </div>
         </div>
-      )}
 
-      {/* Categories Tab */}
-      {activeTab === 'categories' && (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">Category Images</h2>
-            <div className="flex gap-3">
-              {/* New Category Form */}
-              <div className="bg-gray-50 p-4 rounded-lg border">
-                <h3 className="text-sm font-medium text-gray-700 mb-3">New Category Details</h3>
-                <p className="text-xs text-gray-500 mb-3">Fill in the details before uploading the image</p>
-                <div className="space-y-2">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Category Title</label>
-                    <input
-                      type="text"
-                      value={newCategoryData.title}
-                      onChange={(e) => setNewCategoryData(prev => ({ ...prev, title: e.target.value }))}
-                      className="w-full px-3 py-2 border rounded-md text-sm"
-                      placeholder="e.g., Kitchen Cleaning"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Category Link</label>
-                    <input
-                      type="text"
-                      value={newCategoryData.link}
-                      onChange={(e) => setNewCategoryData(prev => ({ ...prev, link: e.target.value }))}
-                      className="w-full px-3 py-2 border rounded-md text-sm"
-                      placeholder="/collections/kitchen-cleaning"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Alt Text</label>
-                    <input
-                      type="text"
-                      value={newCategoryData.altText}
-                      onChange={(e) => setNewCategoryData(prev => ({ ...prev, altText: e.target.value }))}
-                      className="w-full px-3 py-2 border rounded-md text-sm"
-                      placeholder="e.g., Kitchen Cleaning Service"
-                    />
-                  </div>
+        {/* Mobile Background Images Tab */}
+        {activeTab === 'mobile-background' && (
+          <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-8">
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent mb-2">
+                  Mobile Background Images
+                </h2>
+                <p className="text-lg text-gray-600 mb-4">These images are used for the mobile hero section and desktop right side slider</p>
+                <div className="bg-gradient-to-r from-blue-50/80 to-indigo-50/80 backdrop-blur-sm p-6 rounded-2xl border border-blue-200/50">
+                  <p className="text-sm text-blue-800 font-medium">
+                    <strong>Mobile:</strong> Images slide automatically with configurable timing in Slider Settings<br />
+                    <strong>Desktop Right Side:</strong> Same images displayed in the right side slider
+                  </p>
                 </div>
-
-                {/* Preview */}
-                {(newCategoryData.title || newCategoryData.link) && (
-                  <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded text-xs">
-                    <div className="font-medium text-blue-800">Preview:</div>
-                    <div className="text-blue-600">
-                      <div><strong>Title:</strong> {newCategoryData.title || 'Not set'}</div>
-                      <div><strong>Link:</strong> {newCategoryData.link || 'Not set'}</div>
-                      <div><strong>Alt Text:</strong> {newCategoryData.altText || 'Not set'}</div>
-                    </div>
-                  </div>
-                )}
               </div>
-
-              <label className={`px-4 py-2 rounded-lg cursor-pointer flex items-center gap-2 ${!newCategoryData.title || !newCategoryData.link
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-green-600 hover:bg-green-700'
-                } text-white`}>
-                <Upload className="w-4 h-4" />
-                {uploading ? 'Uploading...' : 'Upload Category'}
+              <label className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-2xl font-bold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 cursor-pointer flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                <Upload className="w-5 h-5" />
+                Upload Image
                 <input
                   type="file"
                   accept="image/*"
                   className="hidden"
-                  onChange={(e) => {
-                    if (e.target.files[0] && newCategoryData.title && newCategoryData.link) {
-                      handleImageUpload('category', e.target.files[0]);
-                    } else if (e.target.files[0]) {
-                      alert('Please fill in Category Title and Link before uploading');
-                    }
-                  }}
-                  disabled={uploading || !newCategoryData.title || !newCategoryData.link}
+                  onChange={(e) => e.target.files[0] && handleImageUpload('mobile-background', e.target.files[0])}
+                  disabled={uploading}
                 />
               </label>
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {heroData.categories.map((category, index) => (
-              <div key={index} className="border rounded-lg p-4 bg-white shadow-sm">
-                <div className="aspect-square bg-gray-100 rounded-lg mb-3 overflow-hidden">
-                  <img
-                    src={category.imageUrl}
-                    alt={category.altText}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-
-                <div className="space-y-3">
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={category.title}
-                      onChange={(e) => updateCategory(index, 'title', e.target.value)}
-                      className="w-full px-3 py-2 border rounded-md"
-                      placeholder="Category title"
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {heroData.mobileBackgroundImages.map((image, index) => (
+                <div key={index} className="bg-white/50 backdrop-blur-sm border border-gray-200/50 rounded-3xl p-6 shadow-xl hover:shadow-2xl hover:bg-white/70 transition-all duration-300 transform hover:scale-[1.02]">
+                  <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl mb-6 overflow-hidden shadow-lg">
+                    <img
+                      src={image.imageUrl}
+                      alt={image.altText}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                     />
-                    {savingItems.has(`cat-${index}`) && (
-                      <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
-                        <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                      </div>
-                    )}
                   </div>
 
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={category.link}
-                      onChange={(e) => updateCategory(index, 'link', e.target.value)}
-                      className="w-full px-3 py-2 border rounded-md"
-                      placeholder="Link URL"
-                    />
-                    {savingItems.has(`cat-${index}`) && (
-                      <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
-                        <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={category.altText}
-                      onChange={(e) => updateCategory(index, 'altText', e.target.value)}
-                      className="w-full px-3 py-2 border rounded-md"
-                      placeholder="Alt text"
-                    />
-                    {savingItems.has(`cat-${index}`) && (
-                      <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
-                        <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <label className="flex items-center gap-2">
+                  <div className="space-y-4">
+                    <div className="relative">
                       <input
-                        type="checkbox"
-                        checked={category.isActive}
-                        onChange={(e) => updateCategory(index, 'isActive', e.target.checked)}
+                        type="text"
+                        value={image.altText}
+                        onChange={(e) => updateMobileBackgroundImage(index, 'altText', e.target.value)}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 bg-white/80 backdrop-blur-sm shadow-lg"
+                        placeholder="Alt text"
                       />
-                      Active
-                    </label>
+                      {savingItems.has(`mobile-bg-${index}`) && (
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                          <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                      )}
+                    </div>
 
-                    <div className="flex gap-1">
-                      {index > 0 && (
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <label className="flex items-center gap-3 p-3 bg-gradient-to-r from-green-50/50 to-emerald-50/50 rounded-xl border border-green-100/50">
+                          <input
+                            type="checkbox"
+                            checked={image.isActive}
+                            onChange={(e) => updateMobileBackgroundImage(index, 'isActive', e.target.checked)}
+                            className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                          />
+                          <span className="font-bold text-gray-700">Active</span>
+                        </label>
+                        {image.isActive && (
+                          <div className="flex items-center gap-2 text-sm text-green-600 bg-gradient-to-r from-green-50/50 to-emerald-50/50 rounded-xl px-3 py-2 border border-green-100/50">
+                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                            <span className="font-medium">Used on Mobile & Desktop Right Side</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex gap-2">
+                        {index > 0 && (
+                          <button
+                            onClick={() => reorderImages('mobile-background', index, index - 1)}
+                            className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200"
+                          >
+                            <ArrowUp className="w-4 h-4" />
+                          </button>
+                        )}
+                        {index < heroData.mobileBackgroundImages.length - 1 && (
+                          <button
+                            onClick={() => reorderImages('mobile-background', index, index + 1)}
+                            className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200"
+                          >
+                            <ArrowDown className="w-4 h-4" />
+                          </button>
+                        )}
                         <button
-                          onClick={() => reorderImages('categories', index, index - 1)}
-                          className="p-1 text-gray-600 hover:text-blue-600"
+                          onClick={() => deleteImage('mobile-background', index)}
+                          className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-xl transition-all duration-200"
                         >
-                          <ArrowUp className="w-4 h-4" />
+                          <Trash2 className="w-4 h-4" />
                         </button>
-                      )}
-                      {index < heroData.categories.length - 1 && (
-                        <button
-                          onClick={() => reorderImages('categories', index, index + 1)}
-                          className="p-1 text-gray-600 hover:text-blue-600"
-                        >
-                          <ArrowDown className="w-4 h-4" />
-                        </button>
-                      )}
-                      <button
-                        onClick={() => deleteImage('categories', index)}
-                        className="p-1 text-red-600 hover:text-red-800"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Settings Tab */}
-      {activeTab === 'settings' && (
-        <div className="space-y-6">
-          <h2 className="text-xl font-semibold">Slider Settings</h2>
-
-          <div className="bg-white p-6 rounded-lg border shadow-sm">
-            <div className="space-y-4">
-              <label className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={heroData.sliderSettings.autoSlide}
-                  onChange={(e) => setHeroData(prev => ({
-                    ...prev,
-                    sliderSettings: { ...prev.sliderSettings, autoSlide: e.target.checked }
-                  }))}
-                />
-                <span className="text-lg">Enable Auto Slide</span>
-              </label>
-
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Slide Interval (milliseconds)
-                </label>
-                <input
-                  type="number"
-                  value={heroData.sliderSettings.slideInterval}
-                  onChange={(e) => setHeroData(prev => ({
-                    ...prev,
-                    sliderSettings: { ...prev.sliderSettings, slideInterval: parseInt(e.target.value) }
-                  }))}
-                  className="w-full px-3 py-2 border rounded-md"
-                  min="1000"
-                  step="500"
-                />
+        {/* Desktop Background Images Tab */}
+        {activeTab === 'desktop-background' && (
+          <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-8">
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent mb-2">
+                  Desktop Background Images
+                </h2>
+                <p className="text-lg text-gray-600 mb-4">These images are used for the main desktop hero background</p>
+                <div className="bg-gradient-to-r from-blue-50/80 to-indigo-50/80 backdrop-blur-sm p-6 rounded-2xl border border-blue-200/50">
+                  <p className="text-sm text-blue-800 font-medium">
+                    <strong>Desktop Main Background:</strong> Images slide automatically every 5 seconds with navigation dots<br />
+                    <strong>Full Screen:</strong> Covers the entire desktop hero section with dark overlay
+                  </p>
+                </div>
               </div>
-
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Transition Duration (milliseconds)
-                </label>
+              <label className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-2xl font-bold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 cursor-pointer flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                <Upload className="w-5 h-5" />
+                Upload Image
                 <input
-                  type="number"
-                  value={heroData.sliderSettings.transitionDuration}
-                  onChange={(e) => setHeroData(prev => ({
-                    ...prev,
-                    sliderSettings: { ...prev.sliderSettings, transitionDuration: parseInt(e.target.value) }
-                  }))}
-                  className="w-full px-3 py-2 border rounded-md"
-                  min="100"
-                  step="100"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => e.target.files[0] && handleImageUpload('desktop-background', e.target.files[0])}
+                  disabled={uploading}
                 />
+              </label>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {heroData.desktopBackgroundImages.map((image, index) => (
+                <div key={index} className="bg-white/50 backdrop-blur-sm border border-gray-200/50 rounded-3xl p-6 shadow-xl hover:shadow-2xl hover:bg-white/70 transition-all duration-300 transform hover:scale-[1.02]">
+                  <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl mb-6 overflow-hidden shadow-lg">
+                    <img
+                      src={image.imageUrl}
+                      alt={image.altText}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={image.altText}
+                        onChange={(e) => updateDesktopBackgroundImage(index, 'altText', e.target.value)}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 bg-white/80 backdrop-blur-sm shadow-lg"
+                        placeholder="Alt text"
+                      />
+                      {savingItems.has(`desktop-bg-${index}`) && (
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                          <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <label className="flex items-center gap-3 p-3 bg-gradient-to-r from-green-50/50 to-emerald-50/50 rounded-xl border border-green-100/50">
+                          <input
+                            type="checkbox"
+                            checked={image.isActive}
+                            onChange={(e) => updateDesktopBackgroundImage(index, 'isActive', e.target.checked)}
+                            className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                          />
+                          <span className="font-bold text-gray-700">Active</span>
+                        </label>
+                        {image.isActive && (
+                          <div className="flex items-center gap-2 text-sm text-green-600 bg-gradient-to-r from-green-50/50 to-emerald-50/50 rounded-xl px-3 py-2 border border-green-100/50">
+                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                            <span className="font-medium">Used on Desktop Main Background</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex gap-2">
+                        {index > 0 && (
+                          <button
+                            onClick={() => reorderImages('desktop-background', index, index - 1)}
+                            className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200"
+                          >
+                            <ArrowUp className="w-4 h-4" />
+                          </button>
+                        )}
+                        {index < heroData.desktopBackgroundImages.length - 1 && (
+                          <button
+                            onClick={() => reorderImages('desktop-background', index, index + 1)}
+                            className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200"
+                          >
+                            <ArrowDown className="w-4 h-4" />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => deleteImage('desktop-background', index)}
+                          className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-xl transition-all duration-200"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Categories Tab */}
+        {activeTab === 'categories' && (
+          <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-8">
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent">
+                Category Images
+              </h2>
+              <div className="flex gap-6">
+                {/* Modern New Category Form */}
+                <div className="bg-gradient-to-r from-gray-50/80 to-blue-50/80 backdrop-blur-sm p-6 rounded-2xl border border-gray-200/50 shadow-lg">
+                  <h3 className="text-lg font-bold text-gray-700 mb-4">New Category Details</h3>
+                  <p className="text-sm text-gray-500 mb-4">Fill in the details before uploading the image</p>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-bold text-gray-600 mb-2">Category Title</label>
+                      <input
+                        type="text"
+                        value={newCategoryData.title}
+                        onChange={(e) => setNewCategoryData(prev => ({ ...prev, title: e.target.value }))}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 bg-white/80 backdrop-blur-sm shadow-lg"
+                        placeholder="e.g., Kitchen Cleaning"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-gray-600 mb-2">Category Link</label>
+                      <input
+                        type="text"
+                        value={newCategoryData.link}
+                        onChange={(e) => setNewCategoryData(prev => ({ ...prev, link: e.target.value }))}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 bg-white/80 backdrop-blur-sm shadow-lg"
+                        placeholder="/collections/kitchen-cleaning"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-gray-600 mb-2">Alt Text</label>
+                      <input
+                        type="text"
+                        value={newCategoryData.altText}
+                        onChange={(e) => setNewCategoryData(prev => ({ ...prev, altText: e.target.value }))}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 bg-white/80 backdrop-blur-sm shadow-lg"
+                        placeholder="e.g., Kitchen Cleaning Service"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Modern Preview */}
+                  {(newCategoryData.title || newCategoryData.link) && (
+                    <div className="mt-6 p-4 bg-gradient-to-r from-blue-50/80 to-indigo-50/80 backdrop-blur-sm border border-blue-200/50 rounded-2xl">
+                      <div className="font-bold text-blue-800 mb-2">Preview:</div>
+                      <div className="text-blue-600 space-y-1">
+                        <div><strong>Title:</strong> {newCategoryData.title || 'Not set'}</div>
+                        <div><strong>Link:</strong> {newCategoryData.link || 'Not set'}</div>
+                        <div><strong>Alt Text:</strong> {newCategoryData.altText || 'Not set'}</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <label className={`px-6 py-3 rounded-2xl cursor-pointer flex items-center gap-3 font-bold shadow-xl transition-all duration-300 transform hover:scale-105 ${!newCategoryData.title || !newCategoryData.link
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:shadow-2xl'
+                  } text-white`}>
+                  <Upload className="w-5 h-5" />
+                  {uploading ? 'Uploading...' : 'Upload Category'}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      if (e.target.files[0] && newCategoryData.title && newCategoryData.link) {
+                        handleImageUpload('category', e.target.files[0]);
+                      } else if (e.target.files[0]) {
+                        alert('Please fill in Category Title and Link before uploading');
+                      }
+                    }}
+                    disabled={uploading || !newCategoryData.title || !newCategoryData.link}
+                  />
+                </label>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {heroData.categories.map((category, index) => (
+                <div key={index} className="bg-white/50 backdrop-blur-sm border border-gray-200/50 rounded-3xl p-6 shadow-xl hover:shadow-2xl hover:bg-white/70 transition-all duration-300 transform hover:scale-[1.02]">
+                  <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl mb-6 overflow-hidden shadow-lg">
+                    <img
+                      src={category.imageUrl}
+                      alt={category.altText}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={category.title}
+                        onChange={(e) => updateCategory(index, 'title', e.target.value)}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 bg-white/80 backdrop-blur-sm shadow-lg"
+                        placeholder="Category title"
+                      />
+                      {savingItems.has(`cat-${index}`) && (
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                          <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={category.link}
+                        onChange={(e) => updateCategory(index, 'link', e.target.value)}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 bg-white/80 backdrop-blur-sm shadow-lg"
+                        placeholder="Link URL"
+                      />
+                      {savingItems.has(`cat-${index}`) && (
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                          <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={category.altText}
+                        onChange={(e) => updateCategory(index, 'altText', e.target.value)}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 bg-white/80 backdrop-blur-sm shadow-lg"
+                        placeholder="Alt text"
+                      />
+                      {savingItems.has(`cat-${index}`) && (
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                          <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <label className="flex items-center gap-3 p-3 bg-gradient-to-r from-green-50/50 to-emerald-50/50 rounded-xl border border-green-100/50">
+                        <input
+                          type="checkbox"
+                          checked={category.isActive}
+                          onChange={(e) => updateCategory(index, 'isActive', e.target.checked)}
+                          className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                        />
+                        <span className="font-bold text-gray-700">Active</span>
+                      </label>
+
+                      <div className="flex gap-2">
+                        {index > 0 && (
+                          <button
+                            onClick={() => reorderImages('categories', index, index - 1)}
+                            className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200"
+                          >
+                            <ArrowUp className="w-4 h-4" />
+                          </button>
+                        )}
+                        {index < heroData.categories.length - 1 && (
+                          <button
+                            onClick={() => reorderImages('categories', index, index + 1)}
+                            className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200"
+                          >
+                            <ArrowDown className="w-4 h-4" />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => deleteImage('categories', index)}
+                          className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-xl transition-all duration-200"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Settings Tab */}
+        {activeTab === 'settings' && (
+          <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-8">
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent mb-8">
+              Slider Settings
+            </h2>
+
+            <div className="bg-gradient-to-r from-gray-50/80 to-blue-50/80 backdrop-blur-sm p-8 rounded-2xl border border-gray-200/50 shadow-lg">
+              <div className="space-y-8">
+                <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-green-50/50 to-emerald-50/50 rounded-2xl border border-green-100/50">
+                  <input
+                    type="checkbox"
+                    checked={heroData.sliderSettings.autoSlide}
+                    onChange={(e) => setHeroData(prev => ({
+                      ...prev,
+                      sliderSettings: { ...prev.sliderSettings, autoSlide: e.target.checked }
+                    }))}
+                    className="w-5 h-5 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                  />
+                  <span className="text-xl font-bold text-gray-700">Enable Auto Slide</span>
+                </div>
+
+                <div className="space-y-4">
+                  <label className="block text-lg font-bold text-gray-700">
+                    Slide Interval (milliseconds)
+                  </label>
+                  <input
+                    type="number"
+                    value={heroData.sliderSettings.slideInterval}
+                    onChange={(e) => setHeroData(prev => ({
+                      ...prev,
+                      sliderSettings: { ...prev.sliderSettings, slideInterval: parseInt(e.target.value) }
+                    }))}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 bg-white/80 backdrop-blur-sm shadow-lg"
+                    min="1000"
+                    step="500"
+                  />
+                  <p className="text-sm text-gray-500">Time between automatic slide transitions</p>
+                </div>
+
+                <div className="space-y-4">
+                  <label className="block text-lg font-bold text-gray-700">
+                    Transition Duration (milliseconds)
+                  </label>
+                  <input
+                    type="number"
+                    value={heroData.sliderSettings.transitionDuration}
+                    onChange={(e) => setHeroData(prev => ({
+                      ...prev,
+                      sliderSettings: { ...prev.sliderSettings, transitionDuration: parseInt(e.target.value) }
+                    }))}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 bg-white/80 backdrop-blur-sm shadow-lg"
+                    min="100"
+                    step="100"
+                  />
+                  <p className="text-sm text-gray-500">Duration of the slide transition animation</p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Toast Notification */}
-      <Toast
-        show={toast.show}
-        onClose={() => setToast(prev => ({ ...prev, show: false }))}
-        type={toast.type}
-        message={toast.message}
-      />
+        {/* Toast Notification */}
+        <Toast
+          show={toast.show}
+          onClose={() => setToast(prev => ({ ...prev, show: false }))}
+          type={toast.type}
+          message={toast.message}
+        />
+      </div>
     </div>
   );
 };

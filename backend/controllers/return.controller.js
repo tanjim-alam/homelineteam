@@ -6,7 +6,7 @@ const Product = require('../models/Product');
 // Create a new return/exchange request
 exports.createReturnRequest = async (req, res, next) => {
     try {
-        const { orderId, type, items, exchangeItems, customerNotes, images } = req.body;
+        const { orderId, type, items, exchangeItems, customerNotes, images, bankAccount, shippingAddress } = req.body;
         const userId = req.user._id;
 
         // Validate required fields
@@ -55,48 +55,31 @@ exports.createReturnRequest = async (req, res, next) => {
             });
         }
 
-        // Calculate refund amount
-        const refundAmount = items.reduce((total, item) => {
-            const orderItem = order.items.find(oi => oi.productId.toString() === item.productId);
-            return total + (orderItem.price * item.quantity);
-        }, 0);
-
         // Create return request
         const returnRequest = new Return({
-            user: userId,
             order: orderId,
+            user: userId,
             type,
             items,
             exchangeItems: exchangeItems || [],
-            customer: {
-                name: order.customer.name,
-                email: order.customer.email,
-                phone: order.customer.phone,
-                address: order.customer.address,
-                city: order.customer.city,
-                state: order.customer.state,
-                zip: order.customer.zip
-            },
-            refund: {
-                amount: refundAmount,
-                method: 'original_payment'
-            },
             customerNotes,
             images: images || [],
-            withinPolicy: true // Will be validated by admin
+            bankAccount: bankAccount || {},
+            shippingAddress: shippingAddress || {}
         });
 
         await returnRequest.save();
 
         // Populate the return request with order and user details
         await returnRequest.populate([
-            { path: 'order', select: 'orderNumber total status' },
-            { path: 'user', select: 'name email' }
+            { path: 'order', select: 'orderNumber status totalAmount' },
+            { path: 'user', select: 'name email' },
+            { path: 'items.productId', select: 'name price images' }
         ]);
 
         res.status(201).json({
             success: true,
-            message: 'Return request submitted successfully',
+            message: 'Return request created successfully',
             data: returnRequest
         });
 
@@ -109,20 +92,31 @@ exports.createReturnRequest = async (req, res, next) => {
 exports.getUserReturns = async (req, res, next) => {
     try {
         const userId = req.user._id;
-        const { status, type } = req.query;
+        const { status, type, page = 1, limit = 10 } = req.query;
 
-        let filter = { user: userId };
+        const filter = { user: userId };
         if (status) filter.status = status;
         if (type) filter.type = type;
 
         const returns = await Return.find(filter)
-            .populate('order', 'orderNumber total status createdAt')
-            .populate('user', 'name email')
-            .sort({ requestedAt: -1 });
+            .populate([
+                { path: 'order', select: 'orderNumber status totalAmount' },
+                { path: 'items.productId', select: 'name price images' }
+            ])
+            .sort({ createdAt: -1 })
+            .limit(limit * 1)
+            .skip((page - 1) * limit);
+
+        const total = await Return.countDocuments(filter);
 
         res.json({
             success: true,
-            data: returns
+            data: returns,
+            pagination: {
+                current: parseInt(page),
+                pages: Math.ceil(total / limit),
+                total
+            }
         });
 
     } catch (error) {
@@ -130,17 +124,19 @@ exports.getUserReturns = async (req, res, next) => {
     }
 };
 
-// Get single return request
+// Get return request by ID
 exports.getReturnById = async (req, res, next) => {
     try {
         const { id } = req.params;
         const userId = req.user._id;
 
         const returnRequest = await Return.findOne({ _id: id, user: userId })
-            .populate('order', 'orderNumber total status items createdAt')
-            .populate('user', 'name email phone')
-            .populate('items.productId', 'name images')
-            .populate('exchangeItems.productId', 'name images');
+            .populate([
+                { path: 'order', select: 'orderNumber status totalAmount items' },
+                { path: 'user', select: 'name email' },
+                { path: 'items.productId', select: 'name price images' },
+                { path: 'exchangeItems.productId', select: 'name price images' }
+            ]);
 
         if (!returnRequest) {
             return res.status(404).json({
@@ -159,7 +155,7 @@ exports.getReturnById = async (req, res, next) => {
     }
 };
 
-// Update return request (customer can only update certain fields)
+// Update return request (user)
 exports.updateReturnRequest = async (req, res, next) => {
     try {
         const { id } = req.params;
@@ -182,7 +178,6 @@ exports.updateReturnRequest = async (req, res, next) => {
             });
         }
 
-        // Update allowed fields
         if (customerNotes !== undefined) returnRequest.customerNotes = customerNotes;
         if (images !== undefined) returnRequest.images = images;
 
@@ -213,11 +208,11 @@ exports.cancelReturnRequest = async (req, res, next) => {
             });
         }
 
-        // Only allow cancellation if status is pending or approved
-        if (!['pending', 'approved'].includes(returnRequest.status)) {
+        // Only allow cancellation if status is pending
+        if (returnRequest.status !== 'pending') {
             return res.status(400).json({
                 success: false,
-                message: 'Cannot cancel return request in current status'
+                message: 'Cannot cancel return request after it has been processed'
             });
         }
 
@@ -238,19 +233,30 @@ exports.cancelReturnRequest = async (req, res, next) => {
 // Admin: Get all return requests
 exports.getAllReturns = async (req, res, next) => {
     try {
-        const { status, type, page = 1, limit = 10 } = req.query;
-        const skip = (page - 1) * limit;
+        const { status, type, page = 1, limit = 10, search } = req.query;
 
-        let filter = {};
+        const filter = {};
         if (status) filter.status = status;
         if (type) filter.type = type;
 
+        // Add search functionality
+        if (search) {
+            filter.$or = [
+                { 'order.orderNumber': { $regex: search, $options: 'i' } },
+                { 'user.name': { $regex: search, $options: 'i' } },
+                { 'user.email': { $regex: search, $options: 'i' } }
+            ];
+        }
+
         const returns = await Return.find(filter)
-            .populate('order', 'orderNumber total status createdAt')
-            .populate('user', 'name email phone')
-            .sort({ requestedAt: -1 })
-            .skip(skip)
-            .limit(parseInt(limit));
+            .populate([
+                { path: 'order', select: 'orderNumber status totalAmount' },
+                { path: 'user', select: 'name email' },
+                { path: 'items.productId', select: 'name price images' }
+            ])
+            .sort({ createdAt: -1 })
+            .limit(limit * 1)
+            .skip((page - 1) * limit);
 
         const total = await Return.countDocuments(filter);
 
@@ -269,16 +275,76 @@ exports.getAllReturns = async (req, res, next) => {
     }
 };
 
-// Admin: Get single return request
+// Admin: Get return products for management
+exports.getAllReturnProducts = async (req, res, next) => {
+    try {
+        const { status, type, page = 1, limit = 10, search } = req.query;
+
+        const filter = {};
+        if (status) filter.status = status;
+        if (type) filter.type = type;
+
+        if (search) {
+            filter.$or = [
+                { 'order.orderNumber': { $regex: search, $options: 'i' } },
+                { 'user.name': { $regex: search, $options: 'i' } },
+                { 'user.email': { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        const returns = await Return.find(filter)
+            .populate([
+                { path: 'order', select: 'orderNumber status totalAmount' },
+                { path: 'user', select: 'name email' },
+                { path: 'items.productId', select: 'name price images' }
+            ])
+            .sort({ createdAt: -1 })
+            .limit(limit * 1)
+            .skip((page - 1) * limit);
+
+        const total = await Return.countDocuments(filter);
+
+        // Get return statistics
+        const stats = await Return.aggregate([
+            {
+                $group: {
+                    _id: '$status',
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        res.json({
+            success: true,
+            data: returns,
+            pagination: {
+                current: parseInt(page),
+                pages: Math.ceil(total / limit),
+                total
+            },
+            stats: stats.reduce((acc, stat) => {
+                acc[stat._id] = stat.count;
+                return acc;
+            }, {})
+        });
+
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Admin: Get return request by ID
 exports.getReturnByIdAdmin = async (req, res, next) => {
     try {
         const { id } = req.params;
 
         const returnRequest = await Return.findById(id)
-            .populate('order', 'orderNumber total status items createdAt')
-            .populate('user', 'name email phone')
-            .populate('items.productId', 'name images')
-            .populate('exchangeItems.productId', 'name images');
+            .populate([
+                { path: 'order', select: 'orderNumber status totalAmount items' },
+                { path: 'user', select: 'name email' },
+                { path: 'items.productId', select: 'name price images' },
+                { path: 'exchangeItems.productId', select: 'name price images' }
+            ]);
 
         if (!returnRequest) {
             return res.status(404).json({
@@ -340,13 +406,13 @@ exports.updateReturnStatus = async (req, res, next) => {
         const now = new Date();
         switch (status) {
             case 'approved':
-                returnRequest.approvedAt = now;
+                returnRequest.timestamps.approvedAt = now;
                 break;
             case 'rejected':
-                returnRequest.rejectedAt = now;
+                returnRequest.timestamps.rejectedAt = now;
                 break;
             case 'completed':
-                returnRequest.completedAt = now;
+                returnRequest.timestamps.completedAt = now;
                 break;
             case 'shipped':
                 returnRequest.returnShipping.shippedAt = now;
@@ -390,10 +456,10 @@ exports.processRefund = async (req, res, next) => {
             });
         }
 
-        // Update refund details
         returnRequest.refund.status = 'processing';
         returnRequest.refund.transactionId = transactionId;
-        if (method) returnRequest.refund.method = method;
+        returnRequest.refund.method = method;
+        returnRequest.refund.processedAt = new Date();
 
         await returnRequest.save();
 
@@ -424,14 +490,12 @@ exports.completeRefund = async (req, res, next) => {
         if (returnRequest.refund.status !== 'processing') {
             return res.status(400).json({
                 success: false,
-                message: 'Refund must be in processing status'
+                message: 'Refund must be in processing status to complete'
             });
         }
 
-        // Complete refund
         returnRequest.refund.status = 'completed';
-        returnRequest.refund.processedAt = new Date();
-        returnRequest.status = 'completed';
+        returnRequest.refund.completedAt = new Date();
 
         await returnRequest.save();
 
@@ -446,112 +510,39 @@ exports.completeRefund = async (req, res, next) => {
     }
 };
 
-// Get return statistics for admin dashboard
+// Admin: Get return statistics
 exports.getReturnStats = async (req, res, next) => {
     try {
-        const stats = await Return.aggregate([
-            {
-                $group: {
-                    _id: '$status',
-                    count: { $sum: 1 },
-                    totalAmount: { $sum: '$refund.amount' }
-                }
-            }
-        ]);
+        // Get all returns and count by status manually
+        const allReturns = await Return.find({});
 
-        const totalReturns = await Return.countDocuments();
-        const totalRefundAmount = await Return.aggregate([
-            { $group: { _id: null, total: { $sum: '$refund.amount' } } }
-        ]);
+        // Count by status
+        const statusCounts = {};
+        allReturns.forEach(returnItem => {
+            const status = returnItem.status || 'pending';
+            statusCounts[status] = (statusCounts[status] || 0) + 1;
+        });
 
-        res.json({
+        const totalReturns = allReturns.length;
+        const totalRefunds = allReturns.filter(r => r.refund && r.refund.status === 'completed').length;
+
+        const result = {
             success: true,
             data: {
-                stats,
+                pending: statusCounts.pending || 0,
+                approved: statusCounts.approved || 0,
+                rejected: statusCounts.rejected || 0,
+                processing: statusCounts.processing || 0,
+                shipped: statusCounts.shipped || 0,
+                received: statusCounts.received || 0,
+                completed: statusCounts.completed || 0,
+                cancelled: statusCounts.cancelled || 0,
                 totalReturns,
-                totalRefundAmount: totalRefundAmount[0]?.total || 0
+                totalRefunds
             }
-        });
+        };
 
-    } catch (error) {
-        next(error);
-    }
-};
-
-// Admin: Get all return products with detailed information
-exports.getAllReturnProducts = async (req, res, next) => {
-    try {
-        const { status, type, page = 1, limit = 20, search } = req.query;
-        const skip = (page - 1) * limit;
-
-        let filter = {};
-        if (status) filter.status = status;
-        if (type) filter.type = type;
-
-        // Build search filter
-        if (search) {
-            filter.$or = [
-                { 'customer.name': { $regex: search, $options: 'i' } },
-                { 'customer.email': { $regex: search, $options: 'i' } },
-                { 'order.orderNumber': { $regex: search, $options: 'i' } },
-                { 'items.name': { $regex: search, $options: 'i' } }
-            ];
-        }
-
-        const returns = await Return.find(filter)
-            .populate({
-                path: 'order',
-                select: 'orderNumber total status createdAt paymentMethod paymentStatus'
-            })
-            .populate({
-                path: 'user',
-                select: 'name email phone'
-            })
-            .populate({
-                path: 'items.productId',
-                select: 'name images slug categoryId'
-            })
-            .populate({
-                path: 'exchangeItems.productId',
-                select: 'name images slug categoryId'
-            })
-            .sort({ requestedAt: -1 })
-            .skip(skip)
-            .limit(parseInt(limit));
-
-        const total = await Return.countDocuments(filter);
-
-        // Get statistics
-        const stats = await Return.aggregate([
-            {
-                $group: {
-                    _id: '$status',
-                    count: { $sum: 1 },
-                    totalAmount: { $sum: '$refund.amount' }
-                }
-            }
-        ]);
-
-        const totalReturns = await Return.countDocuments();
-        const totalRefundAmount = await Return.aggregate([
-            { $group: { _id: null, total: { $sum: '$refund.amount' } } }
-        ]);
-
-        res.json({
-            success: true,
-            data: returns,
-            pagination: {
-                current: parseInt(page),
-                pages: Math.ceil(total / limit),
-                total,
-                limit: parseInt(limit)
-            },
-            stats: {
-                byStatus: stats,
-                totalReturns,
-                totalRefundAmount: totalRefundAmount[0]?.total || 0
-            }
-        });
+        res.json(result);
 
     } catch (error) {
         next(error);

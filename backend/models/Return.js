@@ -1,215 +1,202 @@
 const mongoose = require('mongoose');
 
-const returnItemSchema = new mongoose.Schema({
-    productId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Product',
-        required: true
-    },
-    name: { type: String, required: true },
-    price: { type: Number, required: true },
-    quantity: { type: Number, required: true },
-    selectedOptions: { type: mongoose.Schema.Types.Mixed }, // selected variant fields
-    image: { type: String },
-    reason: {
-        type: String,
-        required: true,
-        enum: [
-            'defective',
-            'wrong_item',
-            'not_as_described',
-            'damaged_shipping',
-            'changed_mind',
-            'wrong_size',
-            'quality_issue',
-            'other'
-        ]
-    },
-    description: { type: String, required: true },
-    condition: {
-        type: String,
-        required: true,
-        enum: ['new', 'used', 'damaged', 'defective']
-    }
-}, { _id: false });
-
 const returnSchema = new mongoose.Schema({
-    // User reference
-    user: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
-    },
-
-    // Order reference
     order: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Order',
         required: true
     },
-
-    // Return/Exchange type
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
     type: {
         type: String,
-        required: true,
         enum: ['return', 'exchange'],
-        default: 'return'
+        required: true
     },
-
-    // Items to return/exchange
-    items: [returnItemSchema],
-
-    // Exchange details (only for exchange type)
+    status: {
+        type: String,
+        enum: ['pending', 'approved', 'rejected', 'processing', 'shipped', 'received', 'completed', 'cancelled'],
+        default: 'pending'
+    },
+    items: [{
+        productId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Product',
+            required: true
+        },
+        quantity: {
+            type: Number,
+            required: true,
+            min: 1
+        },
+        reason: {
+            type: String,
+            required: true
+        },
+        condition: {
+            type: String,
+            enum: ['new', 'used', 'damaged'],
+            default: 'used'
+        }
+    }],
     exchangeItems: [{
         productId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Product',
-            required: false
+            required: true
         },
-        name: { type: String },
-        price: { type: Number },
-        quantity: { type: Number },
-        selectedOptions: { type: mongoose.Schema.Types.Mixed },
-        image: { type: String }
+        quantity: {
+            type: Number,
+            required: true,
+            min: 1
+        }
     }],
-
-    // Status tracking
-    status: {
+    customerNotes: {
         type: String,
-        required: true,
-        enum: [
-            'pending',           // Request submitted, awaiting admin review
-            'approved',          // Admin approved the return/exchange
-            'rejected',          // Admin rejected the request
-            'processing',        // Return/exchange is being processed
-            'shipped',           // Return items shipped back (for exchange)
-            'received',          // Return items received by store
-            'completed',         // Return/exchange completed
-            'cancelled'          // Customer or admin cancelled
-        ],
-        default: 'pending'
+        maxlength: 500
     },
-
-    // Refund details
+    adminNotes: {
+        type: String,
+        maxlength: 500
+    },
+    images: [{
+        url: String,
+        publicId: String
+    }],
     refund: {
-        amount: { type: Number, default: 0 },
         method: {
             type: String,
-            enum: ['original_payment', 'store_credit', 'bank_transfer', 'cash'],
+            enum: ['original_payment', 'store_credit', 'bank_transfer'],
             default: 'original_payment'
+        },
+        amount: {
+            type: Number,
+            default: 0
         },
         status: {
             type: String,
             enum: ['pending', 'processing', 'completed', 'failed'],
             default: 'pending'
         },
-        transactionId: { type: String },
-        processedAt: { type: Date }
+        transactionId: String,
+        processedAt: Date,
+        completedAt: Date
     },
-
-    // Exchange details
-    exchange: {
-        status: {
-            type: String,
-            enum: ['pending', 'processing', 'shipped', 'delivered', 'completed'],
-            default: 'pending'
-        },
-        trackingNumber: { type: String },
-        estimatedDelivery: { type: Date },
-        deliveredAt: { type: Date }
-    },
-
-    // Shipping details for return
     returnShipping: {
-        method: { type: String },
-        trackingNumber: { type: String },
-        carrier: { type: String },
-        cost: { type: Number, default: 0 },
-        shippedAt: { type: Date },
-        deliveredAt: { type: Date }
+        trackingNumber: String,
+        carrier: String,
+        shippedAt: Date,
+        deliveredAt: Date,
+        address: {
+            street: String,
+            city: String,
+            state: String,
+            zipCode: String,
+            country: String
+        }
     },
-
-    // Customer details
-    customer: {
-        name: { type: String, required: true },
-        email: { type: String, required: true },
-        phone: { type: String },
-        address: { type: String, required: true },
-        city: { type: String, required: true },
-        state: { type: String, required: true },
-        zip: { type: String, required: true }
+    bankAccount: {
+        accountHolderName: {
+            type: String,
+            required: function () {
+                return this.type === 'return' && this.refund && this.refund.method === 'bank_transfer';
+            }
+        },
+        accountNumber: {
+            type: String,
+            required: function () {
+                return this.type === 'return' && this.refund && this.refund.method === 'bank_transfer';
+            }
+        },
+        bankName: {
+            type: String,
+            required: function () {
+                return this.type === 'return' && this.refund && this.refund.method === 'bank_transfer';
+            }
+        },
+        ifscCode: {
+            type: String,
+            required: function () {
+                return this.type === 'return' && this.refund && this.refund.method === 'bank_transfer';
+            }
+        },
+        branchName: String,
+        accountType: {
+            type: String,
+            enum: ['savings', 'current'],
+            default: 'savings'
+        }
     },
-
-    // Admin notes and comments
-    adminNotes: { type: String },
-    customerNotes: { type: String },
-
-    // Timestamps
-    requestedAt: { type: Date, default: Date.now },
-    approvedAt: { type: Date },
-    rejectedAt: { type: Date },
-    completedAt: { type: Date },
-
-    // Return policy compliance
-    withinPolicy: { type: Boolean, default: true },
-    policyViolationReason: { type: String },
-
-    // Images for return items
-    images: [{
-        url: { type: String, required: true },
-        caption: { type: String },
-        uploadedAt: { type: Date, default: Date.now }
-    }]
+    shippingAddress: {
+        fullName: {
+            type: String,
+            required: function () {
+                return this.type === 'return';
+            }
+        },
+        phone: {
+            type: String,
+            required: function () {
+                return this.type === 'return';
+            }
+        },
+        address: {
+            type: String,
+            required: function () {
+                return this.type === 'return';
+            }
+        },
+        city: {
+            type: String,
+            required: function () {
+                return this.type === 'return';
+            }
+        },
+        state: {
+            type: String,
+            required: function () {
+                return this.type === 'return';
+            }
+        },
+        zipCode: {
+            type: String,
+            required: function () {
+                return this.type === 'return';
+            }
+        },
+        country: {
+            type: String,
+            required: function () {
+                return this.type === 'return';
+            },
+            default: 'India'
+        },
+        landmark: String,
+        addressType: {
+            type: String,
+            enum: ['home', 'office', 'other'],
+            default: 'home'
+        }
+    },
+    timestamps: {
+        requestedAt: {
+            type: Date,
+            default: Date.now
+        },
+        approvedAt: Date,
+        rejectedAt: Date,
+        completedAt: Date
+    }
 }, {
     timestamps: true
 });
 
-// Indexes for better query performance
+// Index for better query performance
 returnSchema.index({ user: 1, status: 1 });
 returnSchema.index({ order: 1 });
-returnSchema.index({ status: 1 });
-returnSchema.index({ requestedAt: -1 });
-
-// Virtual for total refund amount
-returnSchema.virtual('totalRefundAmount').get(function () {
-    return this.items.reduce((total, item) => total + (item.price * item.quantity), 0);
-});
-
-// Virtual for total exchange value
-returnSchema.virtual('totalExchangeValue').get(function () {
-    if (this.type === 'exchange' && this.exchangeItems.length > 0) {
-        return this.exchangeItems.reduce((total, item) => total + (item.price * item.quantity), 0);
-    }
-    return 0;
-});
-
-// Method to check if return is within policy (30 days)
-returnSchema.methods.isWithinPolicy = function () {
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    return this.requestedAt >= thirtyDaysAgo;
-};
-
-// Method to update status with timestamp
-returnSchema.methods.updateStatus = function (newStatus) {
-    this.status = newStatus;
-    const now = new Date();
-
-    switch (newStatus) {
-        case 'approved':
-            this.approvedAt = now;
-            break;
-        case 'rejected':
-            this.rejectedAt = now;
-            break;
-        case 'completed':
-            this.completedAt = now;
-            break;
-    }
-
-    return this.save();
-};
+returnSchema.index({ status: 1, createdAt: -1 });
 
 module.exports = mongoose.model('Return', returnSchema);
-
-

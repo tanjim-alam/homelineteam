@@ -24,7 +24,7 @@ export const getReturnById = createAsyncThunk('returns/getById', async (id, { re
 
 export const updateReturnStatus = createAsyncThunk('returns/updateStatus', async ({ id, status, adminNotes, refundMethod, trackingNumber }, { rejectWithValue }) => {
     try {
-        const res = await api.patch(`/api/returns/admin/${id}/status`, {
+        const res = await api.put(`/api/returns/admin/${id}/status`, {
             status,
             adminNotes,
             refundMethod,
@@ -38,7 +38,7 @@ export const updateReturnStatus = createAsyncThunk('returns/updateStatus', async
 
 export const processRefund = createAsyncThunk('returns/processRefund', async ({ id, transactionId, method }, { rejectWithValue }) => {
     try {
-        const res = await api.patch(`/api/returns/admin/${id}/process-refund`, {
+        const res = await api.put(`/api/returns/admin/${id}/process-refund`, {
             transactionId,
             method
         });
@@ -50,7 +50,7 @@ export const processRefund = createAsyncThunk('returns/processRefund', async ({ 
 
 export const completeRefund = createAsyncThunk('returns/completeRefund', async (id, { rejectWithValue }) => {
     try {
-        const res = await api.patch(`/api/returns/admin/${id}/complete-refund`);
+        const res = await api.put(`/api/returns/admin/${id}/complete-refund`);
         return res.data;
     } catch (err) {
         return rejectWithValue(err.response?.data?.message || 'Refund completion failed');

@@ -1,6 +1,7 @@
 import serverStatus from '../utils/serverStatus';
 import config from '../config/production';
 
+// https://homelineteam-19e5.vercel.app
 class ApiService {
   constructor() {
     this.baseURL = config.API_BASE_URL || "https://homelineteam-19e5.vercel.app";
@@ -506,6 +507,19 @@ class ApiService {
     if (!category) throw new Error('Category not found');
 
     return this.getProductsByCategory(category._id, params);
+  }
+
+  async getSubcategoryProducts(subcategorySlug, mainCategorySlug, params = {}) {
+    const category = await this.getCategoryBySlug(subcategorySlug);
+    if (!category) throw new Error('Subcategory not found');
+
+    // Add mainCategorySlug to params for hierarchical validation
+    const paramsWithMainCategory = {
+      ...params,
+      mainCategorySlug
+    };
+
+    return this.getProductsByCategory(category._id, paramsWithMainCategory);
   }
 
   // Return/Exchange API methods

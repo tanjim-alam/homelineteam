@@ -9,7 +9,7 @@ function authenticate(req, res, next) {
 		else if (tokenFromCookie) token = tokenFromCookie;
 		if (!token) return res.status(401).json({ message: 'Unauthorized' });
 		const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev_secret');
-		req.user = { id: decoded.sub, role: decoded.role, email: decoded.email, name: decoded.name };
+		req.user = { _id: decoded.sub, id: decoded.sub, role: decoded.role, email: decoded.email, name: decoded.name };
 		next();
 	} catch (err) {
 		return res.status(401).json({ message: 'Unauthorized' });
