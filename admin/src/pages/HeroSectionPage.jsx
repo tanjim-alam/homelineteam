@@ -57,7 +57,8 @@ const HeroSectionPage = () => {
 
       // Determine upload type for API
       const uploadType = type === 'mobile-background' ? 'mobile' :
-        type === 'desktop-background' ? 'desktop' : 'mobile';
+        type === 'desktop-background' ? 'desktop' :
+          type === 'categories' ? 'category' : 'mobile';
 
       const response = await apiClient.post(`/api/hero-section/upload-image?type=${uploadType}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
@@ -457,12 +458,12 @@ const HeroSectionPage = () => {
                           />
                           <span className="font-bold text-gray-700">Active</span>
                         </label>
-                        {image.isActive && (
+                        {/* {image.isActive && (
                           <div className="flex items-center gap-2 text-sm text-green-600 bg-gradient-to-r from-green-50/50 to-emerald-50/50 rounded-xl px-3 py-2 border border-green-100/50">
                             <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                             <span className="font-medium">Used on Mobile & Desktop Right Side</span>
                           </div>
-                        )}
+                        )} */}
                       </div>
 
                       <div className="flex gap-2">
@@ -564,12 +565,12 @@ const HeroSectionPage = () => {
                           />
                           <span className="font-bold text-gray-700">Active</span>
                         </label>
-                        {image.isActive && (
+                        {/* {image.isActive && (
                           <div className="flex items-center gap-2 text-sm text-green-600 bg-gradient-to-r from-green-50/50 to-emerald-50/50 rounded-xl px-3 py-2 border border-green-100/50">
                             <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                             <span className="font-medium">Used on Desktop Main Background</span>
                           </div>
-                        )}
+                        )} */}
                       </div>
 
                       <div className="flex gap-2">
@@ -634,7 +635,7 @@ const HeroSectionPage = () => {
                         value={newCategoryData.link}
                         onChange={(e) => setNewCategoryData(prev => ({ ...prev, link: e.target.value }))}
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 bg-white/80 backdrop-blur-sm shadow-lg"
-                        placeholder="/collections/kitchen-cleaning"
+                        placeholder="/wall-solution/upholstery"
                       />
                     </div>
                     <div>
@@ -662,26 +663,35 @@ const HeroSectionPage = () => {
                   )}
                 </div>
 
-                <label className={`px-6 py-3 rounded-2xl cursor-pointer flex items-center gap-3 font-bold shadow-xl transition-all duration-300 transform hover:scale-105 ${!newCategoryData.title || !newCategoryData.link
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:shadow-2xl'
-                  } text-white`}>
-                  <Upload className="w-5 h-5" />
-                  {uploading ? 'Uploading...' : 'Upload Category'}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      if (e.target.files[0] && newCategoryData.title && newCategoryData.link) {
-                        handleImageUpload('category', e.target.files[0]);
-                      } else if (e.target.files[0]) {
-                        alert('Please fill in Category Title and Link before uploading');
-                      }
-                    }}
-                    disabled={uploading || !newCategoryData.title || !newCategoryData.link}
-                  />
-                </label>
+                {(!newCategoryData.title || !newCategoryData.link) ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="px-6 py-3 rounded-2xl bg-gray-400 cursor-not-allowed flex items-center gap-3 font-bold shadow-xl text-white">
+                      <Upload className="w-5 h-5" />
+                      {uploading ? 'Uploading...' : 'Upload Category'}
+                    </div>
+                    <p className="text-xs text-gray-500 text-center">
+                      Fill in Category Title and Link above to enable upload
+                    </p>
+                  </div>
+                ) : (
+                  <label className="px-6 py-3 rounded-2xl cursor-pointer flex items-center gap-3 font-bold shadow-xl transition-all duration-300 transform hover:scale-105 bg-gradient-to-r from-green-500 to-emerald-600 hover:shadow-2xl text-white">
+                    <Upload className="w-5 h-5" />
+                    {uploading ? 'Uploading...' : 'Upload Category'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        if (e.target.files[0] && newCategoryData.title && newCategoryData.link) {
+                          handleImageUpload('categories', e.target.files[0]);
+                        } else if (e.target.files[0]) {
+                          alert('Please fill in Category Title and Link before uploading');
+                        }
+                      }}
+                      disabled={uploading}
+                    />
+                  </label>
+                )}
               </div>
             </div>
 

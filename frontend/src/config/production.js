@@ -5,7 +5,7 @@
 // https://homelineteam-19e5.vercel.app
 export const config = {
   // API Configuration
-  API_BASE_URL: "https://homelineteam-19e5.vercel.app" ||
+  API_BASE_URL: "http://localhost:5000" ||
     (typeof window !== 'undefined' && window.location.hostname === 'localhost'
       ? 'http://localhost:5000'
       : 'https://homelineteam-19e5.vercel.app'),

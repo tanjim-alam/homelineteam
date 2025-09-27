@@ -11,7 +11,7 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white relative overflow-hidden">
+    <footer className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white relative overflow-hidden pb-14 md:pb-0">
       {/* Background Elements */}
       <div className="absolute inset-0">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary-500 via-pink-500 to-primary-600"></div>
@@ -185,7 +185,7 @@ const Footer = () => {
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="text-gray-400 text-xs sm:text-sm text-center md:text-left">
                 © {currentYear} HomeLine. All rights reserved. Made with{' '}
-                <Heart className="inline w-3 h-3 sm:w-4 sm:h-4 text-primary-400 fill-current" /> in India.
+                <Link href="https://www.mndigitalagency.com" className="hover:text-white transition-colors duration-300">MN Digital Agency</Link> in India.
               </div>
 
               <div className="flex items-center gap-4 sm:gap-6 text-xs sm:text-sm text-gray-400">

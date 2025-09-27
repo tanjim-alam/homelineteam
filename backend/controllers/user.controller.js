@@ -27,52 +27,8 @@ function createUserToken(user) {
     return jwt.sign(payload, process.env.JWT_SECRET || 'dev_secret', { expiresIn: '7d' });
 }
 
-// Email transporter configuration
-const createEmailTransporter = () => {
-    const emailUser = process.env.EMAIL_USER || 'ahaanwell@gmail.com';
-    const emailPass = process.env.EMAIL_PASS || 'qwbnsavibnsvdwma';
-
-
-    return nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-            user: emailUser,
-            pass: emailPass
-        }
-    });
-};
-
-// Send OTP via email
-const sendOTPEmail = async (email, otp) => {
-    try {
-        const transporter = createEmailTransporter();
-
-        const mailOptions = {
-            from: 'noreply@homelineteams.com',
-            to: email,
-            subject: 'Email Verification OTP - HomeLine Teams',
-            html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #333;">Email Verification</h2>
-          <p>Hello!</p>
-          <p>Thank you for registering with HomeLine Teams. Please use the following OTP to verify your email address:</p>
-          <div style="background-color: #f4f4f4; padding: 20px; text-align: center; margin: 20px 0;">
-            <h1 style="color: #007bff; font-size: 32px; margin: 0; letter-spacing: 5px;">${otp}</h1>
-          </div>
-          <p>This OTP is valid for 15 minutes.</p>
-          <p>If you didn't request this verification, please ignore this email.</p>
-          <p>Best regards,<br>HomeLine Teams</p>
-        </div>
-      `
-        };
-
-
-        const result = await transporter.sendMail(mailOptions);
-        return true;
-    } catch (error) {
-        return false;
-    }
-};
+// Import email service
+const { createEmailTransporter, sendOTPEmail } = require('../utils/emailService');
 
 // Register user with email OTP
 exports.register = async (req, res, next) => {

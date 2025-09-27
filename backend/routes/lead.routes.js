@@ -11,6 +11,9 @@ router.post('/', controller.createLead);
 router.get('/', authenticate, requireAdmin, controller.getLeads);
 router.patch('/:id/status', authenticate, requireAdmin, controller.updateLeadStatus);
 
+// Test email functionality (admin only)
+router.get('/test-email', authenticate, requireAdmin, controller.testEmail);
+
 module.exports = router;
 
 

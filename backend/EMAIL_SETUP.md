@@ -36,6 +36,27 @@ GET https://your-backend-url/api/leads/test-email
 
 This will send a test email and show the configuration being used.
 
+## Lead Email Notifications
+
+The system now automatically sends email notifications for all interior design leads to the configured email address. The email includes:
+
+- Lead contact information (name, phone, email, city)
+- Source page and message
+- Product details (if applicable)
+- Calculator data (for interior design calculator leads)
+- Package configuration (for package page leads)
+- Kitchen configuration (for kitchen page leads)
+- Selected product information
+
+### Email Configuration for Lead Notifications
+
+The lead notification emails are sent to the email address specified in the `EMAIL_TO` environment variable. If not set, it defaults to `tanjim.seo@gmail.com`.
+
+Make sure to set this environment variable in your production deployment:
+```bash
+EMAIL_TO=your-lead-notification-email@domain.com
+```
+
 ## Gmail App Password
 
 Make sure you're using a Gmail App Password, not your regular password:

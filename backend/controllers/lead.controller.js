@@ -1,4 +1,5 @@
 const Lead = require('../models/Lead');
+const { sendLeadNotificationEmail } = require('../utils/emailService');
 
 exports.createLead = async (req, res, next) => {
   try {
@@ -43,8 +44,12 @@ exports.createLead = async (req, res, next) => {
     // Create lead in database
     const lead = await Lead.create({ name, phone, city, homeType, sourcePage, message, meta, productDetails });
 
-
-    // Email feature removed - leads are only stored in admin panel
+    // Send email notification for interior design leads
+    try {
+      await sendLeadNotificationEmail(lead);
+    } catch (emailError) {
+      // Don't fail the lead creation if email fails
+    }
 
     res.status(201).json({
       success: true,
@@ -83,6 +88,59 @@ exports.updateLeadStatus = async (req, res, next) => {
     res.json(lead);
   } catch (err) {
     next(err);
+  }
+};
+
+// Test email functionality
+exports.testEmail = async (req, res, next) => {
+  try {
+    const { sendLeadNotificationEmail } = require('../utils/emailService');
+
+    // Create a test lead
+    const testLead = {
+      _id: 'test_lead_id',
+      name: 'Test User',
+      phone: '9876543210',
+      email: 'test@example.com',
+      city: 'Mumbai',
+      homeType: '2 BHK',
+      sourcePage: 'Test Page',
+      message: 'This is a test lead for email functionality',
+      productDetails: {
+        name: 'Test Product',
+        price: 50000,
+        category: 'Kitchen',
+        description: 'Test kitchen product'
+      },
+      meta: {
+        testData: true,
+        calculatorData: {
+          homeType: '2 BHK',
+          rooms: 2,
+          area: 800,
+          budget: 100000,
+          style: 'Modern',
+          timeline: '3 months',
+          estimatedCost: 75000
+        }
+      },
+      createdAt: new Date()
+    };
+
+    const emailSent = await sendLeadNotificationEmail(testLead);
+
+    res.json({
+      success: true,
+      message: emailSent ? 'Test email sent successfully' : 'Failed to send test email',
+      emailSent: emailSent,
+      testLead: testLead
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to test email functionality',
+      error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
+    });
   }
 };
 

@@ -98,7 +98,7 @@ const updateHeroSection = async (req, res) => {
 // Upload hero image
 const uploadHeroImage = async (req, res) => {
   try {
-    const { type } = req.query; // 'mobile' or 'desktop'
+    const { type } = req.query; // 'mobile', 'desktop', or 'category'
 
     // Upload request received
 
@@ -110,7 +110,18 @@ const uploadHeroImage = async (req, res) => {
     }
 
     // Upload to Cloudinary using the buffer
-    const folder = type === 'desktop' ? 'hero-section/desktop' : 'hero-section/mobile';
+    let folder;
+    if (type === 'desktop') {
+      folder = 'hero-section/desktop';
+    } else if (type === 'mobile') {
+      folder = 'hero-section/mobile';
+    } else if (type === 'category') {
+      folder = 'hero-section/categories';
+    } else {
+      // Default to mobile for backward compatibility
+      folder = 'hero-section/mobile';
+    }
+
     const result = await uploadBuffer(req.file.buffer, folder);
 
     res.json({

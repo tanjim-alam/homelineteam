@@ -125,7 +125,7 @@ const HeroSlider = ({ isMobile = false, className = "" }) => {
       )}
 
       {/* Background Image Slider */}
-      <div className={`relative ${isMobile ? 'h-[55vh]' : 'h-96'} rounded-xl overflow-hidden`}>
+      <div className={`relative ${isMobile ? 'h-[55vh]' : 'h-96'} rounded-none md:rounded-xl overflow-hidden`}>
         {/* Sliding Background Images */}
         <div className="absolute inset-0">
           {activeBackgroundImages.map((image, index) => (
