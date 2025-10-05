@@ -7,6 +7,7 @@ const { authenticate, requireAdmin } = require('../middlewares/auth.middleware')
 // Public routes
 router.get('/', controller.getProducts);
 router.get('/search', controller.searchProducts);
+router.get('/:slug/related', controller.getRelatedProducts);
 router.get('/:slug', controller.getProductBySlug);
 
 // Admin routes (require authentication and admin role)

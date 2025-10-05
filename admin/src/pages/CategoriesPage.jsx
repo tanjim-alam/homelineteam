@@ -38,6 +38,7 @@ export default function CategoriesPage() {
   const [selectedCategory, setSelectedCategory] = useState(null)
   const [successMessage, setSuccessMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
+  const [creating, setCreating] = useState(false)
   const [subCategories, setSubCategories] = useState([])
   const [mainCategories, setMainCategories] = useState([])
   const [mainCategoriesLoading, setMainCategoriesLoading] = useState(false)
@@ -140,22 +141,39 @@ export default function CategoriesPage() {
     }
   }, [error, dispatch])
 
+  // Auto-scroll to top when an error message appears so the alert is visible
+  useEffect(() => {
+    if (errorMessage || error) {
+      try {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      } catch (_) { }
+    }
+  }, [errorMessage, error])
+
   const createCategory = async (formData) => {
     try {
+      setCreating(true)
       const response = await api.post('/api/categories', formData)
 
       if (response.data) {
         // Refresh categories
         await fetchCategories()
+        setCreating(false)
         return response.data
       } else {
         setErrorMessage('Failed to create category')
         setTimeout(() => setErrorMessage(''), 5000)
+        setCreating(false)
         throw new Error('Failed to create category')
       }
     } catch (error) {
-      setErrorMessage('Error creating category: ' + (error.response?.data?.message || error.message))
+      const backendMsg = error.response?.data?.message
+      const friendly = backendMsg && /exists|duplicate/i.test(backendMsg)
+        ? backendMsg
+        : ('Error creating category: ' + (backendMsg || error.message))
+      setErrorMessage(friendly)
       setTimeout(() => setErrorMessage(''), 5000)
+      setCreating(false)
       throw error
     }
   }
@@ -275,7 +293,7 @@ export default function CategoriesPage() {
           }, 2000)
         })
         .catch(() => {
-          // Error handling is done in createCategory
+          // Error already shown in UI
         })
     }
   }
@@ -853,7 +871,7 @@ export default function CategoriesPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={createLoading || updateLoading}
+                  disabled={creating || createLoading}
                   className="px-10 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-bold shadow-xl hover:shadow-2xl transform hover:scale-105 disabled:transform-none flex items-center space-x-3"
                 >
                   {(createLoading || updateLoading) && (
@@ -1025,8 +1043,8 @@ export default function CategoriesPage() {
                         <button
                           onClick={() => handleDeleteMainCategory(mainCategory._id)}
                           className={`p-2 rounded-xl transition-all duration-200 ${canDeleteMainCategory(mainCategory._id)
-                              ? 'text-red-600 hover:text-red-700 hover:bg-red-50'
-                              : 'text-gray-400 cursor-not-allowed'
+                            ? 'text-red-600 hover:text-red-700 hover:bg-red-50'
+                            : 'text-gray-400 cursor-not-allowed'
                             }`}
                           title={
                             canDeleteMainCategory(mainCategory._id)

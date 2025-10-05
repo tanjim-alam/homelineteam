@@ -15,6 +15,7 @@ export default function ProductsPage() {
   const [updateLoading, setUpdateLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [creating, setCreating] = useState(false);
 
   const [form, setForm] = useState({
     subcategoryId: '',
@@ -61,6 +62,15 @@ export default function ProductsPage() {
     fetchProducts();
     fetchCategories();
   }, []);
+
+  // Auto-scroll to top when an error appears so the alert is visible
+  useEffect(() => {
+    if (error) {
+      try {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (_) { }
+    }
+  }, [error]);
 
   const fetchProducts = async () => {
     try {
@@ -308,6 +318,7 @@ export default function ProductsPage() {
     }
 
     try {
+      setCreating(true);
       const formData = new FormData();
       formData.append('categoryId', form.subcategoryId);
       formData.append('name', form.name);
@@ -365,10 +376,15 @@ export default function ProductsPage() {
         fetchProducts();
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to save product');
+      const backendMsg = err.response?.data?.message;
+      const friendly = backendMsg && /exists|duplicate/i.test(backendMsg)
+        ? backendMsg
+        : (backendMsg || 'Failed to save product');
+      setError(friendly);
     } finally {
       setCreateLoading(false);
       setUpdateLoading(false);
+      setCreating(false);
     }
   };
 
@@ -1669,22 +1685,10 @@ export default function ProductsPage() {
                   </button>
                   <button
                     type="submit"
-                    disabled={createLoading || updateLoading}
-                    className="px-10 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-bold shadow-xl hover:shadow-2xl transform hover:scale-105 disabled:transform-none flex items-center gap-3"
+                    disabled={creating || createLoading || updateLoading}
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-2xl font-bold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 flex items-center gap-3"
                   >
-                    {createLoading || updateLoading ? (
-                      <>
-                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        {editingProduct ? 'Update Product' : 'Create Product'}
-                      </>
-                    )}
+                    {editingProduct ? 'Update Product' : (creating || createLoading ? 'Creating...' : 'Create Product')}
                   </button>
                 </div>
               </form>

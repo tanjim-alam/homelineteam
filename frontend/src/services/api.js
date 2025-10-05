@@ -347,6 +347,10 @@ class ApiService {
     return this.request(`/api/products/${slug}`);
   }
 
+  async getRelatedProducts(slug, limit = 8) {
+    return this.request(`/api/products/${slug}/related?limit=${limit}`);
+  }
+
   async getProductsByCategory(categoryId, params = {}) {
     // Convert complex objects to JSON strings for backend
     const processedParams = { ...params };

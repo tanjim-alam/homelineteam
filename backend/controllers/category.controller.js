@@ -6,6 +6,26 @@ exports.createCategory = async (req, res, next) => {
   try {
     const { name, slug, description, seoContent, mainCategoryId, order } = req.body;
 
+    // Validate required fields
+    if (!name || !slug) {
+      const err = new Error('Name and slug are required');
+      err.statusCode = 400;
+      throw err;
+    }
+
+    // Check duplicates by name (case-insensitive) or slug before creating
+    const existing = await Category.findOne({
+      $or: [
+        { slug },
+        { name: { $regex: new RegExp(`^${name}$`, 'i') } }
+      ]
+    });
+    if (existing) {
+      const err = new Error('Category with this name or slug already exists');
+      err.statusCode = 409;
+      throw err;
+    }
+
     // Handle metadata - support both nested object and flat fields
     let metaData = {};
 
@@ -78,6 +98,11 @@ exports.createCategory = async (req, res, next) => {
     // Category created successfully
     res.status(201).json(category);
   } catch (err) {
+    // Handle duplicate key error gracefully
+    if (err && (err.code === 11000 || /E11000 duplicate key/.test(err.message || ''))) {
+      err.statusCode = 409;
+      err.message = 'Category with this slug already exists';
+    }
     next(err);
   }
 };

@@ -30,6 +30,25 @@ exports.createProduct = async (req, res, next) => {
             hasVariants
         } = req.body;
 
+        // Basic validation
+        if (!categoryId || !name || !slug || !basePrice) {
+            const err = new Error('categoryId, name, slug and basePrice are required');
+            err.statusCode = 400;
+            throw err;
+        }
+
+        // Duplicate checks by slug or case-insensitive name
+        const existing = await Product.findOne({
+            $or: [
+                { slug },
+                { name: { $regex: new RegExp(`^${name}$`, 'i') } }
+            ]
+        });
+        if (existing) {
+            const err = new Error('Product with this name or slug already exists');
+            err.statusCode = 409;
+            throw err;
+        }
 
         // Handle metadata - support both nested object and flat fields
         let metaData = {};
@@ -153,6 +172,11 @@ exports.createProduct = async (req, res, next) => {
 
         res.status(201).json(product);
     } catch (err) {
+        // Map duplicate key errors
+        if (err && (err.code === 11000 || /E11000 duplicate key/.test(err.message || ''))) {
+            err.statusCode = 409;
+            err.message = 'Product with this slug already exists';
+        }
         next(err);
     }
 };
@@ -546,6 +570,28 @@ exports.getProductBySlug = async (req, res, next) => {
         const product = await Product.findOne({ slug });
         if (!product) return res.status(404).json({ message: 'Product not found' });
         res.json(product);
+    } catch (err) {
+        next(err);
+    }
+};
+
+// Get related products by product slug
+exports.getRelatedProducts = async (req, res, next) => {
+    try {
+        const { slug } = req.params;
+        const { limit = 8 } = req.query;
+
+        const current = await Product.findOne({ slug });
+        if (!current) return res.status(404).json({ message: 'Product not found' });
+
+        const related = await Product.find({
+            categoryId: current.categoryId,
+            _id: { $ne: current._id }
+        })
+            .sort({ createdAt: -1 })
+            .limit(parseInt(limit));
+
+        res.json(related);
     } catch (err) {
         next(err);
     }
