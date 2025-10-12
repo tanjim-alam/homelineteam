@@ -291,7 +291,28 @@ exports.updateProduct = async (req, res, next) => {
             updates.dynamicFields = await pickDynamicFields(categoryId, dynamicFieldsRaw);
         }
 
-        if (req.files && req.files.images && req.files.images.length) {
+        // Handle image updates - support both reordering existing images and adding new ones
+        if (req.body.updateImageOrder === 'true') {
+            // Handle reordered existing images and new images
+            updates.mainImages = [];
+
+            // Add existing images in their new order
+            if (req.body.existingImages) {
+                const existingImages = Array.isArray(req.body.existingImages)
+                    ? req.body.existingImages
+                    : [req.body.existingImages];
+                updates.mainImages.push(...existingImages);
+            }
+
+            // Add new images
+            if (req.files && req.files.newImages && req.files.newImages.length) {
+                for (const file of req.files.newImages) {
+                    const uploaded = await uploadBuffer(file.buffer, `products/${slug || id}`);
+                    updates.mainImages.push(uploaded.secure_url);
+                }
+            }
+        } else if (req.files && req.files.images && req.files.images.length) {
+            // Handle traditional image upload (for backward compatibility)
             updates.mainImages = [];
             for (const file of req.files.images) {
                 const uploaded = await uploadBuffer(file.buffer, `products/${slug || id}`);

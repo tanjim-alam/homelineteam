@@ -49,6 +49,7 @@ const uploadProduct = multer({
   limits: { fileSize: 5 * 1024 * 1024 }
 }).fields([
   { name: 'images', maxCount: 10 },
+  { name: 'newImages', maxCount: 10 },
   { name: 'metaData[ogImage]', maxCount: 1 }
 ]); // Use .fields() to handle specific file fields
 

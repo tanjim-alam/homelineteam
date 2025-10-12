@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Package, Image as ImageIcon } from 'lucide-react';
+import { Plus, Edit, Trash2, Package, Image as ImageIcon, GripVertical } from 'lucide-react';
 import apiClient from '../api/client';
 
 export default function ProductsPage() {
@@ -43,6 +43,7 @@ export default function ProductsPage() {
   const [existingImages, setExistingImages] = useState([]);
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [showBulkActions, setShowBulkActions] = useState(false);
+  const [draggedExistingIndex, setDraggedExistingIndex] = useState(null);
 
   const [variantForm, setVariantForm] = useState({
     fields: {},
@@ -174,12 +175,17 @@ export default function ProductsPage() {
     if (files.length > 0) {
       // Create preview URLs for all selected files
       const previews = files.map(file => URL.createObjectURL(file));
+
+      // Always append new images to existing ones (for both new and editing)
       setForm({
         ...form,
-        mainImages: files,
-        imagePreviews: previews
+        mainImages: [...form.mainImages, ...files],
+        imagePreviews: [...form.imagePreviews, ...previews]
       });
     }
+
+    // Clear the input so the same file can be selected again
+    e.target.value = '';
   };
 
   const removeImagePreview = (index) => {
@@ -190,6 +196,161 @@ export default function ProductsPage() {
       mainImages: newFiles,
       imagePreviews: newPreviews
     });
+  };
+
+  // Drag and drop functionality for image reordering
+  const [draggedIndex, setDraggedIndex] = useState(null);
+
+  const handleDragStart = (e, index) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e, dropIndex) => {
+    e.preventDefault();
+
+    if (draggedIndex === null || draggedIndex === dropIndex) {
+      setDraggedIndex(null);
+      return;
+    }
+
+    // Reorder images and previews
+    const newFiles = [...form.mainImages];
+    const newPreviews = [...form.imagePreviews];
+
+    // Remove dragged item
+    const draggedFile = newFiles.splice(draggedIndex, 1)[0];
+    const draggedPreview = newPreviews.splice(draggedIndex, 1)[0];
+
+    // Insert at new position
+    newFiles.splice(dropIndex, 0, draggedFile);
+    newPreviews.splice(dropIndex, 0, draggedPreview);
+
+    setForm({
+      ...form,
+      mainImages: newFiles,
+      imagePreviews: newPreviews
+    });
+
+    setDraggedIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+  };
+
+  // Drag and drop functionality for existing images
+  const handleExistingDragStart = (e, index) => {
+    setDraggedExistingIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleExistingDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleExistingDrop = (e, dropIndex) => {
+    e.preventDefault();
+
+    if (draggedExistingIndex === null || draggedExistingIndex === dropIndex) {
+      setDraggedExistingIndex(null);
+      return;
+    }
+
+    // Reorder existing images
+    const newImages = [...existingImages];
+    const draggedImage = newImages.splice(draggedExistingIndex, 1)[0];
+    newImages.splice(dropIndex, 0, draggedImage);
+
+    setExistingImages(newImages);
+    setDraggedExistingIndex(null);
+  };
+
+  const handleExistingDragEnd = () => {
+    setDraggedExistingIndex(null);
+  };
+
+  // Remove individual existing image
+  const removeExistingImage = (index) => {
+    const newImages = existingImages.filter((_, i) => i !== index);
+    setExistingImages(newImages);
+  };
+
+  // Remove image from combined view (handles both existing and new images)
+  const removeImageFromCombined = (index) => {
+    if (index < existingImages.length) {
+      // Remove from existing images
+      const newImages = existingImages.filter((_, i) => i !== index);
+      setExistingImages(newImages);
+    } else {
+      // Remove from new images
+      const newImageIndex = index - existingImages.length;
+      const newFiles = form.mainImages.filter((_, i) => i !== newImageIndex);
+      const newPreviews = form.imagePreviews.filter((_, i) => i !== newImageIndex);
+      setForm({
+        ...form,
+        mainImages: newFiles,
+        imagePreviews: newPreviews
+      });
+    }
+  };
+
+  // Drag and drop for combined image view
+  const [draggedCombinedIndex, setDraggedCombinedIndex] = useState(null);
+
+  const handleCombinedDragStart = (e, index) => {
+    setDraggedCombinedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleCombinedDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleCombinedDrop = (e, dropIndex) => {
+    e.preventDefault();
+
+    if (draggedCombinedIndex === null || draggedCombinedIndex === dropIndex) {
+      setDraggedCombinedIndex(null);
+      return;
+    }
+
+    const allImages = [...existingImages, ...form.imagePreviews];
+    const allFiles = [...form.mainImages];
+
+    // Remove dragged item
+    const draggedImage = allImages.splice(draggedCombinedIndex, 1)[0];
+    const draggedFile = draggedCombinedIndex < existingImages.length ? null : allFiles.splice(draggedCombinedIndex - existingImages.length, 1)[0];
+
+    // Insert at new position
+    allImages.splice(dropIndex, 0, draggedImage);
+    if (draggedFile) {
+      allFiles.splice(dropIndex - existingImages.length, 0, draggedFile);
+    }
+
+    // Update states
+    const newExistingImages = allImages.slice(0, existingImages.length);
+    const newImagePreviews = allImages.slice(existingImages.length);
+
+    setExistingImages(newExistingImages);
+    setForm({
+      ...form,
+      mainImages: allFiles,
+      imagePreviews: newImagePreviews
+    });
+
+    setDraggedCombinedIndex(null);
+  };
+
+  const handleCombinedDragEnd = () => {
+    setDraggedCombinedIndex(null);
   };
 
   const updateDynamicField = (fieldSlug, value) => {
@@ -284,6 +445,8 @@ export default function ProductsPage() {
     setEditingProduct(null);
     setSelectedCategory(null);
     setExistingImages([]);
+    setDraggedIndex(null);
+    setDraggedExistingIndex(null);
   };
 
   const generateSlug = (name) => {
@@ -317,6 +480,12 @@ export default function ProductsPage() {
       return;
     }
 
+    // Image validation for new products
+    if (!editingProduct && (!form.mainImages || form.mainImages.length === 0)) {
+      setError('Please upload at least one product image');
+      return;
+    }
+
     try {
       setCreating(true);
       const formData = new FormData();
@@ -341,13 +510,28 @@ export default function ProductsPage() {
         formData.append('metaData[ogImage]', form.metaData.ogImage);
       }
 
-      // Handle images - only append if new images are selected
-      if (form.mainImages && form.mainImages.length > 0) {
-        // Check if these are actual File objects (new uploads) or existing image URLs
-        const newImages = form.mainImages.filter(img => img instanceof File);
-        if (newImages.length > 0) {
-          for (let i = 0; i < newImages.length; i++) {
-            formData.append('images', newImages[i]);
+      // Handle images - send the final ordered list
+      if (editingProduct) {
+        // For editing, send the final ordered list of all images
+        // First, send existing images in their new order
+        for (let i = 0; i < existingImages.length; i++) {
+          formData.append('existingImages', existingImages[i]);
+        }
+
+        // Then, send new images as files
+        if (form.mainImages && form.mainImages.length > 0) {
+          for (let i = 0; i < form.mainImages.length; i++) {
+            formData.append('newImages', form.mainImages[i]);
+          }
+        }
+
+        // Send a flag to indicate we're updating image order
+        formData.append('updateImageOrder', 'true');
+      } else {
+        // For new products, send all images in the correct order
+        if (form.mainImages && form.mainImages.length > 0) {
+          for (let i = 0; i < form.mainImages.length; i++) {
+            formData.append('images', form.mainImages[i]);
           }
         }
       }
@@ -357,12 +541,15 @@ export default function ProductsPage() {
         await apiClient.put(`/api/products/${editingProduct._id}`, formData);
         setError('');
         setSuccessMessage('Product updated successfully!');
+
+        // Refresh the product data to show updated images
+        await fetchProducts();
+
         setTimeout(() => {
           setSuccessMessage('');
           setShowForm(false);
           resetForm();
         }, 2000);
-        fetchProducts();
       } else {
         setCreateLoading(true);
         await apiClient.post('/api/products', formData);
@@ -943,7 +1130,6 @@ export default function ProductsPage() {
                           onChange={handleImageChange}
                           className="hidden"
                           id="image-upload"
-                          required={!editingProduct}
                         />
                         <label htmlFor="image-upload" className="cursor-pointer">
                           <div className="flex flex-col items-center gap-4">
@@ -954,11 +1140,11 @@ export default function ProductsPage() {
                             </div>
                             <div>
                               <p className="text-lg font-semibold text-gray-900">
-                                {editingProduct ? 'Click to add new images' : 'Click to upload product images'}
+                                {editingProduct ? 'Click to add more images' : 'Click to upload product images'}
                               </p>
                               <p className="text-sm text-gray-500 mt-2">
                                 {editingProduct ?
-                                  'Replace existing images (optional)' :
+                                  'Add additional images to your product (existing images will be preserved)' :
                                   'Upload multiple images for your product gallery'
                                 }
                               </p>
@@ -970,53 +1156,221 @@ export default function ProductsPage() {
                       {/* New Image Previews */}
                       {form.imagePreviews && form.imagePreviews.length > 0 && (
                         <div className="mt-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-200/50 shadow-lg">
-                          <p className="text-sm font-bold text-blue-700 mb-4">New images to upload:</p>
-                          <div className="flex flex-wrap gap-4">
+                          <div className="flex items-center justify-between mb-4">
+                            <p className="text-sm font-bold text-blue-700">New images to upload:</p>
+                            <div className="flex items-center gap-2 text-xs text-blue-600 bg-blue-100 px-3 py-1 rounded-full">
+                              <GripVertical size={12} />
+                              Drag to reorder
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
                             {form.imagePreviews.map((preview, index) => (
-                              <div key={index} className="relative group">
-                                <img
-                                  src={preview}
-                                  alt={`Preview ${index + 1}`}
-                                  className="w-24 h-24 object-cover rounded-2xl border-2 border-blue-200 shadow-lg"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() => removeImagePreview(index)}
-                                  className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full flex items-center justify-center hover:from-red-600 hover:to-pink-600 transition-all duration-200 shadow-lg"
-                                >
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                  </svg>
-                                </button>
-                                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-2xl transition-all duration-200 flex items-center justify-center">
-                                  <span className="text-white text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                    New
-                                  </span>
+                              <div
+                                key={index}
+                                className={`relative group cursor-move transition-all duration-200 ${draggedIndex === index ? 'opacity-50 scale-95' : 'hover:scale-105'
+                                  }`}
+                                draggable
+                                onDragStart={(e) => handleDragStart(e, index)}
+                                onDragOver={handleDragOver}
+                                onDrop={(e) => handleDrop(e, index)}
+                                onDragEnd={handleDragEnd}
+                              >
+                                <div className="relative">
+                                  <img
+                                    src={preview}
+                                    alt={`Preview ${index + 1}`}
+                                    className="w-full h-24 object-cover rounded-2xl border-2 border-blue-200 shadow-lg"
+                                  />
+
+                                  {/* Drag handle */}
+                                  <div className="absolute top-1 left-1 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                    <GripVertical size={12} />
+                                  </div>
+
+                                  {/* Position indicator */}
+                                  <div className="absolute top-1 right-1 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                                    {index + 1}
+                                  </div>
+
+                                  {/* Remove button */}
+                                  <button
+                                    type="button"
+                                    onClick={() => removeImagePreview(index)}
+                                    className="absolute -bottom-2 -right-2 w-8 h-8 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full flex items-center justify-center hover:from-red-600 hover:to-pink-600 transition-all duration-200 shadow-lg"
+                                  >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                  </button>
+
+                                  {/* Hover overlay */}
+                                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-2xl transition-all duration-200 flex items-center justify-center">
+                                    <span className="text-white text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                      Drag to reorder
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
                             ))}
+                          </div>
+
+                          {/* Reordering instructions */}
+                          <div className="mt-4 p-3 bg-blue-100 rounded-lg border border-blue-200">
+                            <div className="flex items-center gap-2 text-sm text-blue-800">
+                              <GripVertical size={16} />
+                              <span className="font-medium">Image Order:</span>
+                              <span>Drag images to set the display order. The first image will be the main product image.</span>
+                            </div>
                           </div>
                         </div>
                       )}
 
                       {editingProduct && existingImages && existingImages.length > 0 && (
                         <div className="mt-6 p-6 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl border border-gray-200/50 shadow-lg">
-                          <p className="text-sm font-bold text-gray-700 mb-4">Current images:</p>
-                          <div className="flex flex-wrap gap-4">
+                          <div className="flex items-center justify-between mb-4">
+                            <p className="text-sm font-bold text-gray-700">Current images:</p>
+                            <div className="flex items-center gap-2 text-xs text-gray-600 bg-gray-200 px-3 py-1 rounded-full">
+                              <GripVertical size={12} />
+                              Drag to reorder
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
                             {existingImages.map((img, index) => (
-                              <div key={index} className="relative group">
+                              <div
+                                key={index}
+                                className={`relative group cursor-move transition-all duration-200 ${draggedExistingIndex === index ? 'opacity-50 scale-95' : 'hover:scale-105'
+                                  }`}
+                                draggable
+                                onDragStart={(e) => handleExistingDragStart(e, index)}
+                                onDragOver={handleExistingDragOver}
+                                onDrop={(e) => handleExistingDrop(e, index)}
+                                onDragEnd={handleExistingDragEnd}
+                              >
+                                <div className="relative">
+                                  <img
+                                    src={img}
+                                    alt={`Current image ${index + 1}`}
+                                    className="w-full h-24 object-cover rounded-2xl border-2 border-gray-200 shadow-lg"
+                                  />
+
+                                  {/* Drag handle */}
+                                  <div className="absolute top-1 left-1 w-6 h-6 bg-gray-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                    <GripVertical size={12} />
+                                  </div>
+
+                                  {/* Position indicator */}
+                                  <div className="absolute top-1 right-1 w-6 h-6 bg-gray-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                                    {index + 1}
+                                  </div>
+
+                                  {/* Remove button */}
+                                  <button
+                                    type="button"
+                                    onClick={() => removeExistingImage(index)}
+                                    className="absolute -bottom-4 -right-3 w-8 h-8 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full flex items-center justify-center hover:from-red-600 hover:to-pink-600 transition-all duration-200 shadow-lg"
+                                  >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                  </button>
+
+                                  {/* Hover overlay */}
+                                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-2xl transition-all duration-200 flex items-center justify-center">
+                                    <span className="text-white text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                      Drag to reorder
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Reordering instructions for existing images */}
+                          <div className="mt-4 p-3 bg-gray-200 rounded-lg border border-gray-300">
+                            <div className="flex items-center gap-2 text-sm text-gray-700">
+                              <GripVertical size={16} />
+                              <span className="font-medium">Current Image Order:</span>
+                              <span>Drag existing images to reorder them. Changes will be saved when you update the product.</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Combined Image Order Preview */}
+                      {(existingImages.length > 0 || form.imagePreviews.length > 0) && (
+                        <div className="mt-6 p-6 bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl border border-purple-200/50 shadow-lg">
+                          <div className="flex items-center justify-between mb-4">
+                            <p className="text-sm font-bold text-purple-700">Final Image Order:</p>
+                            <div className="flex items-center gap-2 text-xs text-purple-600 bg-purple-100 px-3 py-1 rounded-full">
+                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                              </svg>
+                              Preview
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                            {[...existingImages, ...form.imagePreviews].map((img, index) => (
+                              <div
+                                key={index}
+                                className={`relative group cursor-move transition-all duration-200 ${draggedCombinedIndex === index ? 'opacity-50 scale-95' : 'hover:scale-105'
+                                  }`}
+                                draggable
+                                onDragStart={(e) => handleCombinedDragStart(e, index)}
+                                onDragOver={handleCombinedDragOver}
+                                onDrop={(e) => handleCombinedDrop(e, index)}
+                                onDragEnd={handleCombinedDragEnd}
+                              >
                                 <img
                                   src={img}
-                                  alt={`Current image ${index + 1}`}
-                                  className="w-24 h-24 object-cover rounded-2xl border-2 border-gray-200 shadow-lg"
+                                  alt={`Final image ${index + 1}`}
+                                  className="w-full h-24 object-cover rounded-2xl border-2 border-purple-200 shadow-lg"
                                 />
+
+                                {/* Drag handle */}
+                                <div className="absolute top-1 left-1 w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                  <GripVertical size={12} />
+                                </div>
+
+                                {/* Position indicator */}
+                                <div className="absolute top-1 right-1 w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                                  {index + 1}
+                                </div>
+
+                                {/* Image type indicator */}
+                                <div className="absolute bottom-1 left-1 px-2 py-1 bg-purple-600 text-white text-xs font-bold rounded">
+                                  {index < existingImages.length ? 'Current' : 'New'}
+                                </div>
+
+                                {/* Remove button */}
+                                <button
+                                  type="button"
+                                  onClick={() => removeImageFromCombined(index)}
+                                  className="absolute -bottom-2 -right-2 w-8 h-8 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full flex items-center justify-center hover:from-red-600 hover:to-pink-600 transition-all duration-200 shadow-lg"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                                </button>
+
+                                {/* Hover overlay */}
                                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-2xl transition-all duration-200 flex items-center justify-center">
                                   <span className="text-white text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                    Current
+                                    Drag to reorder
                                   </span>
                                 </div>
                               </div>
                             ))}
+                          </div>
+
+                          {/* Final order instructions */}
+                          <div className="mt-4 p-3 bg-purple-100 rounded-lg border border-purple-200">
+                            <div className="flex items-center gap-2 text-sm text-purple-800">
+                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                              </svg>
+                              <span className="font-medium">This is how your images will appear after saving.</span>
+                              <span>The first image will be the main product image.</span>
+                            </div>
                           </div>
                         </div>
                       )}
