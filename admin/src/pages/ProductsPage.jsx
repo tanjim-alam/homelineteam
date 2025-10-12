@@ -303,10 +303,12 @@ export default function ProductsPage() {
 
   // Drag and drop for combined image view
   const [draggedCombinedIndex, setDraggedCombinedIndex] = useState(null);
+  const [forceRender, setForceRender] = useState(0);
 
   const handleCombinedDragStart = (e, index) => {
     setDraggedCombinedIndex(index);
     e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', index.toString());
   };
 
   const handleCombinedDragOver = (e) => {
@@ -322,30 +324,55 @@ export default function ProductsPage() {
       return;
     }
 
-    const allImages = [...existingImages, ...form.imagePreviews];
-    const allFiles = [...form.mainImages];
+    // Create combined array with metadata
+    const combinedImages = [
+      ...existingImages.map((img, index) => ({
+        image: img,
+        isExisting: true,
+        file: null,
+        originalIndex: index
+      })),
+      ...form.imagePreviews.map((img, index) => ({
+        image: img,
+        isExisting: false,
+        file: form.mainImages[index],
+        originalIndex: index
+      }))
+    ];
 
     // Remove dragged item
-    const draggedImage = allImages.splice(draggedCombinedIndex, 1)[0];
-    const draggedFile = draggedCombinedIndex < existingImages.length ? null : allFiles.splice(draggedCombinedIndex - existingImages.length, 1)[0];
+    const draggedItem = combinedImages.splice(draggedCombinedIndex, 1)[0];
 
     // Insert at new position
-    allImages.splice(dropIndex, 0, draggedImage);
-    if (draggedFile) {
-      allFiles.splice(dropIndex - existingImages.length, 0, draggedFile);
-    }
+    combinedImages.splice(dropIndex, 0, draggedItem);
 
-    // Update states
-    const newExistingImages = allImages.slice(0, existingImages.length);
-    const newImagePreviews = allImages.slice(existingImages.length);
+    // Split back into existing and new images
+    const newExistingImages = [];
+    const newImagePreviews = [];
+    const newFiles = [];
 
-    setExistingImages(newExistingImages);
-    setForm({
-      ...form,
-      mainImages: allFiles,
-      imagePreviews: newImagePreviews
+    combinedImages.forEach((item) => {
+      if (item.isExisting) {
+        newExistingImages.push(item.image);
+      } else {
+        newImagePreviews.push(item.image);
+        if (item.file) {
+          newFiles.push(item.file);
+        }
+      }
     });
 
+
+
+    setExistingImages([...newExistingImages]);
+    setForm(prevForm => ({
+      ...prevForm,
+      mainImages: [...newFiles],
+      imagePreviews: [...newImagePreviews]
+    }));
+
+    // Force re-render
+    setForceRender(prev => prev + 1);
     setDraggedCombinedIndex(null);
   };
 
@@ -512,16 +539,21 @@ export default function ProductsPage() {
 
       // Handle images - send the final ordered list
       if (editingProduct) {
-        // For editing, send the final ordered list of all images
-        // First, send existing images in their new order
-        for (let i = 0; i < existingImages.length; i++) {
-          formData.append('existingImages', existingImages[i]);
-        }
+        // For editing, send the final ordered list of all images in the correct order
+        const allImages = [...existingImages, ...form.imagePreviews];
+        const allFiles = [...form.mainImages];
 
-        // Then, send new images as files
-        if (form.mainImages && form.mainImages.length > 0) {
-          for (let i = 0; i < form.mainImages.length; i++) {
-            formData.append('newImages', form.mainImages[i]);
+        // Send images in their final order
+        for (let i = 0; i < allImages.length; i++) {
+          if (i < existingImages.length) {
+            // This is an existing image (URL)
+            formData.append('orderedImages', allImages[i]);
+          } else {
+            // This is a new image (File object)
+            const fileIndex = i - existingImages.length;
+            if (fileIndex < allFiles.length) {
+              formData.append('orderedImages', allFiles[fileIndex]);
+            }
           }
         }
 
@@ -1296,25 +1328,45 @@ export default function ProductsPage() {
                         </div>
                       )}
 
+                      {/* Important instruction for editing products */}
+                      {editingProduct && (existingImages.length > 0 || form.imagePreviews.length > 0) && (
+                        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                          <div className="flex items-start gap-3">
+                            <div className="p-1 bg-blue-100 rounded">
+                              <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-blue-900 text-sm">🎯 To set image order: Use the "Final Image Order" section below</h4>
+                              <p className="text-xs text-blue-800 mt-1">
+                                Drag images in the "Final Image Order" section to set their position. You can mix existing and new images in any order you want.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                       {/* Combined Image Order Preview */}
                       {(existingImages.length > 0 || form.imagePreviews.length > 0) && (
                         <div className="mt-6 p-6 bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl border border-purple-200/50 shadow-lg">
                           <div className="flex items-center justify-between mb-4">
-                            <p className="text-sm font-bold text-purple-700">Final Image Order:</p>
+                            <p className="text-lg font-bold text-purple-700">🎯 Final Image Order (Drag to Reorder):</p>
                             <div className="flex items-center gap-2 text-xs text-purple-600 bg-purple-100 px-3 py-1 rounded-full">
                               <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                               </svg>
-                              Preview
+                              Main Reordering Area
                             </div>
                           </div>
                           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
                             {[...existingImages, ...form.imagePreviews].map((img, index) => (
                               <div
-                                key={index}
+                                key={`img-${index}-${forceRender}`}
                                 className={`relative group cursor-move transition-all duration-200 ${draggedCombinedIndex === index ? 'opacity-50 scale-95' : 'hover:scale-105'
                                   }`}
-                                draggable
+                                style={{ touchAction: 'none' }}
+                                draggable={true}
                                 onDragStart={(e) => handleCombinedDragStart(e, index)}
                                 onDragOver={handleCombinedDragOver}
                                 onDrop={(e) => handleCombinedDrop(e, index)}
@@ -1324,10 +1376,12 @@ export default function ProductsPage() {
                                   src={img}
                                   alt={`Final image ${index + 1}`}
                                   className="w-full h-24 object-cover rounded-2xl border-2 border-purple-200 shadow-lg"
+                                  draggable={false}
+                                  onDragStart={(e) => e.preventDefault()}
                                 />
 
-                                {/* Drag handle */}
-                                <div className="absolute top-1 left-1 w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                {/* Drag handle - more visible */}
+                                <div className="absolute top-1 left-1 w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center opacity-80 group-hover:opacity-100 transition-opacity duration-200">
                                   <GripVertical size={12} />
                                 </div>
 
@@ -1340,6 +1394,7 @@ export default function ProductsPage() {
                                 <div className="absolute bottom-1 left-1 px-2 py-1 bg-purple-600 text-white text-xs font-bold rounded">
                                   {index < existingImages.length ? 'Current' : 'New'}
                                 </div>
+
 
                                 {/* Remove button */}
                                 <button

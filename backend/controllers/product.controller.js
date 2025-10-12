@@ -293,20 +293,26 @@ exports.updateProduct = async (req, res, next) => {
 
         // Handle image updates - support both reordering existing images and adding new ones
         if (req.body.updateImageOrder === 'true') {
-            // Handle reordered existing images and new images
+            // Handle ordered images (existing + new in final order)
             updates.mainImages = [];
 
-            // Add existing images in their new order
-            if (req.body.existingImages) {
-                const existingImages = Array.isArray(req.body.existingImages)
-                    ? req.body.existingImages
-                    : [req.body.existingImages];
-                updates.mainImages.push(...existingImages);
+            if (req.body.orderedImages) {
+                // Handle ordered images (mix of existing URLs and new files)
+                const orderedImages = Array.isArray(req.body.orderedImages)
+                    ? req.body.orderedImages
+                    : [req.body.orderedImages];
+
+                for (const image of orderedImages) {
+                    if (typeof image === 'string' && image.startsWith('http')) {
+                        // This is an existing image URL
+                        updates.mainImages.push(image);
+                    }
+                }
             }
 
-            // Add new images
-            if (req.files && req.files.newImages && req.files.newImages.length) {
-                for (const file of req.files.newImages) {
+            // Add new images from files
+            if (req.files && req.files.orderedImages && req.files.orderedImages.length) {
+                for (const file of req.files.orderedImages) {
                     const uploaded = await uploadBuffer(file.buffer, `products/${slug || id}`);
                     updates.mainImages.push(uploaded.secure_url);
                 }

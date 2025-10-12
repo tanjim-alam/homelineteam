@@ -50,6 +50,7 @@ const uploadProduct = multer({
 }).fields([
   { name: 'images', maxCount: 10 },
   { name: 'newImages', maxCount: 10 },
+  { name: 'orderedImages', maxCount: 10 },
   { name: 'metaData[ogImage]', maxCount: 1 }
 ]); // Use .fields() to handle specific file fields
 
