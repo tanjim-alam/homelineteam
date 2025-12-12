@@ -76,7 +76,7 @@ export default function ProductsPage() {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get('/api/products');
+      const response = await apiClient.get('/products');
       let data = response;
       if (response && response.data) {
         data = response.data;
@@ -105,15 +105,14 @@ export default function ProductsPage() {
   const fetchCategories = async () => {
     try {
       // Fetch all subcategories using the main categories endpoint
-      // The /api/categories endpoint returns subcategories (Category model)
-      const response = await apiClient.get('/api/categories');
+      const response = await apiClient.get('/categories');
       let data = response;
       if (response && response.data) {
         data = response.data;
       }
       if (Array.isArray(data)) {
         setCategories(data);
-        setSubcategories(data); // All categories from /api/categories are subcategories
+        setSubcategories(data);
       } else if (data && typeof data === 'object') {
         if (Array.isArray(data.categories)) {
           setCategories(data.categories);
@@ -139,7 +138,7 @@ export default function ProductsPage() {
 
   const fetchCategoryDetails = async (categoryId) => {
     try {
-      const response = await apiClient.get(`/api/categories/id/${categoryId}`);
+      const response = await apiClient.get(`/categories/id/${categoryId}`);
       let data = response;
       if (response && response.data) {
         data = response.data;
@@ -570,7 +569,7 @@ export default function ProductsPage() {
 
       if (editingProduct) {
         setUpdateLoading(true);
-        await apiClient.put(`/api/products/${editingProduct._id}`, formData);
+        await apiClient.put(`/products/${editingProduct._id}`, formData);
         setError('');
         setSuccessMessage('Product updated successfully!');
 
@@ -584,7 +583,7 @@ export default function ProductsPage() {
         }, 2000);
       } else {
         setCreateLoading(true);
-        await apiClient.post('/api/products', formData);
+        await apiClient.post('/products', formData);
         setError('');
         setSuccessMessage('Product created successfully!');
         setTimeout(() => {
@@ -651,7 +650,7 @@ export default function ProductsPage() {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
       try {
-        await apiClient.delete(`/api/products/${id}`);
+        await apiClient.delete(`/products/${id}`);
         fetchProducts();
       } catch (err) {
         setError('Failed to delete product');
@@ -665,7 +664,7 @@ export default function ProductsPage() {
     const confirmMessage = `Are you sure you want to delete ${selectedProducts.length} product(s)? This action cannot be undone.`;
     if (window.confirm(confirmMessage)) {
       try {
-        const deletePromises = selectedProducts.map(id => apiClient.delete(`/api/products/${id}`));
+        const deletePromises = selectedProducts.map(id => apiClient.delete(`/products/${id}`));
         await Promise.all(deletePromises);
         setSelectedProducts([]);
         setShowBulkActions(false);

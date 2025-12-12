@@ -52,12 +52,12 @@ export default function KitchenCollectionPage() {
         'Parallel Shape': 'parallel',
         'Straight Shape': 'straight'
       };
-      let endpoint = '/api/kitchen-products';
+      let endpoint = '/kitchen-products';
       if (kitchenConfig.kitchenType) {
         const layout = layoutMap[kitchenConfig.kitchenType];
         if (layout) {
           const layoutParam = encodeURIComponent(JSON.stringify([layout]));
-          endpoint = `/api/kitchen-products?layout=${layoutParam}`;
+          endpoint = `/kitchen-products?layout=${layoutParam}`;
         }
       }
       const response = await api.request(endpoint);

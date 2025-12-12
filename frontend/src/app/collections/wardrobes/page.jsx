@@ -39,7 +39,7 @@ export default function WardrobesPage() {
   const fetchWardrobes = async () => {
     try {
       setLoading(true);
-      const res = await api.request('/api/wardrobe-products');
+      const res = await api.request('/wardrobe-products');
       setWardrobeProducts(Array.isArray(res) ? res : []);
     } catch (e) {
       setError('Failed to load wardrobes');

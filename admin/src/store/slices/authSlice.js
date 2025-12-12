@@ -3,7 +3,7 @@ import api from '../../api/client';
 
 export const login = createAsyncThunk('auth/login', async (payload, { rejectWithValue }) => {
   try {
-    const res = await api.post('/api/auth/login', payload);
+    const res = await api.post('/auth/login', payload);
 
     // Store token if provided in response (fallback if cookies don't work)
     if (res.data.token) {
@@ -17,14 +17,14 @@ export const login = createAsyncThunk('auth/login', async (payload, { rejectWith
 });
 
 export const logout = createAsyncThunk('auth/logout', async () => {
-  await api.post('/api/auth/logout');
+  await api.post('/auth/logout');
   // Clear token from localStorage
   localStorage.removeItem('auth_token');
 });
 
 export const fetchMe = createAsyncThunk('auth/me', async (_, { rejectWithValue }) => {
   try {
-    const res = await api.get('/api/auth/me');
+    const res = await api.get('/auth/me');
     return res.data.user;
   } catch (err) {
     return rejectWithValue('Unauthorized');

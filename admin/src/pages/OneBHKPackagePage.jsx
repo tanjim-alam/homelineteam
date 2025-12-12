@@ -98,7 +98,7 @@ export default function OneBHKPackagePage() {
     const fetchItems = async () => {
         try {
             setLoading(true);
-            const res = await apiClient.get('/api/1bhk-packages');
+            const res = await apiClient.get('/1bhk-packages');
             const data = res?.data || res;
             setItems(Array.isArray(data) ? data : []);
         } catch (e) {
@@ -192,9 +192,9 @@ export default function OneBHKPackagePage() {
             }
 
             if (editing) {
-                await apiClient.put(`/api/1bhk-packages/${editing._id}`, fd);
+                await apiClient.put(`/1bhk-packages/${editing._id}`, fd);
             } else {
-                await apiClient.post('/api/1bhk-packages', fd);
+                await apiClient.post('/1bhk-packages', fd);
             }
             setShowForm(false);
             resetForm();
@@ -256,7 +256,7 @@ export default function OneBHKPackagePage() {
     const handleDelete = async (id) => {
         if (!window.confirm('Delete this 1BHK package?')) return;
         try {
-            await apiClient.delete(`/api/1bhk-packages/${id}`);
+            await apiClient.delete(`/1bhk-packages/${id}`);
             fetchItems();
         } catch (e) {
             setError('Failed to delete 1BHK package');

@@ -31,7 +31,7 @@ export default function OneBHKPackagePage() {
     const fetchPackages = async () => {
       try {
         setLoading(true);
-        const response = await api.request('/api/1bhk-packages');
+        const response = await api.request('/1bhk-packages');
         setPackages(Array.isArray(response) ? response : []);
       } catch (e) {
         setError('Failed to load packages. Please try again later.');

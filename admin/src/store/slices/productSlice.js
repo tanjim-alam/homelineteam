@@ -2,13 +2,13 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../api/client';
 
 export const listProducts = createAsyncThunk('products/list', async (params) => {
-  const res = await api.get('/api/products', { params });
+  const res = await api.get('/products', { params });
   return res.data;
 });
 
 export const createProduct = createAsyncThunk('products/create', async (payload, { rejectWithValue }) => {
   try {
-    const res = await api.post('/api/products', payload);
+    const res = await api.post('/products', payload);
     return res.data;
   } catch (err) {
     return rejectWithValue(err.response?.data?.message || 'Create failed');
@@ -17,7 +17,7 @@ export const createProduct = createAsyncThunk('products/create', async (payload,
 
 export const updateProduct = createAsyncThunk('products/update', async ({ id, payload }, { rejectWithValue }) => {
   try {
-    const res = await api.put(`/api/products/${id}`, payload);
+    const res = await api.put(`/products/${id}`, payload);
     return res.data;
   } catch (err) {
     return rejectWithValue(err.response?.data?.message || 'Update failed');
@@ -26,7 +26,7 @@ export const updateProduct = createAsyncThunk('products/update', async ({ id, pa
 
 export const deleteProduct = createAsyncThunk('products/delete', async (id, { rejectWithValue }) => {
   try {
-    await api.delete(`/api/products/${id}`);
+    await api.delete(`/products/${id}`);
     return id;
   } catch (err) {
     return rejectWithValue(err.response?.data?.message || 'Delete failed');
@@ -35,7 +35,7 @@ export const deleteProduct = createAsyncThunk('products/delete', async (id, { re
 
 export const getProductBySlug = createAsyncThunk('products/getBySlug', async (slug, { rejectWithValue }) => {
   try {
-    const res = await api.get(`/api/products/${slug}`);
+    const res = await api.get(`/products/${slug}`);
     return res.data;
   } catch (err) {
     return rejectWithValue(err.response?.data?.message || 'Fetch failed');

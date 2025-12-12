@@ -97,7 +97,7 @@ export default function KitchenProductsPage() {
     const fetchItems = async () => {
         try {
             setLoading(true);
-            const res = await apiClient.get('/api/kitchen-products');
+            const res = await apiClient.get('/kitchen-products');
             const data = res?.data || res;
             setItems(Array.isArray(data) ? data : []);
         } catch (e) {
@@ -188,9 +188,9 @@ export default function KitchenProductsPage() {
             }
 
             if (editing) {
-                await apiClient.put(`/api/kitchen-products/${editing._id}`, fd);
+                await apiClient.put(`/kitchen-products/${editing._id}`, fd);
             } else {
-                await apiClient.post('/api/kitchen-products', fd);
+                await apiClient.post('/kitchen-products', fd);
             }
             setShowForm(false);
             resetForm();
@@ -250,7 +250,7 @@ export default function KitchenProductsPage() {
     const handleDelete = async (id) => {
         if (!window.confirm('Delete this kitchen product?')) return;
         try {
-            await apiClient.delete(`/api/kitchen-products/${id}`);
+            await apiClient.delete(`/kitchen-products/${id}`);
             fetchItems();
         } catch (e) {
             setError('Failed to delete kitchen product');

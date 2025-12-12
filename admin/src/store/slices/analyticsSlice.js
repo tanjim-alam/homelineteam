@@ -6,7 +6,7 @@ export const getDashboardAnalytics = createAsyncThunk(
     'analytics/getDashboardAnalytics',
     async (_, { rejectWithValue }) => {
         try {
-            const response = await api.get('/api/analytics/dashboard');
+            const response = await api.get('/analytics/dashboard');
             return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || 'Failed to fetch analytics');
@@ -18,7 +18,7 @@ export const getRouteInfo = createAsyncThunk(
     'analytics/getRouteInfo',
     async (_, { rejectWithValue }) => {
         try {
-            const response = await api.get('/api/analytics/routes');
+            const response = await api.get('/analytics/routes');
             return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || 'Failed to fetch route info');

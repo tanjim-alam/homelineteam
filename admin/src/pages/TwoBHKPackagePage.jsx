@@ -114,7 +114,7 @@ export default function TwoBHKPackagePage() {
     const fetchItems = async () => {
         try {
             setLoading(true);
-            const res = await apiClient.get('/api/2bhk-packages');
+            const res = await apiClient.get('/2bhk-packages');
             const data = res?.data || res;
             setItems(Array.isArray(data) ? data : []);
         } catch (e) {
@@ -216,9 +216,9 @@ export default function TwoBHKPackagePage() {
             }
 
             if (editing) {
-                await apiClient.put(`/api/2bhk-packages/${editing._id}`, fd);
+                await apiClient.put(`/2bhk-packages/${editing._id}`, fd);
             } else {
-                await apiClient.post('/api/2bhk-packages', fd);
+                await apiClient.post('/2bhk-packages', fd);
             }
             setShowForm(false);
             resetForm();
@@ -288,7 +288,7 @@ export default function TwoBHKPackagePage() {
     const handleDelete = async (id) => {
         if (!window.confirm('Delete this 2BHK package?')) return;
         try {
-            await apiClient.delete(`/api/2bhk-packages/${id}`);
+            await apiClient.delete(`/2bhk-packages/${id}`);
             fetchItems();
         } catch (e) {
             setError('Failed to delete 2BHK package');

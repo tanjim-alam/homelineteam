@@ -37,7 +37,7 @@ export default function TwoBHKPackagePage() {
     const fetchPackages = async () => {
       try {
         setLoading(true);
-        const response = await api.request('/api/2bhk-packages');
+        const response = await api.request('/2bhk-packages');
         setPackages(Array.isArray(response) ? response : []);
       } catch (e) {
         setError('Failed to load packages. Please try again later.');

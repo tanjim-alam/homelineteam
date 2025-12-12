@@ -34,7 +34,7 @@ const HeroSectionPage = () => {
   // Fetch hero section data
   const fetchHeroData = async () => {
     try {
-      const response = await apiClient.get('/api/hero-section');
+      const response = await apiClient.get('/hero-section');
       if (response.data.success) {
         setHeroData(response.data.data);
       }
@@ -60,7 +60,7 @@ const HeroSectionPage = () => {
         type === 'desktop-background' ? 'desktop' :
           type === 'categories' ? 'category' : 'mobile';
 
-      const response = await apiClient.post(`/api/hero-section/upload-image?type=${uploadType}`, formData, {
+      const response = await apiClient.post(`/hero-section/upload-image?type=${uploadType}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
@@ -295,7 +295,7 @@ const HeroSectionPage = () => {
     setSaving(true);
     try {
       const data = dataToSave || heroData;
-      const response = await apiClient.put('/api/hero-section', data);
+      const response = await apiClient.put('/hero-section', data);
       if (response.data.success) {
         // Don't show alert for auto-saves during upload
         if (!dataToSave) {

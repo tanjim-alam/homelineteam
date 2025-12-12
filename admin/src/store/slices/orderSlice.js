@@ -2,13 +2,13 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../api/client';
 
 export const listOrders = createAsyncThunk('orders/list', async () => {
-  const res = await api.get('/api/orders');
+  const res = await api.get('/orders');
   return res.data;
 });
 
 export const createOrder = createAsyncThunk('orders/create', async (payload, { rejectWithValue }) => {
   try {
-    const res = await api.post('/api/orders', payload);
+    const res = await api.post('/orders', payload);
     return res.data;
   } catch (err) {
     return rejectWithValue(err.response?.data?.message || 'Create failed');
@@ -17,7 +17,7 @@ export const createOrder = createAsyncThunk('orders/create', async (payload, { r
 
 export const getOrderById = createAsyncThunk('orders/getById', async (id, { rejectWithValue }) => {
   try {
-    const res = await api.get(`/api/orders/${id}`);
+    const res = await api.get(`/orders/${id}`);
     return res.data;
   } catch (err) {
     return rejectWithValue(err.response?.data?.message || 'Fetch failed');
@@ -26,7 +26,7 @@ export const getOrderById = createAsyncThunk('orders/getById', async (id, { reje
 
 export const updateOrderStatus = createAsyncThunk('orders/updateStatus', async ({ id, status }, { rejectWithValue }) => {
   try {
-    const res = await api.put(`/api/orders/${id}`, { status });
+    const res = await api.put(`/orders/${id}`, { status });
     return res.data;
   } catch (err) {
     return rejectWithValue(err.response?.data?.message || 'Update failed');
@@ -35,7 +35,7 @@ export const updateOrderStatus = createAsyncThunk('orders/updateStatus', async (
 
 export const updatePaymentStatus = createAsyncThunk('orders/updatePaymentStatus', async ({ id, paymentStatus, notes }, { rejectWithValue }) => {
   try {
-    const res = await api.patch(`/api/orders/${id}/payment-status`, { paymentStatus, notes });
+    const res = await api.patch(`/orders/${id}/payment-status`, { paymentStatus, notes });
     return res.data;
   } catch (err) {
     return rejectWithValue(err.response?.data?.message || 'Payment status update failed');

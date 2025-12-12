@@ -100,7 +100,7 @@ export default function CategoriesPage() {
   // Fetch all categories
   const fetchCategories = async () => {
     try {
-      const response = await api.get('/api/categories')
+      const response = await api.get('/categories')
 
       if (response.data) {
         setSubCategories(response.data)
@@ -116,7 +116,7 @@ export default function CategoriesPage() {
   const fetchMainCategories = async () => {
     try {
       setMainCategoriesLoading(true)
-      const response = await api.get('/api/main-categories')
+      const response = await api.get('/main-categories')
 
       if (response.data && response.data.success && Array.isArray(response.data.data)) {
         setMainCategories(response.data.data)
@@ -153,7 +153,7 @@ export default function CategoriesPage() {
   const createCategory = async (formData) => {
     try {
       setCreating(true)
-      const response = await api.post('/api/categories', formData)
+      const response = await api.post('/categories', formData)
 
       if (response.data) {
         // Refresh categories
@@ -181,7 +181,7 @@ export default function CategoriesPage() {
   // Create main category
   const createMainCategory = async (mainCategoryData) => {
     try {
-      const response = await api.post('/api/main-categories', mainCategoryData)
+      const response = await api.post('/main-categories', mainCategoryData)
 
       if (response.data && response.data.success) {
         // Refresh main categories
@@ -202,7 +202,7 @@ export default function CategoriesPage() {
   // Update main category
   const updateMainCategory = async (id, mainCategoryData) => {
     try {
-      const response = await api.put(`/api/main-categories/${id}`, mainCategoryData)
+      const response = await api.put(`/main-categories/${id}`, mainCategoryData)
 
       if (response.data && response.data.success) {
         // Refresh main categories
@@ -223,7 +223,7 @@ export default function CategoriesPage() {
   // Delete main category
   const deleteMainCategory = async (id) => {
     try {
-      const response = await api.delete(`/api/main-categories/${id}`)
+      const response = await api.delete(`/main-categories/${id}`)
 
       if (response.data && response.data.success) {
         // Refresh main categories

@@ -2,13 +2,13 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../api/client';
 
 export const listUsers = createAsyncThunk('users/list', async () => {
-    const res = await api.get('/api/users');
+    const res = await api.get('/users');
     return res.data;
 });
 
 export const getUserById = createAsyncThunk('users/getById', async (id, { rejectWithValue }) => {
     try {
-        const res = await api.get(`/api/users/${id}`);
+        const res = await api.get(`/users/${id}`);
         return res.data;
     } catch (err) {
         return rejectWithValue(err.response?.data?.message || 'Fetch failed');
@@ -17,7 +17,7 @@ export const getUserById = createAsyncThunk('users/getById', async (id, { reject
 
 export const updateUser = createAsyncThunk('users/update', async ({ id, userData }, { rejectWithValue }) => {
     try {
-        const res = await api.put(`/api/users/${id}`, userData);
+        const res = await api.put(`/users/${id}`, userData);
         return res.data;
     } catch (err) {
         return rejectWithValue(err.response?.data?.message || 'Update failed');
@@ -26,7 +26,7 @@ export const updateUser = createAsyncThunk('users/update', async ({ id, userData
 
 export const deleteUser = createAsyncThunk('users/delete', async (id, { rejectWithValue }) => {
     try {
-        const res = await api.delete(`/api/users/${id}`);
+        const res = await api.delete(`/users/${id}`);
         return res.data;
     } catch (err) {
         return rejectWithValue(err.response?.data?.message || 'Delete failed');
@@ -35,7 +35,7 @@ export const deleteUser = createAsyncThunk('users/delete', async (id, { rejectWi
 
 export const toggleUserStatus = createAsyncThunk('users/toggleStatus', async ({ id, isActive }, { rejectWithValue }) => {
     try {
-        const res = await api.patch(`/api/users/${id}/toggle-status`, { isActive });
+        const res = await api.patch(`/users/${id}/toggle-status`, { isActive });
         return res.data;
     } catch (err) {
         return rejectWithValue(err.response?.data?.message || 'Toggle failed');

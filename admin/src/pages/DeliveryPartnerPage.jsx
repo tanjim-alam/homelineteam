@@ -114,7 +114,7 @@ export default function DeliveryPartnerPage() {
     const fetchPartners = async () => {
         try {
             setLoading(true);
-            const res = await apiClient.get('/api/delivery-partners');
+            const res = await apiClient.get('/delivery-partners');
             const data = res?.data || res;
             setPartners(Array.isArray(data) ? data : []);
         } catch (e) {
@@ -186,9 +186,9 @@ export default function DeliveryPartnerPage() {
             fd.append('notes', form.notes);
 
             if (editing) {
-                await apiClient.put(`/api/delivery-partners/${editing._id}`, fd);
+                await apiClient.put(`/delivery-partners/${editing._id}`, fd);
             } else {
-                await apiClient.post('/api/delivery-partners', fd);
+                await apiClient.post('/delivery-partners', fd);
             }
             setShowForm(false);
             resetForm();
@@ -236,7 +236,7 @@ export default function DeliveryPartnerPage() {
     const handleDelete = async (id) => {
         if (!window.confirm('Delete this delivery partner?')) return;
         try {
-            await apiClient.delete(`/api/delivery-partners/${id}`);
+            await apiClient.delete(`/delivery-partners/${id}`);
             fetchPartners();
         } catch (e) {
             setError('Failed to delete delivery partner');
@@ -245,7 +245,7 @@ export default function DeliveryPartnerPage() {
 
     const handleStatusChange = async (id, status, isAvailable) => {
         try {
-            await apiClient.patch(`/api/delivery-partners/${id}/status`, { status, isAvailable });
+            await apiClient.patch(`/delivery-partners/${id}/status`, { status, isAvailable });
             fetchPartners();
         } catch (e) {
             setError('Failed to update status');
@@ -665,9 +665,9 @@ export default function DeliveryPartnerPage() {
                                         <td className="px-6 py-3">
                                             <div className="flex items-center gap-2">
                                                 <span className={`px-2 py-1 rounded text-xs font-medium ${partner.status === 'active' ? 'bg-green-100 text-green-800' :
-                                                        partner.status === 'pending_approval' ? 'bg-yellow-100 text-yellow-800' :
-                                                            partner.status === 'suspended' ? 'bg-red-100 text-red-800' :
-                                                                'bg-gray-100 text-gray-800'
+                                                    partner.status === 'pending_approval' ? 'bg-yellow-100 text-yellow-800' :
+                                                        partner.status === 'suspended' ? 'bg-red-100 text-red-800' :
+                                                            'bg-gray-100 text-gray-800'
                                                     }`}>
                                                     {statusOptions.find(s => s.value === partner.status)?.label}
                                                 </span>

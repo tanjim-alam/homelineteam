@@ -174,12 +174,12 @@ class ApiService {
 
   // Health check
   async healthCheck() {
-    return this.request('/api/health');
+    return this.request('/health');
   }
 
   // Admin Authentication methods
   async login(credentials) {
-    const response = await this.request('/api/auth/login', {
+    const response = await this.request('/auth/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
     });
@@ -193,7 +193,7 @@ class ApiService {
   }
 
   async logout() {
-    const response = await this.request('/api/auth/logout', {
+    const response = await this.request('/auth/logout', {
       method: 'POST',
     });
 
@@ -204,33 +204,33 @@ class ApiService {
   }
 
   async getMe() {
-    return this.request('/api/auth/me');
+    return this.request('/auth/me');
   }
 
   // User Authentication methods
   async registerUser(userData) {
-    return this.request('/api/users/register', {
+    return this.request('/users/register', {
       method: 'POST',
       body: JSON.stringify(userData),
     });
   }
 
   async verifyUserEmail(email, otp) {
-    return this.request('/api/users/verify-email', {
+    return this.request('/users/verify-email', {
       method: 'POST',
       body: JSON.stringify({ email, otp }),
     });
   }
 
   async resendUserEmailOTP(email) {
-    return this.request('/api/users/resend-email-otp', {
+    return this.request('/users/resend-email-otp', {
       method: 'POST',
       body: JSON.stringify({ email }),
     });
   }
 
   async loginUser(credentials) {
-    const response = await this.request('/api/users/login', {
+    const response = await this.request('/users/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
     });
@@ -244,7 +244,7 @@ class ApiService {
   }
 
   async logoutUser() {
-    const response = await this.request('/api/users/logout', {
+    const response = await this.request('/users/logout', {
       method: 'POST',
     });
 
@@ -255,45 +255,45 @@ class ApiService {
   }
 
   async getUserProfile() {
-    return this.request('/api/users/profile');
+    return this.request('/users/profile');
   }
 
   async updateUserProfile(profileData) {
-    return this.request('/api/users/profile', {
+    return this.request('/users/profile', {
       method: 'PUT',
       body: JSON.stringify(profileData),
     });
   }
 
   async addUserAddress(addressData) {
-    return this.request('/api/users/addresses', {
+    return this.request('/users/addresses', {
       method: 'POST',
       body: JSON.stringify(addressData),
     });
   }
 
   async updateUserAddress(addressId, addressData) {
-    return this.request(`/api/users/addresses/${addressId}`, {
+    return this.request(`/users/addresses/${addressId}`, {
       method: 'PUT',
       body: JSON.stringify(addressData),
     });
   }
 
   async deleteUserAddress(addressId) {
-    return this.request(`/api/users/addresses/${addressId}`, {
+    return this.request(`/users/addresses/${addressId}`, {
       method: 'DELETE',
     });
   }
 
   async forgotUserPassword(email) {
-    return this.request('/api/users/forgot-password', {
+    return this.request('/users/forgot-password', {
       method: 'POST',
       body: JSON.stringify({ email }),
     });
   }
 
   async resetUserPassword(email, token, newPassword) {
-    return this.request('/api/users/reset-password', {
+    return this.request('/users/reset-password', {
       method: 'POST',
       body: JSON.stringify({ email, token, newPassword }),
     });
@@ -301,54 +301,54 @@ class ApiService {
 
   // Categories
   async getCategories() {
-    return this.request('/api/categories');
+    return this.request('/categories');
   }
 
   async getMainCategories() {
-    return this.request('/api/main-categories');
+    return this.request('/main-categories');
   }
 
   async getSubcategories(mainCategoryId) {
-    return this.request(`/api/sub-categories?mainCategoryId=${mainCategoryId}`);
+    return this.request(`/sub-categories?mainCategoryId=${mainCategoryId}`);
   }
 
   async getSubcategoriesByMainCategoryName(mainCategoryName) {
-    return this.request(`/api/sub-categories/by-main-category/${mainCategoryName}`);
+    return this.request(`/sub-categories/by-main-category/${mainCategoryName}`);
   }
 
   async getHierarchicalCategories() {
-    return this.request('/api/categories/hierarchical');
+    return this.request('/categories/hierarchical');
   }
 
   async getCategoriesWithMainCategory() {
-    return this.request('/api/categories/with-main-category');
+    return this.request('/categories/with-main-category');
   }
 
   async getCategoryById(id) {
-    return this.request(`/api/categories/id/${id}`);
+    return this.request(`/categories/id/${id}`);
   }
 
   async getCategoryBySlug(slug) {
-    return this.request(`/api/categories/${slug}`);
+    return this.request(`/categories/${slug}`);
   }
 
   async getCategoryFilterOptions(slug) {
-    return this.request(`/api/categories/${slug}/filter-options`);
+    return this.request(`/categories/${slug}/filter-options`);
   }
 
   // Products
   async getProducts(params = {}) {
     const queryString = new URLSearchParams(params).toString();
-    const endpoint = queryString ? `/api/products?${queryString}` : '/api/products';
+    const endpoint = queryString ? `/products?${queryString}` : '/products';
     return this.request(endpoint);
   }
 
   async getProductBySlug(slug) {
-    return this.request(`/api/products/${slug}`);
+    return this.request(`/products/${slug}`);
   }
 
   async getRelatedProducts(slug, limit = 8) {
-    return this.request(`/api/products/${slug}/related?limit=${limit}`);
+    return this.request(`/products/${slug}/related?limit=${limit}`);
   }
 
   async getProductsByCategory(categoryId, params = {}) {
@@ -380,7 +380,7 @@ class ApiService {
     // Use subcategoryId for the new hierarchical structure
     const queryString = new URLSearchParams({ subcategoryId: categoryId, ...processedParams }).toString();
 
-    return this.request(`/api/products?${queryString}`);
+    return this.request(`/products?${queryString}`);
   }
 
   async getProductsByMainCategory(mainCategoryId, params = {}) {
@@ -412,24 +412,24 @@ class ApiService {
     // Use mainCategoryId for filtering by main category
     const queryString = new URLSearchParams({ mainCategoryId, ...processedParams }).toString();
 
-    return this.request(`/api/products?${queryString}`);
+    return this.request(`/products?${queryString}`);
   }
 
   async getFeaturedProducts(limit = 8) {
     try {
       // Try to get featured products first
-      const featured = await this.request(`/api/products?featured=true&limit=${limit}`);
+      const featured = await this.request(`/products?featured=true&limit=${limit}`);
       if (featured && Array.isArray(featured) && featured.length > 0) {
         return featured;
       }
 
       // Fallback to getting latest products with limit
-      const latest = await this.request(`/api/products?limit=${limit}`);
+      const latest = await this.request(`/products?limit=${limit}`);
       return latest || [];
     } catch (error) {
       // Final fallback - get all products and limit on frontend
       try {
-        const allProducts = await this.request('/api/products');
+        const allProducts = await this.request('/products');
         return Array.isArray(allProducts) ? allProducts.slice(0, limit) : [];
       } catch (fallbackError) {
         return [];
@@ -440,12 +440,12 @@ class ApiService {
   // Search
   async searchProducts(query, params = {}) {
     const searchParams = new URLSearchParams({ q: query, ...params }).toString();
-    return this.request(`/api/products/search?${searchParams}`);
+    return this.request(`/products/search?${searchParams}`);
   }
 
   // Leads
   async createLead(payload) {
-    return this.request('/api/leads', {
+    return this.request('/leads', {
       method: 'POST',
       body: JSON.stringify(payload),
       headers: { 'Content-Type': 'application/json' }
@@ -453,38 +453,38 @@ class ApiService {
   }
 
   async getLeads() {
-    return this.request('/api/leads');
+    return this.request('/leads');
   }
 
   // Collections
   async getCollections() {
     // For now, we'll use categories as collections
-    return this.request('/api/categories');
+    return this.request('/categories');
   }
 
   // Orders
   async createOrder(orderData) {
-    return this.request('/api/orders', {
+    return this.request('/orders', {
       method: 'POST',
       body: JSON.stringify(orderData),
     });
   }
 
   async getUserOrders(userId) {
-    return this.request(`/api/orders/user/${userId}`);
+    return this.request(`/orders/user/${userId}`);
   }
 
   async getOrderById(orderId) {
-    return this.request(`/api/orders/user-order/${orderId}`);
+    return this.request(`/orders/user-order/${orderId}`);
   }
 
   // Hero Section
   async getHeroSection() {
-    return this.request('/api/hero-section');
+    return this.request('/hero-section');
   }
 
   async updateHeroSection(heroData) {
-    return this.request('/api/hero-section', {
+    return this.request('/hero-section', {
       method: 'PUT',
       body: JSON.stringify(heroData),
     });
@@ -494,7 +494,7 @@ class ApiService {
     const formData = new FormData();
     formData.append('image', imageFile);
 
-    return fetch(`${this.baseURL}/api/hero-section/upload-image`, {
+    return fetch(`${this.baseURL}/hero-section/upload-image`, {
       method: 'POST',
       body: formData,
     }).then(response => response.json());
@@ -528,7 +528,7 @@ class ApiService {
 
   // Return/Exchange API methods
   async createReturnRequest(returnData) {
-    return this.request('/api/returns', {
+    return this.request('/returns', {
       method: 'POST',
       body: JSON.stringify(returnData),
     });
@@ -540,22 +540,22 @@ class ApiService {
     if (type) params.append('type', type);
 
     const queryString = params.toString();
-    return this.request(`/api/returns/my-returns${queryString ? `?${queryString}` : ''}`);
+    return this.request(`/returns/my-returns${queryString ? `?${queryString}` : ''}`);
   }
 
   async getReturnById(returnId) {
-    return this.request(`/api/returns/${returnId}`);
+    return this.request(`/returns/${returnId}`);
   }
 
   async updateReturnRequest(returnId, updateData) {
-    return this.request(`/api/returns/${returnId}`, {
+    return this.request(`/returns/${returnId}`, {
       method: 'PUT',
       body: JSON.stringify(updateData),
     });
   }
 
   async cancelReturnRequest(returnId) {
-    return this.request(`/api/returns/${returnId}/cancel`, {
+    return this.request(`/returns/${returnId}/cancel`, {
       method: 'PATCH',
     });
   }

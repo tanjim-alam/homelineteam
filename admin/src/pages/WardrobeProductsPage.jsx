@@ -62,7 +62,7 @@ export default function WardrobeProductsPage() {
   const fetchItems = async () => {
     try {
       setLoading(true);
-      const res = await apiClient.get('/api/wardrobe-products');
+      const res = await apiClient.get('/wardrobe-products');
       const data = res?.data || res;
       setItems(Array.isArray(data) ? data : []);
     } catch (e) {
@@ -146,9 +146,9 @@ export default function WardrobeProductsPage() {
       }
 
       if (editing) {
-        await apiClient.put(`/api/wardrobe-products/${editing._id}`, fd);
+        await apiClient.put(`/wardrobe-products/${editing._id}`, fd);
       } else {
-        await apiClient.post('/api/wardrobe-products', fd);
+        await apiClient.post('/wardrobe-products', fd);
       }
       setShowForm(false);
       resetForm();
@@ -201,7 +201,7 @@ export default function WardrobeProductsPage() {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this wardrobe product?')) return;
-    try { await apiClient.delete(`/api/wardrobe-products/${id}`); fetchItems(); }
+    try { await apiClient.delete(`/wardrobe-products/${id}`); fetchItems(); }
     catch (e) { setError('Failed to delete wardrobe'); }
   };
 
@@ -426,8 +426,8 @@ export default function WardrobeProductsPage() {
                           key={t}
                           onClick={() => setForm({ ...form, defaultOpening: t })}
                           className={`px-6 py-3 rounded-2xl border-2 text-sm font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 ${form.defaultOpening === t
-                              ? 'border-violet-500 bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow-violet-200'
-                              : 'border-gray-200 bg-white/50 backdrop-blur-sm hover:border-violet-300 hover:bg-violet-50/50 text-gray-700'
+                            ? 'border-violet-500 bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow-violet-200'
+                            : 'border-gray-200 bg-white/50 backdrop-blur-sm hover:border-violet-300 hover:bg-violet-50/50 text-gray-700'
                             }`}
                         >
                           {t.charAt(0).toUpperCase() + t.slice(1)}
@@ -446,8 +446,8 @@ export default function WardrobeProductsPage() {
                           key={t}
                           onClick={() => setForm({ ...form, defaultType: t })}
                           className={`px-6 py-3 rounded-2xl border-2 text-sm font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 ${form.defaultType === t
-                              ? 'border-amber-500 bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-amber-200'
-                              : 'border-gray-200 bg-white/50 backdrop-blur-sm hover:border-amber-300 hover:bg-amber-50/50 text-gray-700'
+                            ? 'border-amber-500 bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-amber-200'
+                            : 'border-gray-200 bg-white/50 backdrop-blur-sm hover:border-amber-300 hover:bg-amber-50/50 text-gray-700'
                             }`}
                         >
                           {t.charAt(0).toUpperCase() + t.slice(1)}
@@ -538,15 +538,15 @@ export default function WardrobeProductsPage() {
                 <div className="space-y-3">
                   <label className="block text-sm font-bold text-gray-700">Upload Images</label>
                   <div className="border-2 border-dashed border-gray-300 rounded-3xl p-8 text-center hover:border-purple-400 transition-all duration-200 bg-white/50 backdrop-blur-sm hover:bg-white/70">
-                      <input
+                    <input
                       key={editing ? `edit-${editing._id}` : 'new-wardrobe-product'}
-                        type="file"
-                        multiple
-                        accept="image/*"
+                      type="file"
+                      multiple
+                      accept="image/*"
                       onChange={handleImageChange}
-                        className="hidden"
-                        id="image-upload"
-                      />
+                      className="hidden"
+                      id="image-upload"
+                    />
                     <label htmlFor="image-upload" className="cursor-pointer">
                       <div className="flex flex-col items-center gap-4">
                         <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-pink-200 rounded-2xl flex items-center justify-center shadow-lg">
@@ -588,7 +588,7 @@ export default function WardrobeProductsPage() {
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                              </svg>
                             </button>
                             <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-2xl transition-all duration-200 flex items-center justify-center">
                               <span className="text-white text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-200">
@@ -620,8 +620,8 @@ export default function WardrobeProductsPage() {
                             </div>
                           </div>
                         ))}
+                      </div>
                     </div>
-                  </div>
                   )}
                 </div>
               </div>

@@ -18,15 +18,15 @@ export const config = {
     // API Endpoints
     ENDPOINTS: {
         AUTH: {
-            LOGIN: '/api/auth/login',
-            LOGOUT: '/api/auth/logout',
-            ME: '/api/auth/me',
-            REGISTER: '/api/auth/register',
+            LOGIN: '/auth/login',
+            LOGOUT: '/auth/logout',
+            ME: '/auth/me',
+            REGISTER: '/auth/register',
         },
-        CATEGORIES: '/api/categories',
-        PRODUCTS: '/api/products',
-        ORDERS: '/api/orders',
-        HEALTH: '/api/health',
+        CATEGORIES: '/categories',
+        PRODUCTS: '/products',
+        ORDERS: '/orders',
+        HEALTH: '/health',
     },
 
     // Default Values

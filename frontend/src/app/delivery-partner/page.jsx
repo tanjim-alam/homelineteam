@@ -27,7 +27,7 @@ export default function DeliveryPartnerDashboard() {
         try {
             // For demo purposes, we'll use the partner ID directly
             // In production, you'd have proper authentication
-            const response = await api.request(`/api/delivery-partners/${loginForm.partnerId}`);
+            const response = await api.request(`/delivery-partners/${loginForm.partnerId}`);
 
             if (response) {
                 setPartner(response);
@@ -46,7 +46,7 @@ export default function DeliveryPartnerDashboard() {
     // Fetch orders assigned to this partner
     const fetchOrders = async (partnerId) => {
         try {
-            const response = await api.request(`/api/orders/partner/${partnerId}`);
+            const response = await api.request(`/orders/partner/${partnerId}`);
             setOrders(Array.isArray(response) ? response : []);
         } catch (err) {
             setError('Failed to load orders');
@@ -56,7 +56,7 @@ export default function DeliveryPartnerDashboard() {
     // Update delivery status
     const updateDeliveryStatus = async (orderId, newStatus) => {
         try {
-            await api.request(`/api/orders/${orderId}/delivery-status`, {
+            await api.request(`/orders/${orderId}/delivery-status`, {
                 method: 'PATCH',
                 data: {
                     deliveryStatus: newStatus,

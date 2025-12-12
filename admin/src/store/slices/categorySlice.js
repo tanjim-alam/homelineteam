@@ -2,13 +2,13 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../api/client';
 
 export const listCategories = createAsyncThunk('categories/list', async () => {
-  const res = await api.get('/api/categories');
+  const res = await api.get('/categories');
   return res.data;
 });
 
 export const createCategory = createAsyncThunk('categories/create', async (payload, { rejectWithValue }) => {
   try {
-    const res = await api.post('/api/categories', payload);
+    const res = await api.post('/categories', payload);
     return res.data;
   } catch (err) {
     return rejectWithValue(err.response?.data?.message || 'Create failed');
@@ -17,7 +17,7 @@ export const createCategory = createAsyncThunk('categories/create', async (paylo
 
 export const updateCategory = createAsyncThunk('categories/update', async ({ id, payload }, { rejectWithValue }) => {
   try {
-    const res = await api.put(`/api/categories/${id}`, payload);
+    const res = await api.put(`/categories/${id}`, payload);
     return res.data;
   } catch (err) {
     return rejectWithValue(err.response?.data?.message || 'Update failed');
@@ -26,7 +26,7 @@ export const updateCategory = createAsyncThunk('categories/update', async ({ id,
 
 export const deleteCategory = createAsyncThunk('categories/delete', async (id, { rejectWithValue }) => {
   try {
-    const res = await api.delete(`/api/categories/${id}`);
+    const res = await api.delete(`/categories/${id}`);
     return res.data;
   } catch (err) {
     return rejectWithValue(err.response?.data?.message || 'Delete failed');
@@ -35,7 +35,7 @@ export const deleteCategory = createAsyncThunk('categories/delete', async (id, {
 
 export const getCategoryBySlug = createAsyncThunk('categories/getBySlug', async (slug, { rejectWithValue }) => {
   try {
-    const res = await api.get(`/api/categories/${slug}`);
+    const res = await api.get(`/categories/${slug}`);
     return res.data;
   } catch (err) {
     return rejectWithValue(err.response?.data?.message || 'Fetch failed');
@@ -44,7 +44,7 @@ export const getCategoryBySlug = createAsyncThunk('categories/getBySlug', async 
 
 export const addCustomField = createAsyncThunk('categories/addCustomField', async ({ id, payload }, { rejectWithValue }) => {
   try {
-    const res = await api.post(`/api/categories/${id}/fields`, payload);
+    const res = await api.post(`/categories/${id}/fields`, payload);
     return res.data;
   } catch (err) {
     return rejectWithValue(err.response?.data?.message || 'Add custom field failed');
@@ -53,7 +53,7 @@ export const addCustomField = createAsyncThunk('categories/addCustomField', asyn
 
 export const addVariantField = createAsyncThunk('categories/addVariantField', async ({ id, payload }, { rejectWithValue }) => {
   try {
-    const res = await api.post(`/api/categories/${id}/variant-fields`, payload);
+    const res = await api.post(`/categories/${id}/variant-fields`, payload);
     return res.data;
   } catch (err) {
     return rejectWithValue(err.response?.data?.message || 'Add variant field failed');

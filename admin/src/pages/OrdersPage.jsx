@@ -91,7 +91,7 @@ export default function OrdersPage() {
 
     // Fetch available partners for this order's location
     try {
-      const response = await apiClient.get(`/api/orders/available-partners?city=${order.customer.city}&state=${order.customer.state}&pincode=${order.customer.zip}`)
+      const response = await apiClient.get(`/orders/available-partners?city=${order.customer.city}&state=${order.customer.state}&pincode=${order.customer.zip}`)
       setAvailablePartners(response.data || response)
     } catch (error) {
       setAvailablePartners([])
@@ -104,7 +104,7 @@ export default function OrdersPage() {
 
     setAssigning(true)
     try {
-      await apiClient.post(`/api/orders/${selectedOrder._id}/assign`, assignmentForm)
+      await apiClient.post(`/orders/${selectedOrder._id}/assign`, assignmentForm)
       setShowAssignModal(false)
       setAssignmentForm({ partnerId: '', deliveryFee: '', estimatedDelivery: '', notes: '' })
       dispatch(listOrders()) // Refresh orders
@@ -116,7 +116,7 @@ export default function OrdersPage() {
 
   const handleDeliveryStatusUpdate = async (orderId, status) => {
     try {
-      await apiClient.patch(`/api/orders/${orderId}/delivery-status`, { deliveryStatus: status })
+      await apiClient.patch(`/orders/${orderId}/delivery-status`, { deliveryStatus: status })
       dispatch(listOrders()) // Refresh orders
     } catch (error) {
     }

@@ -12,7 +12,7 @@ export default function LeadsPage() {
     try {
       setLoading(true)
       setError('')
-      const res = await api.get('/api/leads')
+      const res = await api.get('/leads')
       setLeads(res.data || [])
     } catch (e) {
       setError(e.message || 'Failed to load leads')
