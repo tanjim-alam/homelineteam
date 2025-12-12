@@ -93,12 +93,12 @@ const authLimiter = rateLimit({
 });
 
 // Health check
-app.get('/api/health', (req, res) => {
+app.get('/health', (req, res) => {
 	return res.json({ ok: true, service: 'homelineteam-backend', timestamp: new Date().toISOString() });
 });
 
 // CORS test endpoint
-app.get('/api/cors-test', (req, res) => {
+app.get('/cors-test', (req, res) => {
 	res.json({
 		message: 'CORS test successful',
 		origin: req.headers.origin,
@@ -108,7 +108,7 @@ app.get('/api/cors-test', (req, res) => {
 });
 
 // CORS test PATCH endpoint
-app.patch('/api/cors-test', (req, res) => {
+app.patch('/cors-test', (req, res) => {
 	res.json({
 		message: 'CORS PATCH test successful',
 		origin: req.headers.origin,
@@ -125,7 +125,7 @@ app.patch('/api/cors-test', (req, res) => {
 
 
 // Environment check endpoint
-app.get('/api/env-check', (req, res) => {
+app.get('/env-check', (req, res) => {
 	res.json({
 		cloudinary: {
 			cloud_name: process.env.CLOUDINARY_CLOUD_NAME ? 'Set' : 'Missing',
@@ -139,22 +139,22 @@ app.get('/api/env-check', (req, res) => {
 
 // API routes
 const authRoutes = require('./routes/auth.routes');
-app.use('/api/auth', authLimiter, authRoutes);
-app.use('/api/users', authLimiter, userRoutes);
-app.use('/api/categories', categoryRoutes);
-app.use('/api/main-categories', mainCategoryRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/kitchen-products', kitchenProductRoutes);
-app.use('/api/wardrobe-products', wardrobeProductRoutes);
-app.use('/api/1bhk-packages', oneBHKPackageRoutes);
-app.use('/api/2bhk-packages', twoBHKPackageRoutes);
-app.use('/api/delivery-partners', deliveryPartnerRoutes);
-app.use('/api/orders', orderRoutes);
+app.use('/auth', authLimiter, authRoutes);
+app.use('/users', authLimiter, userRoutes);
+app.use('/categories', categoryRoutes);
+app.use('/main-categories', mainCategoryRoutes);
+app.use('/products', productRoutes);
+app.use('/kitchen-products', kitchenProductRoutes);
+app.use('/wardrobe-products', wardrobeProductRoutes);
+app.use('/1bhk-packages', oneBHKPackageRoutes);
+app.use('/2bhk-packages', twoBHKPackageRoutes);
+app.use('/delivery-partners', deliveryPartnerRoutes);
+app.use('/orders', orderRoutes);
 
-app.use('/api/hero-section', heroSectionRoutes);
-app.use('/api/leads', leadRoutes);
-app.use('/api/analytics', analyticsRoutes);
-app.use('/api/returns', returnRoutes);
+app.use('/hero-section', heroSectionRoutes);
+app.use('/leads', leadRoutes);
+app.use('/analytics', analyticsRoutes);
+app.use('/returns', returnRoutes);
 
 // 404 and error handlers
 app.use(notFoundHandler);
