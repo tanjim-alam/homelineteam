@@ -4,7 +4,7 @@ import config from '../config/production';
 // https://homelineteam-19e5.vercel.app
 class ApiService {
   constructor() {
-    this.baseURL = config.API_BASE_URL || "https://homelineteam-19e5.vercel.app";
+    this.baseURL = config.API_BASE_URL || "https://homelineteam.com/api";
     this.timeout = config.REQUEST_TIMEOUT;
     this.maxRetries = config.MAX_RETRY_ATTEMPTS;
     this.cache = new Map();

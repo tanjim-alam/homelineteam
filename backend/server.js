@@ -36,52 +36,22 @@ const { notFoundHandler, errorHandler } = require('./middlewares/error.middlewar
 const app = express();
 
 // CORS configuration - must be first
+const allowedOrigins = [
+	'https://homelineteam.com',
+	'https://www.homelineteam.com'
+];
+
 const corsOptions = {
 	origin: function (origin, callback) {
 
-		// For requests with no origin (like mobile apps or curl requests), 
-		// we need to be more specific when credentials are required
-		if (!origin) {
-			// Only allow no-origin requests in development
-			if (process.env.NODE_ENV === 'development') {
-				return callback(null, true);
-			}
-			// In production, allow no-origin for API testing
-			return callback(null, true);
-		}
+		// Allow server-to-server, Postman, curl, mobile apps
+		if (!origin) return callback(null, true);
 
-		// In development, allow all localhost origins
-		if (process.env.NODE_ENV === 'development' && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
-			return callback(null, true);
-		}
-
-		// Allow all Vercel domains
-		if (origin.includes('vercel.app')) {
-			return callback(null, true);
-		}
-
-		// Check if origin is in allowed list
-		const allowedOrigins = config.CORS_ORIGINS;
 		if (allowedOrigins.includes(origin)) {
 			return callback(null, true);
 		}
 
-		// Allow homelineteam domains
-		if (origin.includes('homelineteam') && origin.includes('vercel.app')) {
-			return callback(null, true);
-		}
-
-		// Allow localhost for development
-		if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
-			return callback(null, true);
-		}
-
-		// Allow all localhost ports for development
-		if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
-			return callback(null, true);
-		}
-
-		callback(new Error('Not allowed by CORS'));
+		callback(new Error("Not allowed by CORS: " + origin));
 	},
 	credentials: true,
 	methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
@@ -90,22 +60,11 @@ const corsOptions = {
 		'Authorization',
 		'X-Requested-With',
 		'Accept',
-		'Origin',
-		'Access-Control-Request-Method',
-		'Access-Control-Request-Headers'
+		'Origin'
 	],
-	exposedHeaders: ['Set-Cookie', 'Authorization'],
-	optionsSuccessStatus: 200,
-	preflightContinue: false
+	exposedHeaders: ['Set-Cookie', 'Authorization']
 };
 
-// const corsOptions = {
-// 	origin: "http://localhost:3001", // Allows all origins
-// 	methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Specify allowed HTTP methods
-// 	allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
-// };
-
-// Apply CORS first
 app.use(cors(corsOptions));
 
 // CORS preflight handling - simplified approach
