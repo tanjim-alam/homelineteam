@@ -38,7 +38,9 @@ const app = express();
 // CORS configuration - must be first
 const allowedOrigins = [
 	'https://homelineteam.com',
-	'https://www.homelineteam.com'
+	'https://www.homelineteam.com',
+	'https://admin.homelineteam.com',
+	'https://wwww.admin.homelineteam.com'
 ];
 
 const corsOptions = {
