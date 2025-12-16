@@ -34,7 +34,7 @@ const returnRoutes = require('./routes/return.routes');
 const { notFoundHandler, errorHandler } = require('./middlewares/error.middleware');
 
 const app = express();
-app.set('trust-proxy');
+app.set('trust-proxy', 1);
 
 // CORS configuration - must be first
 const allowedOrigins = [
