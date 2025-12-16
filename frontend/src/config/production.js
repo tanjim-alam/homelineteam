@@ -1,14 +1,13 @@
 // Production configuration
 
 
-// https://homelineteam-production.up.railway.app
 // https://homelineteam-19e5.vercel.app
 export const config = {
   // API Configuration
-  API_BASE_URL: "https://homelineteam.com/api" ||
+  API_BASE_URL: "https://api.homelineteam.com" ||
     (typeof window !== 'undefined' && window.location.hostname === 'localhost'
       ? 'http://localhost:5000'
-      : 'https://homelineteam.com/api'),
+      : 'https://api.homelineteam.com'),
 
   // Environment
   NODE_ENV: process.env.NODE_ENV || 'production',

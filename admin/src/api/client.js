@@ -3,7 +3,7 @@ import config from '../config/config';
 
 // https://homelineteam-19e5.vercel.app
 const api = axios.create({
-  baseURL: config.API_BASE_URL || "https://homelineteam.com/api",
+  baseURL: config.API_BASE_URL || "https://api.homelineteam.com",
   withCredentials: true,
   headers: {
     'X-Requested-With': 'XMLHttpRequest',

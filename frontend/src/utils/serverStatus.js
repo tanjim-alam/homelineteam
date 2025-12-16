@@ -22,7 +22,7 @@ class ServerStatus {
       const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ||
         (typeof window !== 'undefined' && window.location.hostname === 'localhost'
           ? 'http://localhost:5000'
-          : 'https://homelineteam.com/api');
+          : 'https://api.homelineteam.com');
 
       const response = await fetch(`${apiBaseUrl}/health`, {
         method: 'GET',
