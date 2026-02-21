@@ -121,9 +121,9 @@ export default function Navbar() {
 
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center gap-8">
-              <Link href="/" className="text-gray-700 hover:text-primary-600 transition-colors">
+              {/* <Link href="/" className="text-gray-700 hover:text-primary-600 transition-colors">
                 Home
-              </Link>
+              </Link> */}
               <Link href="/collections" className="text-gray-700 hover:text-primary-600 transition-colors">
                 All Products
               </Link>

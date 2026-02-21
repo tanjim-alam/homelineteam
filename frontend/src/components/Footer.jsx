@@ -56,15 +56,15 @@ const Footer = () => {
               <div className="space-y-2 sm:space-y-3">
                 <div className="flex items-center gap-2 sm:gap-3 text-gray-300 text-sm sm:text-base">
                   <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-primary-400" />
-                  <span>hello@homeline.com</span>
+                  <span>info@homelineteam.com</span>
                 </div>
                 <div className="flex items-center gap-2 sm:gap-3 text-gray-300 text-sm sm:text-base">
                   <Phone className="w-4 h-4 sm:w-5 sm:h-5 text-primary-400" />
-                  <span>+91 98700 0000</span>
+                  <span>+91 9611925494</span>
                 </div>
                 <div className="flex items-start gap-2 sm:gap-3 text-gray-300 text-sm sm:text-base">
                   <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-primary-400 mt-1" />
-                  <span>Bangalore, Karnataka, India</span>
+                  <span>B Narayanapura, Mahadevapura, Bengaluru, Karnataka 560093</span>
                 </div>
               </div>
             </div>
@@ -167,7 +167,7 @@ const Footer = () => {
                   placeholder="Enter your email address"
                   className="flex-1 px-3 sm:px-4 py-2 sm:py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent backdrop-blur-sm text-sm sm:text-base"
                 />
-                <button className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl text-sm sm:text-base">
+                <button className="px-4 cursor-pointer sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl text-sm sm:text-base">
                   Subscribe
                 </button>
               </div>
@@ -184,7 +184,7 @@ const Footer = () => {
           <div className="container-custom py-6 sm:py-8 px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="text-gray-400 text-xs sm:text-sm text-center md:text-left">
-                © {currentYear} HomeLine. All rights reserved. Made with{' '}
+                © {currentYear} HomeLineTeam. All rights reserved. Made with{' '}
                 <Link href="https://www.mndigitalagency.com" className="hover:text-white transition-colors duration-300">MN Digital Agency</Link> in India.
               </div>
 
@@ -207,7 +207,7 @@ const Footer = () => {
       {/* Scroll to Top Button */}
       <button
         onClick={scrollToTop}
-        className="fixed bottom-20 lg:bottom-8 right-4 sm:right-6 lg:right-8 w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 z-50 flex items-center justify-center group"
+        className="fixed cursor-pointer bottom-20 lg:bottom-8 right-4 sm:right-6 lg:right-8 w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 z-50 flex items-center justify-center group"
         aria-label="Scroll to top"
       >
         <ArrowUp className="w-5 h-5 sm:w-6 sm:h-6 group-hover:-translate-y-0.5 transition-transform duration-300" />

@@ -137,46 +137,6 @@ export default function OneBHKPackagePage() {
       />
 
       <div className="min-h-screen bg-gray-50">
-        {/* Hero Section */}
-        {/* <div className="relative text-white overflow-hidden min-h-[600px] flex items-center">
-          <div className="absolute inset-0">
-            <Image 
-              src="/interior-design-img.jpg" 
-              alt="1 BHK Package Hero Background" 
-              fill
-              className="object-cover"
-              priority
-            />
-            <div className="absolute inset-0 bg-gradient-to-br from-green-600/50 via-teal-700/50 to-green-800/80"></div>
-          </div>
-          
-          <div className="container-custom py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="max-w-4xl mx-auto text-center">
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 leading-tight">
-                Complete 1 BHK Interior 
-                <span className="block text-yellow-300">Design Package</span>
-              </h1>
-              <p className="text-lg sm:text-xl text-green-100 mb-8 max-w-2xl mx-auto">
-                Get instant quotes, explore complete home designs, and work with our expert designers to create your perfect 1 BHK space.
-              </p>
-              
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link 
-                  href="/contact"
-                  className="bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold px-8 py-4 text-lg rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg"
-                >
-                  Get Your Free 1 BHK Quote
-                </Link>
-                <Link 
-                  href="/contact"
-                  className="btn-secondary border-white text-white hover:bg-white hover:text-green-600 px-8 py-4 text-lg font-semibold"
-                >
-                  Contact Us
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div> */}
 
         {/* Product Configuration Tool with Fixed Sidebar */}
         <div className="py-16 bg-white">
@@ -557,10 +517,10 @@ export default function OneBHKPackagePage() {
                 Schedule Consultation
               </Link>
               <Link
-                href="tel:+91987000000"
+                href="tel:+919611925494"
                 className="btn-secondary border-white text-white hover:bg-white hover:text-gray-900 px-8 py-4 text-lg font-semibold"
               >
-                Call Now: +91 98700 0000
+                Call Now: +91 9611925494
               </Link>
             </div>
           </div>

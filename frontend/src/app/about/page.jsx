@@ -1,6 +1,7 @@
 import { Heart, Users, Award, Sparkles, CheckCircle, Star } from 'lucide-react';
 import Metadata from '@/components/Metadata';
 import { generateAboutMetadata } from '@/utils/metadata';
+import Link from 'next/link';
 
 export default function AboutPage() {
   const values = [
@@ -230,15 +231,15 @@ export default function AboutPage() {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a href="/collections" className="btn-primary group">
+              <Link href="/collections" className="btn-primary group flex items-center justify-center">
                 <span>Explore Collections</span>
                 <Sparkles className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-              </a>
+              </Link>
               
-              <a href="/contact" className="btn-secondary group">
+              <Link href="/contact" className="btn-secondary group flex items-center justify-center">
                 <span>Get in Touch</span>
                 <CheckCircle className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-              </a>
+              </Link>
             </div>
           </div>
         </div>

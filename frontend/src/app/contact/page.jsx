@@ -61,19 +61,19 @@ export default function ContactPage() {
     {
       icon: Mail,
       title: "Email Us",
-      details: "hello@homeline.com",
+      details: "info@homelineteam.com",
       description: "We'll respond within 24 hours"
     },
     {
       icon: Phone,
       title: "Call Us",
-      details: "+91 98765 43210",
+      details: "+91 9611925494",
       description: "Mon-Sat, 9:00 AM - 7:00 PM"
     },
     {
       icon: MapPin,
       title: "Visit Us",
-      details: "Mumbai, Maharashtra, India",
+      details: "B Narayanapura, Mahadevapura, Bengaluru, Karnataka 560093",
       description: "By appointment only"
     },
     {
@@ -310,11 +310,11 @@ export default function ContactPage() {
                   </p>
                   <div className="text-center">
                     <a
-                      href="tel:+919876543210"
+                      href="tel:+919611925494"
                       className="inline-flex items-center gap-2 bg-primary-600 text-white px-6 py-3 rounded-xl hover:bg-primary-700 transition-all duration-300 font-semibold"
                     >
                       <Phone className="w-5 h-5" />
-                      Call Now: +91 98765 43210
+                      Call Now: +91 9611925494
                     </a>
                   </div>
                 </div>

@@ -427,10 +427,10 @@ export default function KitchenCollectionPage() {
                 Schedule Consultation
               </Link>
               <Link
-                href="tel:+91987000000"
+                href="tel:+919611925494"
                 className="btn-secondary border-white text-white hover:bg-white hover:text-gray-900 px-8 py-4 text-lg font-semibold"
               >
-                Call Now: +91 98700 0000
+                Call Now: +91 9611925494
               </Link>
             </div>
           </div>

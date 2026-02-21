@@ -66,7 +66,7 @@ export default function InteriorDesignPage() {
                       <ArrowRight className="w-5 h-5" />
                     </Link>
                     <Link 
-                      href="tel:+91987000000"
+                      href="tel:+919611925494"
                       className="inline-flex items-center justify-center gap-2 border-2 border-white text-white font-semibold px-8 py-4 rounded-xl hover:bg-white hover:text-black transition-all duration-300"
                     >
                       <Phone className="w-5 h-5" />
@@ -169,7 +169,7 @@ export default function InteriorDesignPage() {
                 title="1 BHK Package"
                 description="Complete interior design solution for 1 BHK apartments with all essential furniture and fixtures."
                 features={["Complete Setup", "Budget Friendly", "Quick Delivery"]}
-                href="/collections/1-bhk-package"
+                href="/collections/1bhk-package"
                 buttonText="View Package"
                 gradientFrom="from-green-500"
                 gradientTo="to-teal-500"
@@ -279,11 +279,11 @@ export default function InteriorDesignPage() {
                   <ArrowRight className="w-5 h-5" />
                 </Link>
                 <Link 
-                  href="tel:+91987000000"
+                  href="tel:+919611925494"
                   className="inline-flex items-center gap-3 border-2 border-white text-white font-semibold px-8 py-4 rounded-xl hover:bg-white hover:text-black transition-all duration-300"
                 >
                   <Phone className="w-5 h-5" />
-                  Call Now: +91 98700 0000
+                  Call Now: +91 9611925494
                 </Link>
               </div>
               
