@@ -54,6 +54,12 @@ export default function ProductsPage() {
     images: []
   });
 
+  const [bulkVariantSettings, setBulkVariantSettings] = useState({
+    price: '',
+    mrp: '',
+    stock: ''
+  });
+
   const [variantOptionsForm, setVariantOptionsForm] = useState({
     fieldSlug: '',
     options: ['']
@@ -1490,266 +1496,94 @@ export default function ProductsPage() {
                             <span className="font-medium">{field.name}</span>
                             {field.required && <span className="text-red-500 ml-1">*</span>}
                             {field.unit && <span className="text-blue-600 ml-1">({field.unit})</span>}
-                            {field.type === 'dropdown' && field.options && (
-                              <span className="text-blue-600 ml-1">Options: {field.options.join(', ')}</span>
-                            )}
                           </div>
                         ))}
                       </div>
                     </div>
 
-                    {/* Variant Options Management */}
+                    {/* Define Variant Values per product */}
                     <div className="border-t pt-6">
-                      <h4 className="text-md font-semibold text-gray-900 mb-4">Define Available Options</h4>
-                      <p className="text-sm text-gray-600 mb-4">
-                        Set what values are available for each variant field in this product.
-                      </p>
+                      <h4 className="text-md font-semibold text-gray-900 mb-4">Define Variant Values</h4>
+                      <p className="text-sm text-gray-600 mb-4">Set available values for each variant field for this product.</p>
 
                       <div className="space-y-4">
-                        {selectedCategory.variantFields.map((field) => (
-                          <div key={field.slug} className="border rounded-lg p-4">
-                            <div className="flex items-center justify-between mb-3">
-                              <h5 className="font-medium text-gray-900">
-                                {field.name}
-                                {field.unit && <span className="text-gray-500 ml-1">({field.unit})</span>}
-                              </h5>
-                              <span className="text-sm text-gray-500">
-                                {form.variantOptions[field.slug]?.length || 0} options set
-                              </span>
-                            </div>
+                        {selectedCategory.variantFields.map((field) => {
+                          const currentOptions = form.variantOptions[field.slug] || [];
+                          const isEditing = variantOptionsForm.fieldSlug === field.slug;
 
-                            {/* Show current options */}
-                            {form.variantOptions[field.slug] && form.variantOptions[field.slug].length > 0 && (
-                              <div className="mb-3">
-                                <p className="text-sm text-gray-600 mb-2">Current options:</p>
-                                <div className="flex flex-wrap gap-2">
-                                  {form.variantOptions[field.slug].map((option, index) => (
-                                    <span key={index} className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                          return (
+                            <div key={field.slug} className="border rounded-lg p-4 bg-white">
+                              <div className="flex justify-between items-center mb-2">
+                                <div>
+                                  <span className="font-medium text-gray-900">{field.name}</span>
+                                  {field.required && <span className="text-red-500 ml-1">*</span>}
+                                </div>
+                                <span className="text-sm text-gray-500">{currentOptions.length} options</span>
+                              </div>
+
+                              {currentOptions.length > 0 && (
+                                <div className="flex flex-wrap gap-2 mb-2">
+                                  {currentOptions.map((option, i) => (
+                                    <span key={i} className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
                                       {option}
                                     </span>
                                   ))}
                                 </div>
-                              </div>
-                            )}
+                              )}
 
-                            {/* Add new options */}
-                            <div className="space-y-3">
-                              <div className="flex items-center space-x-2">
-                                <input
-                                  type="text"
-                                  value={variantOptionsForm.fieldSlug === field.slug ? variantOptionsForm.options[0] : ''}
-                                  onChange={(e) => {
-                                    if (variantOptionsForm.fieldSlug === field.slug) {
-                                      updateVariantOption(0, e.target.value);
-                                    } else {
-                                      setVariantOptionsForm({
-                                        fieldSlug: field.slug,
-                                        options: [e.target.value]
-                                      });
-                                    }
-                                  }}
-                                  placeholder={`Enter ${field.name} option`}
-                                  className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    if (variantOptionsForm.fieldSlug === field.slug) {
-                                      addVariantOption();
-                                    } else {
-                                      setVariantOptionsForm({
-                                        fieldSlug: field.slug,
-                                        options: ['', '']
-                                      });
-                                    }
-                                  }}
-                                  className="px-3 py-2 text-blue-600 hover:text-blue-800 text-sm border border-blue-300 rounded-lg"
-                                >
-                                  + Add More
-                                </button>
-                              </div>
-
-                              {/* Additional options */}
-                              {variantOptionsForm.fieldSlug === field.slug && variantOptionsForm.options.length > 1 && (
+                              {isEditing ? (
                                 <div className="space-y-2">
-                                  {variantOptionsForm.options.slice(1).map((option, index) => (
-                                    <div key={index + 1} className="flex items-center space-x-2">
+                                  {variantOptionsForm.options.map((option, idx) => (
+                                    <div key={idx} className="flex items-center gap-2">
                                       <input
                                         type="text"
                                         value={option}
-                                        onChange={(e) => updateVariantOption(index + 1, e.target.value)}
-                                        placeholder={`Option ${index + 2}`}
+                                        onChange={(e) => updateVariantOption(idx, e.target.value)}
+                                        placeholder={`Option ${idx + 1}`}
                                         className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                       />
                                       <button
                                         type="button"
-                                        onClick={() => removeVariantOption(index + 1)}
-                                        className="px-3 py-2 text-red-600 hover:text-red-800 text-sm"
+                                        onClick={() => removeVariantOption(idx)}
+                                        className="px-3 py-2 text-red-600 hover:text-red-800"
                                       >
                                         Remove
                                       </button>
                                     </div>
                                   ))}
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={addVariantOption}
+                                      className="px-3 py-2 text-blue-600 hover:text-blue-800 text-sm border border-blue-300 rounded-lg"
+                                    >
+                                      + Add More
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={saveVariantOptions}
+                                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                                    >
+                                      Save Options
+                                    </button>
+                                  </div>
                                 </div>
-                              )}
-
-                              {/* Save button */}
-                              {variantOptionsForm.fieldSlug === field.slug && (
-                                <div className="flex justify-end">
+                              ) : (
+                                <div className="flex items-center gap-2">
                                   <button
                                     type="button"
-                                    onClick={saveVariantOptions}
-                                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                                    onClick={() => setVariantOptionsForm({ fieldSlug: field.slug, options: currentOptions.length > 0 ? currentOptions : [''] })}
+                                    className="px-3 py-2 text-blue-600 hover:text-blue-800 text-sm border border-blue-300 rounded-lg"
                                   >
-                                    Save Options
+                                    Add/Change Options
                                   </button>
                                 </div>
                               )}
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Bulk Variant Creation */}
-                {form.hasVariants && selectedCategory?.variantFields && Object.keys(form.variantOptions).length > 0 && (
-                  <div className="border-t pt-6">
-                    <h4 className="text-md font-semibold text-gray-900 mb-4">Bulk Variant Creation</h4>
-                    <p className="text-sm text-gray-600 mb-4">
-                      Create all possible variant combinations automatically with base pricing.
-                    </p>
-
-                    <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200 mb-4">
-                      <div className="text-sm text-yellow-800">
-                        <p className="font-medium mb-2">Available combinations:</p>
-                        {(() => {
-                          if (!selectedCategory?.variantFields) return null;
-
-                          const fields = selectedCategory.variantFields;
-                          const options = form.variantOptions;
-                          const combinations = fields.reduce((acc, field) => {
-                            const fieldOptions = options[field.slug] || [];
-                            return acc * Math.max(fieldOptions.length, 1);
-                          }, 1);
-                          return (
-                            <p>
-                              {fields.map((field, index) => {
-                                const fieldOptions = options[field.slug] || [];
-                                return (
-                                  <span key={field.slug}>
-                                    {field.name}: {fieldOptions.length} options
-                                    {index < fields.length - 1 ? ' × ' : ''}
-                                  </span>
-                                );
-                              })}
-                              {combinations > 1 && (
-                                <span className="font-bold ml-2">= {combinations} total variants</span>
-                              )}
-                            </p>
                           );
-                        })()}
+                        })}
                       </div>
                     </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Base Price for All Variants</label>
-                        <input
-                          type="number"
-                          value={variantForm.price}
-                          onChange={(e) => setVariantForm({ ...variantForm, price: e.target.value })}
-                          placeholder="Base Price"
-                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Base MRP for All Variants</label>
-                        <input
-                          type="number"
-                          value={variantForm.mrp}
-                          onChange={(e) => setVariantForm({ ...variantForm, mrp: e.target.value })}
-                          placeholder="Base MRP"
-                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Base Stock for All Variants</label>
-                        <input
-                          type="number"
-                          value={variantForm.stock}
-                          onChange={(e) => setVariantForm({ ...variantForm, stock: e.target.value })}
-                          placeholder="Base Stock"
-                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (!selectedCategory?.variantFields) {
-                          setError('Please select a category with variant fields first');
-                          return;
-                        }
-
-                        const fields = selectedCategory.variantFields;
-                        const options = form.variantOptions;
-
-                        // Generate all combinations
-                        const generateCombinations = (fieldIndex = 0, currentCombination = {}) => {
-                          if (fieldIndex >= fields.length) {
-                            return [currentCombination];
-                          }
-
-                          const field = fields[fieldIndex];
-                          const fieldOptions = options[field.slug] || [];
-
-                          if (fieldOptions.length === 0) {
-                            return generateCombinations(fieldIndex + 1, currentCombination);
-                          }
-
-                          const combinations = [];
-                          fieldOptions.forEach(option => {
-                            const newCombination = { ...currentCombination, [field.slug]: option };
-                            combinations.push(...generateCombinations(fieldIndex + 1, newCombination));
-                          });
-
-                          return combinations;
-                        };
-
-                        const allCombinations = generateCombinations();
-
-                        // Create variants for each combination
-                        const newVariants = allCombinations.map(combination => ({
-                          fields: combination,
-                          price: variantForm.price || form.basePrice,
-                          mrp: variantForm.mrp || form.basePrice,
-                          discount: variantForm.discount || 0,
-                          stock: variantForm.stock || 0,
-                          images: []
-                        }));
-
-                        setForm(prev => ({
-                          ...prev,
-                          variants: [...prev.variants, ...newVariants]
-                        }));
-
-                        // Reset variant form
-                        setVariantForm({
-                          fields: {},
-                          price: '',
-                          mrp: '',
-                          discount: '',
-                          stock: 0,
-                          images: []
-                        });
-                      }}
-                      className="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors"
-                    >
-                      Generate All Variants
-                    </button>
                   </div>
                 )}
 
@@ -1759,7 +1593,7 @@ export default function ProductsPage() {
                     <h4 className="text-md font-semibold text-gray-900 mb-4">Add Variant</h4>
 
                     {/* Dynamic Variant Fields */}
-                    {selectedCategory?.variantFields && (
+                    {/* {selectedCategory?.variantFields && (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                         {selectedCategory.variantFields.map((field, index) => (
                           <div key={index}>
@@ -1768,20 +1602,28 @@ export default function ProductsPage() {
                               {field.required && <span className="text-red-500">*</span>}
                             </label>
 
-                            {field.type === 'dropdown' && field.options ? (
-                              <select
-                                value={variantForm.fields[field.slug] || ''}
-                                onChange={(e) => updateVariantField(field.slug, e.target.value)}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                required={field.required}
-                              >
-                                <option value="">Select {field.name}</option>
-                                {field.options.map((option, optIndex) => (
-                                  <option key={optIndex} value={option}>
-                                    {option}
-                                  </option>
-                                ))}
-                              </select>
+                            {field.type === 'dropdown' ? (
+                              (() => {
+                                const availableOptions = (form.variantOptions[field.slug] && form.variantOptions[field.slug].length > 0)
+                                  ? form.variantOptions[field.slug]
+                                  : (field.options || []);
+
+                                return (
+                                  <select
+                                    value={variantForm.fields[field.slug] || ''}
+                                    onChange={(e) => updateVariantField(field.slug, e.target.value)}
+                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    required={field.required}
+                                  >
+                                    <option value="">Select {field.name}</option>
+                                    {availableOptions.map((option, optIndex) => (
+                                      <option key={optIndex} value={option}>
+                                        {option}
+                                      </option>
+                                    ))}
+                                  </select>
+                                );
+                              })()
                             ) : (
                               <input
                                 type={field.type === 'number' ? 'number' : 'text'}
@@ -1795,12 +1637,12 @@ export default function ProductsPage() {
                           </div>
                         ))}
                       </div>
-                    )}
+                    )} */}
 
 
 
                     {/* Basic Variant Fields */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                    {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                       <input
                         type="number"
                         value={variantForm.price}
@@ -1830,7 +1672,122 @@ export default function ProductsPage() {
                       className="mt-4 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
                     >
                       Add Variant
-                    </button>
+                    </button> */}
+
+                    {/* Bulk Variant Creation */}
+                    {form.hasVariants && selectedCategory?.variantFields && Object.keys(form.variantOptions).length > 0 && (
+                      <div className="border-t pt-6 mt-6">
+                        <h4 className="text-md font-semibold text-gray-900 mb-4">Bulk Variant Creation</h4>
+                        <p className="text-sm text-gray-600 mb-3">Create all possible variant combinations automatically with base pricing.</p>
+
+                        <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200 mb-4">
+                          <p className="text-sm text-yellow-800 font-medium mb-2">Available combinations:</p>
+                          <p className="text-sm text-yellow-800">
+                            {selectedCategory.variantFields.map((field, index) => {
+                              const count = (form.variantOptions[field.slug] || []).length;
+                              return (
+                                <span key={field.slug}>
+                                  {field.name}: {count} options{index < selectedCategory.variantFields.length - 1 ? ' × ' : ''}
+                                </span>
+                              );
+                            })}
+                            <span className="font-bold ml-2">
+                              = {selectedCategory.variantFields.reduce((acc, field) => acc * Math.max((form.variantOptions[field.slug] || []).length, 1), 1)} total variants
+                            </span>
+                          </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Base Price for All Variants</label>
+                            <input
+                              type="number"
+                              value={bulkVariantSettings.price}
+                              onChange={(e) => setBulkVariantSettings(prev => ({ ...prev, price: e.target.value }))}
+                              placeholder="Base Price"
+                              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Base MRP for All Variants</label>
+                            <input
+                              type="number"
+                              value={bulkVariantSettings.mrp}
+                              onChange={(e) => setBulkVariantSettings(prev => ({ ...prev, mrp: e.target.value }))}
+                              placeholder="Base MRP"
+                              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Base Stock for All Variants</label>
+                            <input
+                              type="number"
+                              value={bulkVariantSettings.stock}
+                              onChange={(e) => setBulkVariantSettings(prev => ({ ...prev, stock: e.target.value }))}
+                              placeholder="Base Stock"
+                              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const fields = selectedCategory.variantFields;
+                            const options = form.variantOptions;
+
+                            const generateCombinations = (fieldIndex = 0, current = {}) => {
+                              if (fieldIndex >= fields.length) {
+                                return [current];
+                              }
+
+                              const field = fields[fieldIndex];
+                              const fieldOptions = options[field.slug] || [];
+
+                              if (fieldOptions.length === 0) {
+                                return generateCombinations(fieldIndex + 1, current);
+                              }
+
+                              const next = [];
+                              fieldOptions.forEach(option => {
+                                const newCurrent = { ...current, [field.slug]: option };
+                                next.push(...generateCombinations(fieldIndex + 1, newCurrent));
+                              });
+
+                              return next;
+                            };
+
+                            const allVariants = generateCombinations();
+                            if (allVariants.length === 0) {
+                              alert('No variant options available for combination generation.');
+                              return;
+                            }
+
+                            const newVariants = allVariants.map(combo => ({
+                              fields: combo,
+                              price: bulkVariantSettings.price || variantForm.price || '',
+                              mrp: bulkVariantSettings.mrp || variantForm.mrp || '',
+                              discount: variantForm.discount || 0,
+                              stock: bulkVariantSettings.stock || variantForm.stock || 0,
+                              images: []
+                            }));
+
+                            setForm(prev => ({
+                              ...prev,
+                              variants: [...prev.variants, ...newVariants]
+                            }));
+
+                            setVariantForm({ fields: {}, price: '', mrp: '', discount: '', stock: 0, images: [] });
+                            setBulkVariantSettings({ price: '', mrp: '', stock: '' });
+                          }}
+                          className="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors"
+                        >
+                          Generate All Variants
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
 

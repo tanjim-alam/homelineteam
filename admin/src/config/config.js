@@ -1,7 +1,7 @@
 // Configuration for the admin panel
 export const config = {
     // API Configuration
-    // API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://homelineteam-production.up.railway.app',
+    // API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://api.homelineteam.com',
     API_BASE_URL: 'https://api.homelineteam.com',
     // App Configuration
     APP_NAME: import.meta.env.VITE_APP_NAME || 'HomeLine Admin',

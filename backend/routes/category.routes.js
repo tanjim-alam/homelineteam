@@ -24,7 +24,8 @@ router.put('/:id', authenticate, requireAdmin, uploadCategory, controller.update
 router.delete('/:id', authenticate, requireAdmin, controller.deleteCategory);
 router.post('/:categoryId/fields', authenticate, requireAdmin, controller.addCustomField);
 router.post('/:categoryId/variant-fields', authenticate, requireAdmin, controller.addVariantField);
-
+router.put('/:categoryId/variant-fields/:fieldId', authenticate, requireAdmin, controller.updateVariantField);
+router.delete('/:categoryId/variant-fields/:fieldId', authenticate, requireAdmin, controller.deleteVariantField);
 
 module.exports = router;
 

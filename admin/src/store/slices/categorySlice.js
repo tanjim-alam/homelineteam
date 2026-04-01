@@ -60,6 +60,24 @@ export const addVariantField = createAsyncThunk('categories/addVariantField', as
   }
 });
 
+export const updateVariantField = createAsyncThunk('categories/updateVariantField', async ({ id, fieldId, payload }, { rejectWithValue }) => {
+  try {
+    const res = await api.put(`/categories/${id}/variant-fields/${fieldId}`, payload);
+    return res.data;
+  } catch (err) {
+    return rejectWithValue(err.response?.data?.message || 'Update variant field failed');
+  }
+});
+
+export const deleteVariantField = createAsyncThunk('categories/deleteVariantField', async ({ id, fieldId }, { rejectWithValue }) => {
+  try {
+    const res = await api.delete(`/categories/${id}/variant-fields/${fieldId}`);
+    return res.data;
+  } catch (err) {
+    return rejectWithValue(err.response?.data?.message || 'Delete variant field failed');
+  }
+});
+
 const slice = createSlice({
   name: 'categories',
   initialState: {
@@ -140,6 +158,18 @@ const slice = createSlice({
         }
       })
       .addCase(addVariantField.fulfilled, (s, a) => {
+        const index = s.items.findIndex(item => item._id === a.payload._id);
+        if (index !== -1) {
+          s.items[index] = a.payload;
+        }
+      })
+      .addCase(updateVariantField.fulfilled, (s, a) => {
+        const index = s.items.findIndex(item => item._id === a.payload._id);
+        if (index !== -1) {
+          s.items[index] = a.payload;
+        }
+      })
+      .addCase(deleteVariantField.fulfilled, (s, a) => {
         const index = s.items.findIndex(item => item._id === a.payload._id);
         if (index !== -1) {
           s.items[index] = a.payload;

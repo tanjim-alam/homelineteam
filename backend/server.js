@@ -35,12 +35,14 @@ const { notFoundHandler, errorHandler } = require('./middlewares/error.middlewar
 
 const app = express();
 
+const PORT = config.PORT || 5000;
+
 // CORS configuration - must be first
 const allowedOrigins = [
 	'https://homelineteam.com',
 	'https://www.homelineteam.com',
 	'https://admin.homelineteam.com',
-	'https://wwww.admin.homelineteam.com'
+	'https://wwww.admin.homelineteam.com',
 ];
 
 const corsOptions = {
@@ -164,8 +166,8 @@ app.use(errorHandler);
 
 connectDatabase().then(() => {
 	configureCloudinary();
-	app.listen(config.PORT, () => {
-		// Server started successfully
+	app.listen(PORT, () => {
+		console.log(`Server running on port ${config.PORT}`);
 	});
 }).catch((error) => {
 	process.exit(1);

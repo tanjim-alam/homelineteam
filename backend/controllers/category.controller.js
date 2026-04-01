@@ -487,6 +487,64 @@ exports.addVariantField = async (req, res, next) => {
   }
 };
 
+// Update variant field in existing category
+exports.updateVariantField = async (req, res, next) => {
+  try {
+    const { categoryId, fieldId } = req.params;
+    const { name, slug, type, options, required, unit, order } = req.body;
+
+    const updateQuery = {};
+    if (name !== undefined) updateQuery['variantFields.$.name'] = name;
+    if (slug !== undefined) updateQuery['variantFields.$.slug'] = slug;
+    if (type !== undefined) updateQuery['variantFields.$.type'] = type;
+    if (options !== undefined) updateQuery['variantFields.$.options'] = options;
+    if (required !== undefined) updateQuery['variantFields.$.required'] = required;
+    if (unit !== undefined) updateQuery['variantFields.$.unit'] = unit;
+    if (order !== undefined) updateQuery['variantFields.$.order'] = order;
+
+    const matchCondition = {
+      _id: categoryId,
+      $or: [
+        { 'variantFields._id': fieldId },
+        { 'variantFields.slug': fieldId }
+      ]
+    };
+
+    const category = await Category.findOneAndUpdate(
+      matchCondition,
+      { $set: updateQuery },
+      { new: true }
+    );
+
+    if (!category) return res.status(404).json({ message: 'Category or variant field not found' });
+    res.json(category);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Delete variant field from existing category
+exports.deleteVariantField = async (req, res, next) => {
+  try {
+    const { categoryId, fieldId } = req.params;
+
+    // Current category variant fields use slug as identifier in subdocuments (no _id field), so delete by slug.
+    const category = await Category.findOneAndUpdate(
+      { _id: categoryId },
+      { $pull: { variantFields: { slug: fieldId } } },
+      { new: true }
+    );
+
+    if (!category) {
+      return res.status(404).json({ message: 'Category not found' });
+    }
+
+    return res.json(category);
+  } catch (err) {
+    next(err);
+  }
+};
+
 // Delete category
 exports.deleteCategory = async (req, res, next) => {
   try {

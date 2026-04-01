@@ -10,8 +10,11 @@ async function connectDatabase() {
 		await mongoose.connect(mongoUri, {
 			// Keep options minimal; Mongoose 8 handles defaults well
 		});
+		console.log('MongoDB connected successfully');
 		// MongoDB connected successfully
 	} catch (error) {
+		console.error('Error connecting to MongoDB:', error);
+
 		process.exit(1);
 	}
 }

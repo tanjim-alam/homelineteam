@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import {
-  listCategories,
-  createCategory,
   updateCategory,
   deleteCategory,
   addCustomField,
   addVariantField,
+  updateVariantField,
+  deleteVariantField,
   clearError
 } from '../store/slices/categorySlice'
 import api from '../api/client'
@@ -29,13 +29,14 @@ import {
 
 export default function CategoriesPage() {
   const dispatch = useDispatch()
-  const { items, loading, error, createLoading, updateLoading } = useSelector(s => s.categories)
+  const {  loading, error, createLoading, updateLoading } = useSelector(s => s.categories)
 
   const [showForm, setShowForm] = useState(false)
   const [editingCategory, setEditingCategory] = useState(null)
   const [showCustomFieldForm, setShowCustomFieldForm] = useState(false)
   const [showVariantFieldForm, setShowVariantFieldForm] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState(null)
+  const [editingVariantField, setEditingVariantField] = useState(null)
   const [successMessage, setSuccessMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [creating, setCreating] = useState(false)
@@ -108,6 +109,7 @@ export default function CategoriesPage() {
         setSubCategories([])
       }
     } catch (error) {
+      console.error('Fetch categories error:', error)
       setSubCategories([])
     }
   }
@@ -124,6 +126,7 @@ export default function CategoriesPage() {
         setMainCategories([])
       }
     } catch (error) {
+      console.error('Fetch main categories error:', error)
       setMainCategories([])
     } finally {
       setMainCategoriesLoading(false)
@@ -146,7 +149,9 @@ export default function CategoriesPage() {
     if (errorMessage || error) {
       try {
         window.scrollTo({ top: 0, behavior: 'smooth' })
-      } catch (_) { }
+      } catch (err) {
+        console.error('Error scrolling to top:', err)
+      }
     }
   }, [errorMessage, error])
 
@@ -320,9 +325,33 @@ export default function CategoriesPage() {
   }
 
   // Helper function to open variant field form and scroll to top
-  const openVariantFieldFormAndScrollToTop = (category) => {
+  const openVariantFieldFormAndScrollToTop = (category, field = null) => {
     setSelectedCategory(category)
     setShowVariantFieldForm(true)
+    setEditingVariantField(field)
+
+    if (field) {
+      setVariantFieldForm({
+        name: field.name || '',
+        slug: field.slug || '',
+        type: field.type || 'dropdown',
+        options: Array.isArray(field.options) && field.options.length > 0 ? field.options : [''],
+        required: field.required || false,
+        unit: field.unit || '',
+        order: field.order || 1
+      })
+    } else {
+      setVariantFieldForm({
+        name: '',
+        slug: '',
+        type: 'dropdown',
+        options: [''],
+        required: false,
+        unit: '',
+        order: 1
+      })
+    }
+
     // Scroll to top when form opens
     window.scrollTo({
       top: 0,
@@ -382,14 +411,23 @@ export default function CategoriesPage() {
     }
   }
 
-  const handleVariantFieldSubmit = (e) => {
+  const handleVariantFieldSubmit = async (e) => {
     e.preventDefault()
-    if (selectedCategory) {
-      // Add variant field to category using the API
-      dispatch(addVariantField({
-        id: selectedCategory._id,
-        payload: variantFieldForm
-      }))
+    if (!selectedCategory) return
+
+    try {
+      if (editingVariantField) {
+        await dispatch(updateVariantField({
+          id: selectedCategory._id,
+          fieldId: editingVariantField.slug || editingVariantField._id,
+          payload: variantFieldForm
+        })).unwrap()
+      } else {
+        await dispatch(addVariantField({
+          id: selectedCategory._id,
+          payload: variantFieldForm
+        })).unwrap()
+      }
 
       setVariantFieldForm({
         name: '',
@@ -400,7 +438,23 @@ export default function CategoriesPage() {
         unit: '',
         order: 1
       })
+      setEditingVariantField(null)
       setShowVariantFieldForm(false)
+      // reload categories to show updates if needed
+      await fetchCategories()
+    } catch (error) {
+      console.error('Variant field save failed:', error)
+    }
+  }
+
+  const handleDeleteVariantField = async (categoryId, fieldId) => {
+    if (!window.confirm('Are you sure you want to delete this variant field?')) return
+
+    try {
+      await dispatch(deleteVariantField({ id: categoryId, fieldId })).unwrap()
+      await fetchCategories()
+    } catch (error) {
+      console.error('Failed to delete variant field:', error)
     }
   }
 
@@ -438,21 +492,39 @@ export default function CategoriesPage() {
   }
 
   const addOption = () => {
-    setCustomFieldForm({
-      ...customFieldForm,
-      options: [...customFieldForm.options, '']
-    })
+    if (showVariantFieldForm) {
+      setVariantFieldForm({
+        ...variantFieldForm,
+        options: [...variantFieldForm.options, '']
+      })
+    } else {
+      setCustomFieldForm({
+        ...customFieldForm,
+        options: [...customFieldForm.options, '']
+      })
+    }
   }
 
   const removeOption = (index) => {
-    const newOptions = customFieldForm.options.filter((_, i) => i !== index)
-    setCustomFieldForm({ ...customFieldForm, options: newOptions })
+    if (showVariantFieldForm) {
+      const newOptions = variantFieldForm.options.filter((_, i) => i !== index)
+      setVariantFieldForm({ ...variantFieldForm, options: newOptions })
+    } else {
+      const newOptions = customFieldForm.options.filter((_, i) => i !== index)
+      setCustomFieldForm({ ...customFieldForm, options: newOptions })
+    }
   }
 
   const updateOption = (index, value) => {
-    const newOptions = [...customFieldForm.options]
-    newOptions[index] = value
-    setCustomFieldForm({ ...customFieldForm, options: newOptions })
+    if (showVariantFieldForm) {
+      const newOptions = [...variantFieldForm.options]
+      newOptions[index] = value
+      setVariantFieldForm({ ...variantFieldForm, options: newOptions })
+    } else {
+      const newOptions = [...customFieldForm.options]
+      newOptions[index] = value
+      setCustomFieldForm({ ...customFieldForm, options: newOptions })
+    }
   }
 
   const generateSlug = (name) => {
@@ -503,6 +575,7 @@ export default function CategoriesPage() {
       setEditingMainCategory(null)
       setShowMainCategoryModal(false)
     } catch (error) {
+      console.error('Main category submit error:', error)
       // Error handling is done in createMainCategory/updateMainCategory
     }
   }
@@ -1228,11 +1301,14 @@ export default function CategoriesPage() {
                   <Settings className="w-5 h-5 text-purple-600" />
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900">
-                  Add Variant Field to {selectedCategory.name}
+                  {editingVariantField ? 'Edit Variant Field' : 'Add Variant Field'} to {selectedCategory.name}
                 </h2>
               </div>
               <button
-                onClick={() => setShowVariantFieldForm(false)}
+                onClick={() => {
+                  setShowVariantFieldForm(false)
+                  setEditingVariantField(null)
+                }}
                 className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
               >
                 <X className="w-6 h-6" />
@@ -1274,28 +1350,6 @@ export default function CategoriesPage() {
                     <option value="number">Number</option>
                     <option value="text">Text</option>
                   </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Unit (optional)</label>
-                  <input
-                    type="text"
-                    value={variantFieldForm.unit}
-                    onChange={(e) => setVariantFieldForm({ ...variantFieldForm, unit: e.target.value })}
-                    className="w-full border border-gray-200 rounded-2xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white"
-                    placeholder="e.g., ft, cm, kg"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Order</label>
-                  <input
-                    type="number"
-                    value={variantFieldForm.order}
-                    onChange={(e) => setVariantFieldForm({ ...variantFieldForm, order: parseInt(e.target.value) })}
-                    className="w-full border border-gray-200 rounded-2xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white"
-                    min="1"
-                  />
                 </div>
 
                 <div className="flex items-center space-x-3">
@@ -1348,7 +1402,10 @@ export default function CategoriesPage() {
               <div className="flex justify-end space-x-4 pt-6 border-t border-gray-100">
                 <button
                   type="button"
-                  onClick={() => setShowVariantFieldForm(false)}
+                  onClick={() => {
+                    setShowVariantFieldForm(false)
+                    setEditingVariantField(null)
+                  }}
                   className="px-6 py-3 border-2 border-gray-200 rounded-2xl text-gray-700 hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 font-medium"
                 >
                   Cancel
@@ -1357,7 +1414,7 @@ export default function CategoriesPage() {
                   type="submit"
                   className="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-2xl hover:from-purple-700 hover:to-pink-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
-                  Add Variant Field
+                  {editingVariantField ? 'Update Variant Field' : 'Add Variant Field'}
                 </button>
               </div>
             </form>
@@ -1504,14 +1561,28 @@ export default function CategoriesPage() {
                           <h4 className="text-sm font-medium text-gray-900 mb-2">Variant Fields ({category.variantFields.length})</h4>
                           <div className="flex flex-wrap gap-2">
                             {category.variantFields.map((field, index) => (
-                              <span
-                                key={index}
-                                className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full"
-                              >
-                                {field.name} ({field.type})
-                                {field.unit && <span className="text-purple-600 ml-1">({field.unit})</span>}
-                                {field.required && <span className="text-red-600 ml-1">*</span>}
-                              </span>
+                              <div key={field._id || index} className="flex items-center gap-2 px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full">
+                                <span className="font-semibold">
+                                  {field.name} ({field.type})
+                                  {field.required && <span className="text-red-600 ml-1">*</span>}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => openVariantFieldFormAndScrollToTop(category, field)}
+                                  className="text-indigo-600 hover:text-indigo-800"
+                                  title="Edit variant field"
+                                >
+                                  <Edit3 className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteVariantField(category._id, field.slug || field._id)}
+                                  className="text-red-600 hover:text-red-800"
+                                  title="Delete variant field"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
                             ))}
                           </div>
                         </div>
