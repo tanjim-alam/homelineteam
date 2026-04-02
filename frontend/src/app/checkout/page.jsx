@@ -106,11 +106,13 @@ export default function CheckoutPage() {
         items: cartItems.map(item => ({
           productId: item.productId,
           name: item.name,
+          slug: item.slug || item.product?.slug,
           price: item.price,
           quantity: item.quantity,
           selectedOptions: item.variant,
           image: item.product?.mainImages?.[0] || null
         })),
+
         total: total,
         subtotal: subtotal,
         shipping: shipping,

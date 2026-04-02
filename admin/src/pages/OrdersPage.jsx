@@ -8,6 +8,7 @@ import {
   clearError
 } from '../store/slices/orderSlice'
 import apiClient from '../api/client'
+import config from '../config/config'
 import { Truck, Package, Clock, CheckCircle, XCircle, User, Phone, Mail, RefreshCw, CreditCard, DollarSign, Calendar, MapPin } from 'lucide-react'
 
 export default function OrdersPage() {
@@ -131,6 +132,12 @@ export default function OrdersPage() {
       shipped: 'bg-purple-100 text-purple-800'
     }
     return statusConfig[status] || statusConfig.pending
+  }
+
+  const getProductLink = (item) => {
+    const slug = item.slug || item.productId?.slug
+    if (!slug) return null
+    return `${config.FRONTEND_BASE_URL.replace(/\/$/, '')}/products/${slug}`
   }
 
   const getPaymentMethodInfo = (paymentMethod) => {
@@ -419,8 +426,20 @@ export default function OrdersPage() {
                             <p className="text-sm text-gray-600 mb-2">Items ({order.items.length}):</p>
                             <div className="space-y-1">
                               {order.items.slice(0, 3).map((item, index) => (
-                                <div key={index} className="flex justify-between text-sm">
-                                  <span className="text-gray-700">{item.name || `Item ${index + 1}`}</span>
+                                <div key={index} className="flex justify-between items-center text-sm">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-gray-700">{item.name || `Item ${index + 1}`}</span>
+                                    {getProductLink(item) && (
+                                      <a
+                                        href={getProductLink(item)}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="text-indigo-600 hover:text-indigo-800 hover:underline text-xs"
+                                      >
+                                        View Product
+                                      </a>
+                                    )}
+                                  </div>
                                   <span className="text-gray-600">Qty: {item.quantity || 1}</span>
                                 </div>
                               ))}
@@ -727,7 +746,19 @@ export default function OrdersPage() {
                       {currentOrder.items.map((item, index) => (
                         <div key={index} className="flex justify-between items-center p-4 border-b border-gray-200 last:border-b-0 hover:bg-gray-100 transition-colors">
                           <div className="flex-1">
-                            <p className="font-medium text-gray-900">{item.name || `Item ${index + 1}`}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium text-gray-900">{item.name || `Item ${index + 1}`}</p>
+                              {getProductLink(item) && (
+                                <a
+                                  href={getProductLink(item)}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-indigo-600 hover:text-indigo-800 hover:underline text-sm"
+                                >
+                                  Live Link
+                                </a>
+                              )}
+                            </div>
                             {item.selectedOptions && Object.keys(item.selectedOptions).length > 0 && (
                               <p className="text-sm text-gray-600 mt-1">
                                 {Object.entries(item.selectedOptions).map(([key, value]) => `${key}: ${value}`).join(', ')}

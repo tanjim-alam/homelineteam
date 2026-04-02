@@ -43,6 +43,7 @@ const allowedOrigins = [
 	'https://www.homelineteam.com',
 	'https://admin.homelineteam.com',
 	'https://wwww.admin.homelineteam.com',
+	'http://localhost:3001',
 ];
 
 const corsOptions = {

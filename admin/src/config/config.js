@@ -2,7 +2,7 @@
 export const config = {
     // API Configuration
     // API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://api.homelineteam.com',
-    API_BASE_URL: 'https://api.homelineteam.com',
+    API_BASE_URL: 'http://localhost:5000',
     // App Configuration
     APP_NAME: import.meta.env.VITE_APP_NAME || 'HomeLine Admin',
 
@@ -28,6 +28,9 @@ export const config = {
         ORDERS: '/orders',
         HEALTH: '/health',
     },
+
+    // Frontend URL for live product links
+    FRONTEND_BASE_URL: import.meta.env.VITE_FRONTEND_BASE_URL || 'https://homelineteam.com',
 
     // Default Values
     DEFAULTS: {

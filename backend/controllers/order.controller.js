@@ -1,4 +1,5 @@
 const Order = require('../models/Order');
+const Product = require('../models/Product');
 const DeliveryPartner = require('../models/DeliveryPartner');
 const User = require('../models/User');
 
@@ -43,10 +44,25 @@ exports.createOrder = async (req, res, next) => {
 			};
 		}
 
+		// Attach product slug to items when available so admin can construct live links
+		const productIds = [...new Set(items.map(item => item.productId).filter(Boolean))];
+		let slugMap = {};
+		if (productIds.length) {
+			const products = await Product.find({ _id: { $in: productIds } }).select('slug');
+			products.forEach(p => {
+				slugMap[p._id.toString()] = p.slug;
+			});
+		}
+
+		const enrichedItems = items.map(item => ({
+			...item,
+			slug: item.slug || (item.productId ? slugMap[item.productId.toString()] : undefined)
+		}));
+
 		const orderData = {
 			user: userId || null,
 			customer,
-			items,
+			items: enrichedItems,
 			total,
 			subtotal: subtotal || total,
 			shipping: shipping || 0,
@@ -67,7 +83,7 @@ exports.createOrder = async (req, res, next) => {
 exports.getOrderById = async (req, res, next) => {
 	try {
 		const { id } = req.params;
-		const order = await Order.findById(id);
+		const order = await Order.findById(id).populate('items.productId', 'slug');
 		if (!order) return res.status(404).json({ message: 'Order not found' });
 		res.json(order);
 	} catch (err) {
@@ -78,7 +94,7 @@ exports.getOrderById = async (req, res, next) => {
 // List orders (basic; in real admin require auth)
 exports.getOrders = async (req, res, next) => {
 	try {
-		const orders = await Order.find().sort({ createdAt: -1 });
+		const orders = await Order.find().sort({ createdAt: -1 }).populate('items.productId', 'slug');
 		res.json(orders);
 	} catch (err) {
 		next(err);
@@ -99,6 +115,7 @@ exports.getUserOrders = async (req, res, next) => {
 
 		const orders = await Order.find({ user: userId })
 			.populate('user', 'name email phone')
+			.populate('items.productId', 'slug')
 			.sort({ createdAt: -1 });
 
 		res.json({
@@ -124,7 +141,8 @@ exports.getUserOrderById = async (req, res, next) => {
 		}
 
 		const order = await Order.findOne({ _id: id, user: userId })
-			.populate('user', 'name email phone');
+			.populate('user', 'name email phone')
+			.populate('items.productId', 'slug');
 
 		if (!order) {
 			return res.status(404).json({
