@@ -1,6 +1,6 @@
 module.exports = {
     PORT: process.env.PORT || 5000,
-    NODE_ENV: "production",
+    NODE_ENV: "development",
 
     MONGODB_URI: process.env.MONGODB_URI || "mongodb+srv://homeline:homeline123@cluster0.symdr6d.mongodb.net/homelineteam",
 

@@ -38,7 +38,7 @@ const app = express();
 const PORT = config.PORT || 5000;
 
 // CORS configuration - must be first
-const allowedOrigins = [
+const allowedOrigins = config.CORS_ORIGINS || [
 	'https://homelineteam.com',
 	'https://www.homelineteam.com',
 	'https://admin.homelineteam.com',
