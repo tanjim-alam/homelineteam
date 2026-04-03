@@ -755,7 +755,7 @@ export default function OrdersPage() {
                                   rel="noreferrer"
                                   className="text-indigo-600 hover:text-indigo-800 hover:underline text-sm"
                                 >
-                                  Live Link
+                                  View Product
                                 </a>
                               )}
                             </div>
