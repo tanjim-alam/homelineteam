@@ -38,38 +38,27 @@ const app = express();
 const PORT = config.PORT || 5000;
 
 // CORS configuration - must be first
-const allowedOrigins = config.CORS_ORIGINS || [
+const allowedOrigins = [
 	'https://homelineteam.com',
 	'https://www.homelineteam.com',
-	'https://admin.homelineteam.com',
-	'https://wwww.admin.homelineteam.com'
+	'https://admin.homelineteam.com'
 ];
 
 const corsOptions = {
 	origin: function (origin, callback) {
-
-		// Allow server-to-server, Postman, curl, mobile apps
 		if (!origin) return callback(null, true);
 
 		if (allowedOrigins.includes(origin)) {
 			return callback(null, true);
 		}
 
-		callback(new Error("Not allowed by CORS: " + origin));
+		return callback(new Error("Not allowed by CORS: " + origin));
 	},
 	credentials: true,
-	methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-	allowedHeaders: [
-		'Content-Type',
-		'Authorization',
-		'X-Requested-With',
-		'Accept',
-		'Origin'
-	],
-	exposedHeaders: ['Set-Cookie', 'Authorization']
 };
 
 app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 // CORS preflight handling - simplified approach
 app.use((req, res, next) => {
