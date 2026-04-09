@@ -20,8 +20,7 @@ module.exports = {
     CORS_ORIGINS: [
         "https://homelineteam.com",
         "https://www.homelineteam.com",
-        "https://homelineteam.com/admin",
-        "https://www.homelineteam.com/admin",
+        "https://admin.homelineteam.com"
     ],
 
     RATE_LIMIT_WINDOW_MS: 15 * 60 * 1000,
