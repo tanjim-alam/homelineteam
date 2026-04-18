@@ -93,6 +93,18 @@ exports.createProduct = async (req, res, next) => {
         const parsedVariants = typeof variants === 'string' ? JSON.parse(variants) : variants;
         const parsedVariantOptions = variantOptions ? (typeof variantOptions === 'string' ? JSON.parse(variantOptions) : variantOptions) : {};
 
+        const customSizeRaw = req.body.customSize ? (typeof req.body.customSize === 'string' ? JSON.parse(req.body.customSize) : req.body.customSize) : {};
+        const customSize = {
+            enabled: customSizeRaw.enabled === 'true' || customSizeRaw.enabled === true,
+            sizeUnit: customSizeRaw.sizeUnit || 'mm',
+            widthBasePrice: customSizeRaw.widthBasePrice !== undefined && customSizeRaw.widthBasePrice !== '' ? parseFloat(customSizeRaw.widthBasePrice) || 0 : 0,
+            heightBasePrice: customSizeRaw.heightBasePrice !== undefined && customSizeRaw.heightBasePrice !== '' ? parseFloat(customSizeRaw.heightBasePrice) || 0 : 0,
+            minWidth: customSizeRaw.minWidth !== undefined && customSizeRaw.minWidth !== '' ? parseFloat(customSizeRaw.minWidth) : undefined,
+            maxWidth: customSizeRaw.maxWidth !== undefined && customSizeRaw.maxWidth !== '' ? parseFloat(customSizeRaw.maxWidth) : undefined,
+            minHeight: customSizeRaw.minHeight !== undefined && customSizeRaw.minHeight !== '' ? parseFloat(customSizeRaw.minHeight) : undefined,
+            maxHeight: customSizeRaw.maxHeight !== undefined && customSizeRaw.maxHeight !== '' ? parseFloat(customSizeRaw.maxHeight) : undefined,
+        };
+
         const dynamicFieldsRaw = req.body.dynamicFields ? (typeof req.body.dynamicFields === 'string' ? JSON.parse(req.body.dynamicFields) : req.body.dynamicFields) : {};
         const dynamicFields = await pickDynamicFields(categoryId, dynamicFieldsRaw);
 
@@ -155,6 +167,7 @@ exports.createProduct = async (req, res, next) => {
             mainImages,
             dynamicFields,
             variantOptions: parsedVariantOptions,
+            customSize,
             metaData,
             hasVariants: hasVariants || false,
             variants: processedVariants
@@ -286,9 +299,26 @@ exports.updateProduct = async (req, res, next) => {
         if (variantOptions) updates.variantOptions = typeof variantOptions === 'string' ? JSON.parse(variantOptions) : variantOptions;
         if (hasVariants !== undefined) updates.hasVariants = hasVariants;
 
+        if (req.body.customSize !== undefined) {
+            const customSizeRaw = typeof req.body.customSize === 'string' ? JSON.parse(req.body.customSize) : req.body.customSize;
+            updates.customSize = {
+                enabled: customSizeRaw.enabled === 'true' || customSizeRaw.enabled === true,
+                sizeUnit: customSizeRaw.sizeUnit || 'mm',
+                widthBasePrice: customSizeRaw.widthBasePrice !== undefined && customSizeRaw.widthBasePrice !== '' ? parseFloat(customSizeRaw.widthBasePrice) || 0 : 0,
+                heightBasePrice: customSizeRaw.heightBasePrice !== undefined && customSizeRaw.heightBasePrice !== '' ? parseFloat(customSizeRaw.heightBasePrice) || 0 : 0,
+                minWidth: customSizeRaw.minWidth !== undefined && customSizeRaw.minWidth !== '' ? parseFloat(customSizeRaw.minWidth) : undefined,
+                maxWidth: customSizeRaw.maxWidth !== undefined && customSizeRaw.maxWidth !== '' ? parseFloat(customSizeRaw.maxWidth) : undefined,
+                minHeight: customSizeRaw.minHeight !== undefined && customSizeRaw.minHeight !== '' ? parseFloat(customSizeRaw.minHeight) : undefined,
+                maxHeight: customSizeRaw.maxHeight !== undefined && customSizeRaw.maxHeight !== '' ? parseFloat(customSizeRaw.maxHeight) : undefined,
+            };
+        }
+
+        const existingProduct = await Product.findById(id);
+        if (!existingProduct) return res.status(404).json({ message: 'Product not found' });
+
         if (req.body.dynamicFields) {
             const dynamicFieldsRaw = typeof req.body.dynamicFields === 'string' ? JSON.parse(req.body.dynamicFields) : req.body.dynamicFields;
-            updates.dynamicFields = await pickDynamicFields(categoryId, dynamicFieldsRaw);
+            updates.dynamicFields = await pickDynamicFields(categoryId || existingProduct.categoryId, dynamicFieldsRaw);
         }
 
         // Handle image updates - support both reordering existing images and adding new ones

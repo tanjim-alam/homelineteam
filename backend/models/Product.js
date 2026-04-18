@@ -39,6 +39,16 @@ const productSchema = new mongoose.Schema(
 		dynamicFields: { type: mongoose.Schema.Types.Mixed, default: {} },
 		// variantOptions stores available options for each variant field (e.g., { height: ["4 ft", "5 ft"], width: ["2 ft", "3 ft"] })
 		variantOptions: { type: mongoose.Schema.Types.Mixed, default: {} },
+		customSize: {
+			enabled: { type: Boolean, default: false },
+			sizeUnit: { type: String, enum: ['mm', 'cm', 'ft'], default: 'mm' },
+			widthBasePrice: { type: Number, default: 0 },
+			heightBasePrice: { type: Number, default: 0 },
+			minWidth: { type: Number },
+			maxWidth: { type: Number },
+			minHeight: { type: Number },
+			maxHeight: { type: Number }
+		},
 		metaData: metaSchema,
 		// Variants system for different combinations
 		variants: [variantSchema],

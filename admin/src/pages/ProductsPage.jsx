@@ -31,6 +31,16 @@ export default function ProductsPage() {
     variants: [],
     variantOptions: {}, // Store available options for each variant field
     dynamicFields: {},
+    customSize: {
+      enabled: false,
+      sizeUnit: 'mm',
+      widthBasePrice: '',
+      heightBasePrice: '',
+      minWidth: '',
+      maxWidth: '',
+      minHeight: '',
+      maxHeight: ''
+    },
     metaData: {
       title: '',
       description: '',
@@ -40,6 +50,7 @@ export default function ProductsPage() {
   });
 
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedCategoryFieldSlugs, setSelectedCategoryFieldSlugs] = useState({});
   const [existingImages, setExistingImages] = useState([]);
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [showBulkActions, setShowBulkActions] = useState(false);
@@ -142,7 +153,7 @@ export default function ProductsPage() {
 
   // Removed fetchSubcategories - subcategories are now loaded directly from fetchCategories
 
-  const fetchCategoryDetails = async (categoryId) => {
+  const fetchCategoryDetails = async (categoryId, dynamicFields = {}) => {
     try {
       const response = await apiClient.get(`/categories/id/${categoryId}`);
       let data = response;
@@ -150,9 +161,26 @@ export default function ProductsPage() {
         data = response.data;
       }
       setSelectedCategory(data);
+      initializeCategoryFieldSelection(data, dynamicFields);
     } catch (err) {
       setSelectedCategory(null);
+      setSelectedCategoryFieldSlugs({});
     }
+  };
+
+  const initializeCategoryFieldSelection = (category, dynamicFields = {}) => {
+    if (!category) {
+      setSelectedCategoryFieldSlugs({});
+      return;
+    }
+    const selected = {};
+    const allFields = [
+      ...(category.customFields || [])
+    ];
+    allFields.forEach((field) => {
+      selected[field.slug] = true;
+    });
+    setSelectedCategoryFieldSlugs(selected);
   };
 
   // Removed handleMainCategoryChange - no longer needed
@@ -163,6 +191,7 @@ export default function ProductsPage() {
       fetchCategoryDetails(subcategoryId);
     } else {
       setSelectedCategory(null);
+      setSelectedCategoryFieldSlugs({});
     }
   };
 
@@ -172,6 +201,7 @@ export default function ProductsPage() {
       fetchCategoryDetails(categoryId);
     } else {
       setSelectedCategory(null);
+      setSelectedCategoryFieldSlugs({});
     }
   };
 
@@ -395,6 +425,22 @@ export default function ProductsPage() {
     }));
   };
 
+  const toggleCategoryField = (fieldSlug, enabled, isRequired = false) => {
+    if (isRequired && !enabled) {
+      return;
+    }
+    setSelectedCategoryFieldSlugs(prev => ({
+      ...prev,
+      [fieldSlug]: enabled
+    }));
+    setForm(prev => ({
+      ...prev,
+      dynamicFields: enabled
+        ? { ...prev.dynamicFields }
+        : Object.fromEntries(Object.entries(prev.dynamicFields).filter(([key]) => key !== fieldSlug))
+    }));
+  };
+
   const updateVariantField = (fieldSlug, value) => {
     setVariantForm(prev => ({
       ...prev,
@@ -467,6 +513,16 @@ export default function ProductsPage() {
       variants: [],
       variantOptions: {},
       dynamicFields: {},
+      customSize: {
+        enabled: false,
+        sizeUnit: 'mm',
+        widthBasePrice: '',
+        heightBasePrice: '',
+        minWidth: '',
+        maxWidth: '',
+        minHeight: '',
+        maxHeight: ''
+      },
       metaData: {
         title: '',
         description: '',
@@ -533,6 +589,7 @@ export default function ProductsPage() {
       formData.append('variants', JSON.stringify(form.variants));
       formData.append('variantOptions', JSON.stringify(form.variantOptions));
       formData.append('dynamicFields', JSON.stringify(form.dynamicFields));
+      formData.append('customSize', JSON.stringify(form.customSize));
 
       // Append SEO metadata
       formData.append('metaData[title]', form.metaData.title || '');
@@ -628,6 +685,16 @@ export default function ProductsPage() {
       variants: product.variants || [],
       variantOptions: product.variantOptions || {},
       dynamicFields: product.dynamicFields || {},
+      customSize: {
+        enabled: product.customSize?.enabled || false,
+        sizeUnit: product.customSize?.sizeUnit || 'mm',
+        widthBasePrice: product.customSize?.widthBasePrice != null ? product.customSize.widthBasePrice : '',
+        heightBasePrice: product.customSize?.heightBasePrice != null ? product.customSize.heightBasePrice : '',
+        minWidth: product.customSize?.minWidth != null ? product.customSize.minWidth : '',
+        maxWidth: product.customSize?.maxWidth != null ? product.customSize.maxWidth : '',
+        minHeight: product.customSize?.minHeight != null ? product.customSize.minHeight : '',
+        maxHeight: product.customSize?.maxHeight != null ? product.customSize.maxHeight : ''
+      },
       metaData: {
         title: product.metaData?.title || '',
         description: product.metaData?.description || '',
@@ -641,7 +708,7 @@ export default function ProductsPage() {
 
     // Load subcategory details if subcategory is set
     if (product.categoryId || product.subcategoryId) {
-      fetchCategoryDetails(product.categoryId || product.subcategoryId);
+      fetchCategoryDetails(product.categoryId || product.subcategoryId, product.dynamicFields || {});
     }
 
     setShowForm(true);
@@ -746,7 +813,7 @@ export default function ProductsPage() {
             value={form.dynamicFields[field.slug] || ''}
             onChange={(e) => updateDynamicField(field.slug, e.target.value)}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder={`Enter ${field.name}`}
+            placeholder={field.placeholder || `Will be ${field.name}`}
             required={field.required}
           />
         );
@@ -757,7 +824,7 @@ export default function ProductsPage() {
             value={form.dynamicFields[field.slug] || ''}
             onChange={(e) => updateDynamicField(field.slug, e.target.value)}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder={`Enter ${field.name}`}
+            placeholder={field.placeholder || `Will be ${field.name}`}
             required={field.required}
           />
         );
@@ -828,7 +895,7 @@ export default function ProductsPage() {
             onChange={(e) => updateDynamicField(field.slug, e.target.value)}
             rows={4}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder={`Enter ${field.name}`}
+            placeholder={field.placeholder || `Will be ${field.name}`}
             required={field.required}
           />
         );
@@ -1000,6 +1067,7 @@ export default function ProductsPage() {
                         ))}
                       </select>
                       <p className="text-xs text-gray-500 font-medium">Select the category for your product</p>
+
                     </div>
 
                     <div className="space-y-3">
@@ -1125,6 +1193,136 @@ export default function ProductsPage() {
                         </div>
                       </div>
                     </div>
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-r from-sky-50/70 to-blue-50/70 rounded-3xl p-8 border border-sky-100/80 shadow-lg">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-12 h-12 bg-gradient-to-br from-sky-100 to-blue-200 rounded-2xl flex items-center justify-center">
+                      <svg className="w-6 h-6 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 0v4m0-4h4m-4 0H8" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold text-slate-900">Custom Size Configuration</h3>
+                      <p className="text-sm text-slate-500">Enable width and height pricing for this product.</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <label className="inline-flex items-center gap-3 text-sm text-slate-700">
+                      <input
+                        type="checkbox"
+                        checked={form.customSize.enabled}
+                        onChange={(e) => setForm({ ...form, customSize: { ...form.customSize, enabled: e.target.checked } })}
+                        className="h-4 w-4 text-sky-600 border-gray-300 rounded"
+                      />
+                      Enable custom size fields on product page
+                    </label>
+
+                    {form.customSize.enabled && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-3">
+                          <label className="block text-sm font-bold text-gray-700">Unit Type</label>
+                          <select
+                            value={form.customSize.sizeUnit}
+                            onChange={(e) => setForm({ ...form, customSize: { ...form.customSize, sizeUnit: e.target.value } })}
+                            className="w-full border-2 border-gray-200 rounded-2xl px-4 py-4 focus:ring-4 focus:ring-sky-300/40 focus:border-sky-400 transition-all duration-200 bg-white/50 backdrop-blur-sm hover:bg-white/70 focus:bg-white shadow-lg"
+                          >
+                            <option value="mm">mm</option>
+                            <option value="cm">cm</option>
+                            <option value="ft">ft</option>
+                          </select>
+                          <p className="text-xs text-gray-500">Choose the unit for width and height measurements.</p>
+                        </div>
+
+                        <div className="space-y-3">
+                          <label className="block text-sm font-bold text-gray-700">Width base price (per 1 unit)</label>
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                              <span className="text-gray-500 text-sm font-medium">₹</span>
+                            </div>
+                            <input
+                              type="number"
+                              min="0"
+                              value={form.customSize.widthBasePrice}
+                              onChange={(e) => setForm({ ...form, customSize: { ...form.customSize, widthBasePrice: e.target.value } })}
+                              className="w-full border-2 border-gray-200 rounded-2xl pl-10 pr-4 py-4 focus:ring-4 focus:ring-sky-300/40 focus:border-sky-400 transition-all duration-200 bg-white/50 backdrop-blur-sm hover:bg-white/70 focus:bg-white shadow-lg"
+                              placeholder="0"
+                            />
+                          </div>
+                          <p className="text-xs text-gray-500">Price added for each unit of width.</p>
+                        </div>
+
+                        <div className="space-y-3">
+                          <label className="block text-sm font-bold text-gray-700">Height base price (per 1 unit)</label>
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                              <span className="text-gray-500 text-sm font-medium">₹</span>
+                            </div>
+                            <input
+                              type="number"
+                              min="0"
+                              value={form.customSize.heightBasePrice}
+                              onChange={(e) => setForm({ ...form, customSize: { ...form.customSize, heightBasePrice: e.target.value } })}
+                              className="w-full border-2 border-gray-200 rounded-2xl pl-10 pr-4 py-4 focus:ring-4 focus:ring-sky-300/40 focus:border-sky-400 transition-all duration-200 bg-white/50 backdrop-blur-sm hover:bg-white/70 focus:bg-white shadow-lg"
+                              placeholder="0"
+                            />
+                          </div>
+                          <p className="text-xs text-gray-500">Price added for each unit of height.</p>
+                        </div>
+
+                        <div className="space-y-3">
+                          <label className="block text-sm font-bold text-gray-700">Minimum width</label>
+                          <input
+                            type="number"
+                            min="0"
+                            value={form.customSize.minWidth}
+                            onChange={(e) => setForm({ ...form, customSize: { ...form.customSize, minWidth: e.target.value } })}
+                            className="w-full border-2 border-gray-200 rounded-2xl px-4 py-4 focus:ring-4 focus:ring-sky-300/40 focus:border-sky-400 transition-all duration-200 bg-white/50 backdrop-blur-sm hover:bg-white/70 focus:bg-white shadow-lg"
+                            placeholder="0"
+                          />
+                        </div>
+
+                        <div className="space-y-3">
+                          <label className="block text-sm font-bold text-gray-700">Maximum width</label>
+                          <input
+                            type="number"
+                            min="0"
+                            value={form.customSize.maxWidth}
+                            onChange={(e) => setForm({ ...form, customSize: { ...form.customSize, maxWidth: e.target.value } })}
+                            className="w-full border-2 border-gray-200 rounded-2xl px-4 py-4 focus:ring-4 focus:ring-sky-300/40 focus:border-sky-400 transition-all duration-200 bg-white/50 backdrop-blur-sm hover:bg-white/70 focus:bg-white shadow-lg"
+                            placeholder="0"
+                          />
+                        </div>
+
+                        <div className="space-y-3">
+                          <label className="block text-sm font-bold text-gray-700">Minimum height</label>
+                          <input
+                            type="number"
+                            min="0"
+                            value={form.customSize.minHeight}
+                            onChange={(e) => setForm({ ...form, customSize: { ...form.customSize, minHeight: e.target.value } })}
+                            className="w-full border-2 border-gray-200 rounded-2xl px-4 py-4 focus:ring-4 focus:ring-sky-300/40 focus:border-sky-400 transition-all duration-200 bg-white/50 backdrop-blur-sm hover:bg-white/70 focus:bg-white shadow-lg"
+                            placeholder="0"
+                          />
+                        </div>
+
+                        <div className="space-y-3">
+                          <label className="block text-sm font-bold text-gray-700">Maximum height</label>
+                          <input
+                            type="number"
+                            min="0"
+                            value={form.customSize.maxHeight}
+                            onChange={(e) => setForm({ ...form, customSize: { ...form.customSize, maxHeight: e.target.value } })}
+                            className="w-full border-2 border-gray-200 rounded-2xl px-4 py-4 focus:ring-4 focus:ring-sky-300/40 focus:border-sky-400 transition-all duration-200 bg-white/50 backdrop-blur-sm hover:bg-white/70 focus:bg-white shadow-lg"
+                            placeholder="0"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    <p className="text-xs text-gray-500">Final price = base price + width × width base price + height × height base price.</p>
                   </div>
                 </div>
 
@@ -1439,22 +1637,42 @@ export default function ProductsPage() {
                 </div>
 
                 {/* Custom Fields based on Category */}
-                {selectedCategory && selectedCategory.customFields && selectedCategory.customFields.length > 0 && (
+                {(selectedCategory && (selectedCategory.customFields && selectedCategory.customFields.length > 0)) && (
                   <div className="border-t pt-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                      Category Fields ({selectedCategory.customFields.length} fields)
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      Category Custom Inputs
                     </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {selectedCategory.customFields.map((field) => (
-                        <div key={field.slug}>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            {field.name}
-                            {field.required && <span className="text-red-500">*</span>}
-                            <span className="text-xs text-gray-500 ml-2">({field.type})</span>
-                          </label>
-                          {renderDynamicField(field)}
-                        </div>
-                      ))}
+                    <p className="text-sm text-gray-500 mb-6">
+                      Select which category-specific fields and features should be included for this product.
+                    </p>
+                    <div className="grid grid-cols-1 gap-6">
+                      {...(selectedCategory.customFields || []).map((field) => {
+                        const enabled = selectedCategoryFieldSlugs[field.slug] ?? true;
+                        return (
+                          <div key={`dynamic-field-${field.slug}`} className="bg-white rounded-3xl border border-gray-200 p-6 shadow-sm">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                              <div>
+                                <p className="font-semibold text-gray-900">
+                                  {field.name}
+                                  {field.required && <span className="text-red-500 ml-1">*</span>}
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1">{field.type}</p>
+                              </div>
+                              <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+                                <input
+                                  type="checkbox"
+                                  checked={enabled}
+                                  disabled={field.required}
+                                  onChange={(e) => toggleCategoryField(field.slug, e.target.checked, field.required)}
+                                  className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                                />
+                                {field.required ? 'Required' : enabled ? 'Included' : 'Exclude'}
+                              </label>
+                            </div>
+                            {enabled && renderDynamicField(field)}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}

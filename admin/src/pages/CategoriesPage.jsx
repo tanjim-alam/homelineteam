@@ -84,6 +84,7 @@ export default function CategoriesPage() {
     options: [''],
     required: false,
     unit: '',
+    basePrice: 0,
     order: 1
   })
 
@@ -338,6 +339,7 @@ export default function CategoriesPage() {
         options: Array.isArray(field.options) && field.options.length > 0 ? field.options : [''],
         required: field.required || false,
         unit: field.unit || '',
+        basePrice: field.basePrice || 0,
         order: field.order || 1
       })
     } else {
@@ -348,6 +350,7 @@ export default function CategoriesPage() {
         options: [''],
         required: false,
         unit: '',
+        basePrice: 0,
         order: 1
       })
     }
@@ -1285,12 +1288,13 @@ export default function CategoriesPage() {
                   type="submit"
                   className="px-8 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-2xl hover:from-emerald-700 hover:to-teal-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
-                  Add Field
+                  Add Custom Field
                 </button>
               </div>
             </form>
           </div>
         )}
+
 
         {/* Variant Field Form */}
         {showVariantFieldForm && selectedCategory && (
@@ -1350,6 +1354,17 @@ export default function CategoriesPage() {
                     <option value="number">Number</option>
                     <option value="text">Text</option>
                   </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">Base Price</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={variantFieldForm.basePrice}
+                    onChange={(e) => setVariantFieldForm({ ...variantFieldForm, basePrice: Number(e.target.value) })}
+                    className="w-full border border-gray-200 rounded-2xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white"
+                  />
                 </div>
 
                 <div className="flex items-center space-x-3">
@@ -1555,6 +1570,7 @@ export default function CategoriesPage() {
                         </div>
                       )}
 
+
                       {/* Variant Fields */}
                       {category.variantFields && category.variantFields.length > 0 && (
                         <div className="mb-3">
@@ -1565,6 +1581,9 @@ export default function CategoriesPage() {
                                 <span className="font-semibold">
                                   {field.name} ({field.type})
                                   {field.required && <span className="text-red-600 ml-1">*</span>}
+                                  {field.basePrice != null && field.basePrice > 0 && (
+                                    <span className="ml-2 text-gray-600">+₹{field.basePrice}</span>
+                                  )}
                                 </span>
                                 <button
                                   type="button"
@@ -1602,7 +1621,7 @@ export default function CategoriesPage() {
                         className="inline-flex items-center space-x-2 px-6 py-3 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-2xl transition-all duration-200 text-sm font-semibold shadow-lg hover:shadow-xl"
                       >
                         <Tag className="w-5 h-5" />
-                        <span>Add Field</span>
+                        <span>Add Custom Field</span>
                       </button>
                       <button
                         onClick={() => openVariantFieldFormAndScrollToTop(category)}

@@ -27,8 +27,36 @@ export default function ProductDetailPage() {
   const [category, setCategory] = useState(null);
   const [variantOptions, setVariantOptions] = useState({});
   const [selectedOptions, setSelectedOptions] = useState({});
+  const [customFieldValues, setCustomFieldValues] = useState({});
   const [activeTab, setActiveTab] = useState('description');
   const [related, setRelated] = useState([]);
+
+  const getCustomSizeFields = () => {
+    if (!product?.customSize?.enabled) return [];
+    const unit = product.customSize.sizeUnit || '';
+    return [
+      {
+        slug: 'width',
+        name: 'WIDTH',
+        type: 'number',
+        unit,
+        required: true,
+        basePrice: product.customSize.widthBasePrice || 0,
+        min: product.customSize.minWidth,
+        max: product.customSize.maxWidth
+      },
+      {
+        slug: 'height',
+        name: 'HEIGHT',
+        type: 'number',
+        unit,
+        required: true,
+        basePrice: product.customSize.heightBasePrice || 0,
+        min: product.customSize.minHeight,
+        max: product.customSize.maxHeight
+      }
+    ];
+  };
   // Wallpaper Roll Calculator (simple: W x H in ft)
   const [wallWidthFt, setWallWidthFt] = useState('');
   const [wallHeightFt, setWallHeightFt] = useState('');
@@ -41,11 +69,20 @@ export default function ProductDetailPage() {
         const productData = await api.getProductBySlug(slug);
         setProduct(productData);
 
+        const baseCustomFieldValues = {};
+        if (productData.customSize?.enabled) {
+          baseCustomFieldValues.width = '';
+          baseCustomFieldValues.height = '';
+        }
+        setCustomFieldValues(baseCustomFieldValues);
+
         // Fetch category to get variant field definitions
         if (productData.categoryId) {
           try {
             const categoryData = await api.getCategoryById(productData.categoryId);
             setCategory(categoryData);
+
+            setCustomFieldValues(baseCustomFieldValues);
 
             // Initialize variant options from product data
             if (productData.variantOptions) {
@@ -121,6 +158,44 @@ export default function ProductDetailPage() {
     }
   };
 
+  const getCustomFieldValues = () => {
+    if (getCustomSizeFields().length === 0) return null;
+    return Object.entries(customFieldValues || {}).reduce((acc, [key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        acc[key] = value;
+      }
+      return acc;
+    }, {});
+  };
+
+  const getCustomOrderPrice = () => {
+    const hasFields = getCustomSizeFields().length;
+    if (!hasFields) return null;
+
+    const customFields = getCustomFieldValues();
+    if (!customFields || Object.keys(customFields).length === 0) return null;
+
+    let price = product?.basePrice || 0;
+    const allFields = getCustomSizeFields();
+
+    allFields.forEach(field => {
+      const value = customFields[field.slug];
+      if (value === undefined || value === null || value === '') return;
+
+      const fieldBase = Number(field.basePrice || 0);
+      if (field.type === 'number') {
+        const numericValue = parseFloat(value);
+        if (!isNaN(numericValue)) {
+          price += fieldBase * numericValue;
+        }
+      } else if (fieldBase > 0) {
+        price += fieldBase;
+      }
+    });
+
+    return price;
+  };
+
   const handleQuantityChange = (newQuantity) => {
     if (newQuantity >= 1 && newQuantity <= (selectedVariant?.stock || 999)) {
       setQuantity(newQuantity);
@@ -130,8 +205,16 @@ export default function ProductDetailPage() {
   const handleAddToCart = () => {
     if (!product || !addToCart) return;
 
-    // Use selectedVariant if available, otherwise use product base data
-    const variantToAdd = selectedVariant || {
+    const customFields = getCustomFieldValues();
+    const customPrice = getCustomOrderPrice();
+    const isCustomOrder = customFields && Object.keys(customFields).length > 0 && customPrice !== null;
+
+    const variantToAdd = isCustomOrder ? {
+      price: customPrice,
+      mrp: product.mrp || customPrice,
+      stock: selectedVariant?.stock || product.stock || 999,
+      fields: customFields
+    } : selectedVariant || {
       price: product.basePrice,
       mrp: product.mrp || product.basePrice,
       stock: product.stock || 999,
@@ -164,9 +247,12 @@ export default function ProductDetailPage() {
     const productName = product.name;
     const productPrice = getCurrentPrice();
     const selectedVariantText = selectedVariant ? `\n*Variant:* ${selectedVariant.name}` : '';
-    const selectedOptionsText = Object.keys(selectedOptions).length > 0
-      ? `\n*Options:* ${Object.entries(selectedOptions).map(([key, value]) => `${key}: ${value}`).join(', ')}`
-      : '';
+    const customFields = getCustomFieldValues();
+    const selectedOptionsText = customFields && Object.keys(customFields).length > 0
+      ? `\n*Custom Options:* ${Object.entries(customFields).map(([key, value]) => `${key}: ${value}`).join(', ')}`
+      : Object.keys(selectedOptions).length > 0
+        ? `\n*Options:* ${Object.entries(selectedOptions).map(([key, value]) => `${key}: ${value}`).join(', ')}`
+        : '';
     const quantityText = quantity > 1 ? `\n*Quantity:* ${quantity}` : '';
     const totalPrice = productPrice * quantity;
 
@@ -179,8 +265,17 @@ export default function ProductDetailPage() {
     window.open(whatsappUrl, '_blank');
   };
 
-  const getCurrentPrice = () => selectedVariant?.price || product?.basePrice || 0;
-  const getCurrentMRP = () => selectedVariant?.mrp || product?.basePrice || 0;
+  const getCurrentPrice = () => {
+    const customPrice = getCustomOrderPrice();
+    if (customPrice !== null) return customPrice;
+    return selectedVariant?.price || product?.basePrice || 0;
+  };
+
+  const getCurrentMRP = () => {
+    const customPrice = getCustomOrderPrice();
+    if (customPrice !== null) return product?.mrp || customPrice;
+    return selectedVariant?.mrp || product?.basePrice || 0;
+  };
 
   const getDiscountPercentage = () => {
     const price = getCurrentPrice();
@@ -259,9 +354,7 @@ export default function ProductDetailPage() {
 
   // Get field display name and unit from category
   const getFieldDisplayInfo = (fieldSlug) => {
-    if (!category?.variantFields) return { name: fieldSlug, unit: '' };
-
-    const fieldDef = category.variantFields.find(f => f.slug === fieldSlug);
+    const fieldDef = category?.variantFields?.find(f => f.slug === fieldSlug)
     return {
       name: fieldDef?.name || fieldSlug,
       unit: fieldDef?.unit || ''
@@ -569,6 +662,81 @@ export default function ProductDetailPage() {
                     )}
                   </div>
                 )}
+
+                {getCustomSizeFields().length > 0 ? (
+                  <div className="space-y-4 sm:space-y-5 mb-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-base sm:text-lg font-semibold text-gray-900">Custom Configuration</h3>
+                        <p className="text-sm text-gray-500">Enter custom values for this product. Price updates automatically.</p>
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        {getCustomOrderPrice() !== null && (
+                          <span>Custom price: <strong>₹{getCustomOrderPrice().toFixed(2)}</strong></span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {getCustomSizeFields().map(field => {
+                        const value = customFieldValues[field.slug] ?? '';
+                        const commonProps = {
+                          value,
+                          onChange: (e) => setCustomFieldValues({ ...customFieldValues, [field.slug]: e.target.value }),
+                          className: "w-full border border-gray-200 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-transparent text-gray-700 transition-all duration-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white"
+                        };
+
+                        return (
+                          <div key={field.slug} className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <label className="text-sm font-medium text-gray-900">{field.name}</label>
+                              {field.unit && <span className="text-xs text-gray-500">{field.unit}</span>}
+                            </div>
+
+                            {field.type === 'dropdown' ? (
+                              <div className="flex flex-wrap gap-2">
+                                {(product.variantOptions?.[field.slug] || field.options || []).map(option => (
+                                  <button
+                                    type="button"
+                                    key={option}
+                                    onClick={() => setCustomFieldValues({ ...customFieldValues, [field.slug]: option })}
+                                    className={`px-3 py-2 rounded-lg border text-sm ${value === option ? 'border-primary-600 bg-primary-50 text-primary-700' : 'border-gray-200 bg-white text-gray-700 hover:border-primary-300'}`}
+                                  >
+                                    {option}
+                                  </button>
+                                ))}
+                              </div>
+                            ) : (
+                              <input
+                                type={field.type === 'number' ? 'number' : 'text'}
+                                placeholder={field.placeholder || (field.unit ? `Enter ${field.name} (${field.unit})` : `Enter ${field.name}`)}
+                                min={field.type === 'number' ? (field.min !== undefined ? field.min : 0) : undefined}
+                                max={field.type === 'number' ? field.max : undefined}
+                                {...commonProps}
+                              />
+                            )}
+
+                            {field.placeholder && !value && (
+                              <p className="text-xs text-gray-500">{field.placeholder}</p>
+                            )}
+
+                            {(field.min !== undefined || field.max !== undefined) && (
+                              <p className="text-xs text-gray-500">
+                                {field.min !== undefined ? `Min: ${field.min}` : ''}
+                                {field.min !== undefined && field.max !== undefined ? ' · ' : ''}
+                                {field.max !== undefined ? `Max: ${field.max}` : ''}
+                              </p>
+                            )}
+
+                            {field.required && !value && (
+                              <p className="text-xs text-red-600">This field is required for custom configuration.</p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : null}
 
                 {/* Simple Wallpaper Roll Calculator (W x H in ft) */}
                 {isWallpaperCategory() && (

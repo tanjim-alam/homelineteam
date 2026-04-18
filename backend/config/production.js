@@ -27,7 +27,7 @@ module.exports = {
     CORS_ORIGINS: [
         "https://homelineteam.com",
         "https://www.homelineteam.com",
-        "https://admin.homelineteam.com"
+        "https://admin.homelineteam.com",
     ],
 
     // Rate Limiting

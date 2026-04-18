@@ -30,6 +30,7 @@ const variantFieldSchema = new mongoose.Schema(
 		options: [{ type: String }], // for dropdown / multi-select
 		required: { type: Boolean, default: false },
 		unit: { type: String }, // e.g., "cm", "inches", "ft"
+		basePrice: { type: Number, default: 0 }, // extra price for custom units/size
 		order: { type: Number, default: 0 }, // for display order
 	},
 	{ _id: false }

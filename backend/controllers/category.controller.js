@@ -472,11 +472,11 @@ exports.addCustomField = async (req, res, next) => {
 exports.addVariantField = async (req, res, next) => {
   try {
     const { categoryId } = req.params;
-    const { name, slug, type, options, required, unit, order } = req.body;
+    const { name, slug, type, options, required, unit, basePrice, order } = req.body;
 
     const category = await Category.findByIdAndUpdate(
       categoryId,
-      { $push: { variantFields: { name, slug, type, options, required, unit, order } } },
+      { $push: { variantFields: { name, slug, type, options, required, unit, basePrice, order } } },
       { new: true }
     );
 
@@ -491,7 +491,7 @@ exports.addVariantField = async (req, res, next) => {
 exports.updateVariantField = async (req, res, next) => {
   try {
     const { categoryId, fieldId } = req.params;
-    const { name, slug, type, options, required, unit, order } = req.body;
+    const { name, slug, type, options, required, unit, basePrice, order } = req.body;
 
     const updateQuery = {};
     if (name !== undefined) updateQuery['variantFields.$.name'] = name;
@@ -500,6 +500,7 @@ exports.updateVariantField = async (req, res, next) => {
     if (options !== undefined) updateQuery['variantFields.$.options'] = options;
     if (required !== undefined) updateQuery['variantFields.$.required'] = required;
     if (unit !== undefined) updateQuery['variantFields.$.unit'] = unit;
+    if (basePrice !== undefined) updateQuery['variantFields.$.basePrice'] = basePrice;
     if (order !== undefined) updateQuery['variantFields.$.order'] = order;
 
     const matchCondition = {

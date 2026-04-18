@@ -35,18 +35,13 @@ const { notFoundHandler, errorHandler } = require('./middlewares/error.middlewar
 const app = express();
 const PORT = config.PORT || 5000;
 
-//////////////////////////////////////////////////////////
-// ✅ FIX 1: Disable caching (VERY IMPORTANT)
-//////////////////////////////////////////////////////////
+
 app.use((req, res, next) => {
   res.setHeader("Cache-Control", "no-store");
   res.setHeader("Vary", "Origin"); // 🔥 critical for CORS
   next();
 });
 
-//////////////////////////////////////////////////////////
-// ✅ FIX 2: Clean CORS (NO manual override)
-//////////////////////////////////////////////////////////
 const allowedOrigins = config.CORS_ORIGINS || [
   'https://homelineteam.com',
   'https://www.homelineteam.com',
@@ -67,28 +62,20 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-// app.options("*", cors(corsOptions)); 
 
-//////////////////////////////////////////////////////////
-// Security & misc
-//////////////////////////////////////////////////////////
 app.use(helmet());
 app.use(morgan('dev'));
 app.use(express.json({ limit: config.MAX_REQUEST_SIZE }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-//////////////////////////////////////////////////////////
-// Rate limiting
-//////////////////////////////////////////////////////////
+
 const authLimiter = rateLimit({
   windowMs: config.RATE_LIMIT_WINDOW_MS,
   max: config.RATE_LIMIT_MAX_REQUESTS
 });
 
-//////////////////////////////////////////////////////////
-// Routes
-//////////////////////////////////////////////////////////
+
 app.use('/auth', authLimiter, require('./routes/auth.routes'));
 app.use('/users', authLimiter, userRoutes);
 app.use('/categories', categoryRoutes);
@@ -105,15 +92,11 @@ app.use('/leads', leadRoutes);
 app.use('/analytics', analyticsRoutes);
 app.use('/returns', returnRoutes);
 
-//////////////////////////////////////////////////////////
-// Error handlers
-//////////////////////////////////////////////////////////
+
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-//////////////////////////////////////////////////////////
-// Start server
-//////////////////////////////////////////////////////////
+
 connectDatabase().then(() => {
   configureCloudinary();
   app.listen(PORT, () => {
