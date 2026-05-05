@@ -28,8 +28,7 @@ export const useHeroData = () => {
     setError(null);
 
     try {
-      const data = await apiService.getHeroSection();
-
+      const data = await apiService.getHeroSection()
       if (data && data.success && data.data) {
         setHeroData(data.data);
         setLastUpdated(new Date());

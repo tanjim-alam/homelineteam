@@ -683,7 +683,7 @@ export default function ProductDetailPage() {
                         const commonProps = {
                           value,
                           onChange: (e) => setCustomFieldValues({ ...customFieldValues, [field.slug]: e.target.value }),
-                          className: "w-full border border-gray-200 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-transparent text-gray-700 transition-all duration-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white"
+                          className: "w-full border border-gray-200 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-transparent text-gray-800 transition-all duration-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white"
                         };
 
                         return (
