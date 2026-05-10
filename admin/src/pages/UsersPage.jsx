@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useDispatch, useSelector } from 'react-redux'
+import { useToast } from '../context/ToastContext'
 import {
     listUsers,
     getUserById,
@@ -21,15 +23,21 @@ import {
     RefreshCw,
     Search,
     Filter,
-    MoreVertical,
     CheckCircle,
     XCircle,
     AlertCircle,
-    Clock
+    Clock,
+    Users,
+    UserCheck,
+    UserX,
+    TrendingUp
 } from 'lucide-react'
+
+function Portal({ children }) { return createPortal(children, document.body) }
 
 export default function UsersPage() {
     const dispatch = useDispatch()
+    const { showToast } = useToast()
     const {
         items,
         currentUser,
@@ -45,16 +53,9 @@ export default function UsersPage() {
     const [statusFilter, setStatusFilter] = useState('all')
     const [verificationFilter, setVerificationFilter] = useState('all')
     const [showEditModal, setShowEditModal] = useState(false)
-    const [editForm, setEditForm] = useState({
-        name: '',
-        email: '',
-        phone: '',
-        isActive: true
-    })
+    const [editForm, setEditForm] = useState({ name: '', email: '', phone: '', isActive: true })
 
-    useEffect(() => {
-        dispatch(listUsers())
-    }, [dispatch])
+    useEffect(() => { dispatch(listUsers()) }, [dispatch])
 
     useEffect(() => {
         if (error) {
@@ -62,10 +63,6 @@ export default function UsersPage() {
             return () => clearTimeout(timer)
         }
     }, [error, dispatch])
-
-    const handleRefresh = () => {
-        dispatch(listUsers())
-    }
 
     const handleViewUser = (user) => {
         setSelectedUser(user)
@@ -75,32 +72,29 @@ export default function UsersPage() {
 
     const handleEditUser = (user) => {
         setSelectedUser(user)
-        setEditForm({
-            name: user.name || '',
-            email: user.email || '',
-            phone: user.phone || '',
-            isActive: user.isActive !== false
-        })
+        setEditForm({ name: user.name || '', email: user.email || '', phone: user.phone || '', isActive: user.isActive !== false })
         setShowEditModal(true)
     }
 
-    const handleEditSubmit = async (e) => {
+    const handleEditSubmit = (e) => {
         e.preventDefault()
         if (!selectedUser) return
-
         dispatch(updateUser({ id: selectedUser._id, userData: editForm }))
+            .unwrap()
+            .then(() => showToast('success', 'User updated'))
+            .catch(() => showToast('error', 'Failed to update user'))
         setShowEditModal(false)
         setSelectedUser(null)
     }
 
     const handleDeleteUser = async (user) => {
-        if (window.confirm(`Are you sure you want to delete user ${user.name}?`)) {
+        if (window.confirm(`Delete user ${user.name}?`)) {
             try {
                 await dispatch(deleteUser(user._id)).unwrap()
-                // Refresh the user list after successful deletion
                 dispatch(listUsers())
-            } catch (error) {
-                console.error('Failed to delete user:', error)
+                showToast('success', 'User deleted')
+            } catch (err) {
+                showToast('error', 'Failed to delete user')
             }
         }
     }
@@ -109,630 +103,443 @@ export default function UsersPage() {
         dispatch(toggleUserStatus({ id: user._id, isActive: !user.isActive }))
     }
 
-    const getStatusColor = (isActive) => {
-        return isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-    }
-
-    const getVerificationColor = (isEmailVerified) => {
-        return isEmailVerified ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-    }
-
-    const getVerificationIcon = (isEmailVerified) => {
-        return isEmailVerified ? <CheckCircle className="w-4 h-4" /> : <Clock className="w-4 h-4" />
-    }
-
     const filteredUsers = items.filter(user => {
         const matchesSearch = user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             user.phone?.includes(searchTerm)
-
         const matchesStatus = statusFilter === 'all' ||
             (statusFilter === 'active' && user.isActive !== false) ||
             (statusFilter === 'inactive' && user.isActive === false)
-
         const matchesVerification = verificationFilter === 'all' ||
             (verificationFilter === 'verified' && user.isEmailVerified) ||
             (verificationFilter === 'unverified' && !user.isEmailVerified)
-
         return matchesSearch && matchesStatus && matchesVerification
     })
 
-    const getTotalUsers = () => items.length
-    const getActiveUsers = () => items.filter(user => user.isActive !== false).length
-    const getVerifiedUsers = () => items.filter(user => user.isEmailVerified).length
-    const getRecentUsers = () => {
-        const oneWeekAgo = new Date()
-        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
-        return items.filter(user => new Date(user.createdAt) > oneWeekAgo).length
+    const totalUsers = items.length
+    const activeUsers = items.filter(u => u.isActive !== false).length
+    const verifiedUsers = items.filter(u => u.isEmailVerified).length
+    const recentUsers = (() => {
+        const d = new Date(); d.setDate(d.getDate() - 7)
+        return items.filter(u => new Date(u.createdAt) > d).length
+    })()
+
+    const stats = [
+        { label: 'Total Users', value: totalUsers, icon: Users, color: 'blue', sub: 'All registered' },
+        { label: 'Active', value: activeUsers, icon: UserCheck, color: 'green', sub: 'Currently active' },
+        { label: 'Verified', value: verifiedUsers, icon: Shield, color: 'purple', sub: 'Email verified' },
+        { label: 'New This Week', value: recentUsers, icon: TrendingUp, color: 'orange', sub: 'Recent signups' },
+    ]
+
+    const colorMap = {
+        blue: { bg: 'bg-blue-50', icon: 'bg-blue-100 text-blue-600', val: 'text-blue-700', border: 'border-blue-100' },
+        green: { bg: 'bg-green-50', icon: 'bg-green-100 text-green-600', val: 'text-green-700', border: 'border-green-100' },
+        purple: { bg: 'bg-purple-50', icon: 'bg-purple-100 text-purple-600', val: 'text-purple-700', border: 'border-purple-100' },
+        orange: { bg: 'bg-orange-50', icon: 'bg-orange-100 text-orange-600', val: 'text-orange-700', border: 'border-orange-100' },
     }
 
-    const UserStatusBadge = ({ isActive }) => (
-        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(isActive)}`}>
-            {isActive ? 'Active' : 'Inactive'}
+    const StatusBadge = ({ isActive }) => (
+        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${isActive !== false ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${isActive !== false ? 'bg-green-500' : 'bg-red-500'}`} />
+            {isActive !== false ? 'Active' : 'Inactive'}
         </span>
     )
 
-    const VerificationBadge = ({ isEmailVerified }) => (
-        <span className={`px-2 py-1 text-xs font-medium rounded-full flex items-center gap-1 ${getVerificationColor(isEmailVerified)}`}>
-            {getVerificationIcon(isEmailVerified)}
-            {isEmailVerified ? 'Verified' : 'Unverified'}
+    const VerifyBadge = ({ verified }) => (
+        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${verified ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+            {verified ? <CheckCircle className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
+            {verified ? 'Verified' : 'Pending'}
         </span>
     )
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-            <div className="p-6 max-w-7xl mx-auto space-y-8">
-                {/* Modern Header */}
-                <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-8">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent mb-2">
-                                User Management
-                            </h1>
-                            <p className="text-lg text-gray-600">Manage registered users and their accounts</p>
-                        </div>
-                        <div className="flex items-center gap-4">
-                            <button
-                                onClick={handleRefresh}
-                                disabled={loading}
-                                className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-2xl font-bold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                            >
-                                <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-                                Refresh Users
-                            </button>
-                        </div>
+        <div className="min-h-screen bg-gray-50 p-6">
+            <div className="max-w-7xl mx-auto space-y-6">
+
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
+                        <p className="text-sm text-gray-500 mt-0.5">Manage registered users and their accounts</p>
                     </div>
+                    <button
+                        onClick={() => dispatch(listUsers())}
+                        disabled={loading}
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                    >
+                        <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                        Refresh
+                    </button>
                 </div>
 
-                {/* Modern Error Alert */}
+                {/* Error */}
                 {error && (
-                    <div className="bg-red-50/80 backdrop-blur-sm border border-red-200/50 rounded-3xl p-6 shadow-xl">
-                        <div className="flex items-center space-x-3">
-                            <div className="w-10 h-10 bg-gradient-to-br from-red-100 to-pink-200 rounded-2xl flex items-center justify-center">
-                                <AlertCircle className="h-6 w-6 text-red-600" />
-                            </div>
-                            <div>
-                                <h3 className="text-sm font-bold text-red-800">Error</h3>
-                                <p className="text-sm text-red-700 mt-1">{error}</p>
-                            </div>
-                        </div>
+                    <div className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+                        <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
+                        <p className="text-sm text-red-700">{error}</p>
                     </div>
                 )}
 
-                {/* Modern Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-8 hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm font-bold text-gray-600 mb-2">Total Users</p>
-                                <p className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent">{getTotalUsers()}</p>
-                                <p className="text-xs text-gray-500 mt-1">All registered users</p>
-                            </div>
-                            <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-200 rounded-2xl flex items-center justify-center shadow-lg">
-                                <User className="w-8 h-8 text-blue-600" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-8 hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm font-bold text-gray-600 mb-2">Active Users</p>
-                                <p className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-green-900 to-emerald-900 bg-clip-text text-transparent">{getActiveUsers()}</p>
-                                <p className="text-xs text-gray-500 mt-1">Currently active</p>
-                            </div>
-                            <div className="w-16 h-16 bg-gradient-to-br from-green-100 to-emerald-200 rounded-2xl flex items-center justify-center shadow-lg">
-                                <CheckCircle className="w-8 h-8 text-green-600" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-8 hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm font-bold text-gray-600 mb-2">Verified Users</p>
-                                <p className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-purple-900 to-pink-900 bg-clip-text text-transparent">{getVerifiedUsers()}</p>
-                                <p className="text-xs text-gray-500 mt-1">Email verified</p>
-                            </div>
-                            <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-pink-200 rounded-2xl flex items-center justify-center shadow-lg">
-                                <Shield className="w-8 h-8 text-purple-600" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-8 hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm font-bold text-gray-600 mb-2">New This Week</p>
-                                <p className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-orange-900 to-amber-900 bg-clip-text text-transparent">{getRecentUsers()}</p>
-                                <p className="text-xs text-gray-500 mt-1">Recent signups</p>
-                            </div>
-                            <div className="w-16 h-16 bg-gradient-to-br from-orange-100 to-amber-200 rounded-2xl flex items-center justify-center shadow-lg">
-                                <Calendar className="w-8 h-8 text-orange-600" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Modern Filter and Users List */}
-                <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 overflow-hidden">
-                    <div className="p-8 border-b border-white/20 bg-gradient-to-r from-blue-50/50 to-indigo-50/50">
-                        <div className="flex justify-between items-center">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-indigo-200 rounded-2xl flex items-center justify-center">
-                                    <User className="w-6 h-6 text-blue-600" />
+                {/* Stats */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {stats.map(({ label, value, icon: Icon, color, sub }) => {
+                        const c = colorMap[color]
+                        return (
+                            <div key={label} className={`bg-white rounded-xl border ${c.border} p-5 flex items-center gap-4`}>
+                                <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${c.icon}`}>
+                                    <Icon className="w-5 h-5" />
                                 </div>
                                 <div>
-                                    <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent">
-                                        All Users
-                                    </h2>
-                                    <p className="text-gray-600 mt-1 text-lg">Manage and track user accounts</p>
+                                    <p className={`text-2xl font-bold ${c.val}`}>{value}</p>
+                                    <p className="text-xs font-semibold text-gray-700 leading-none">{label}</p>
+                                    <p className="text-xs text-gray-400 mt-0.5">{sub}</p>
                                 </div>
                             </div>
+                        )
+                    })}
+                </div>
+
+                {/* Table Card */}
+                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                    {/* Toolbar */}
+                    <div className="px-5 py-4 border-b border-gray-100 flex flex-wrap items-center gap-3">
+                        <div className="relative flex-1 min-w-48">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <input
+                                type="text"
+                                placeholder="Search by name, email or phone…"
+                                value={searchTerm}
+                                onChange={e => setSearchTerm(e.target.value)}
+                                className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 bg-gray-50"
+                            />
                         </div>
-
-                        {/* Modern Filters */}
-                        <div className="mt-6 flex flex-wrap gap-4">
-                            <div className="flex items-center gap-2">
-                                <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                    <input
-                                        type="text"
-                                        placeholder="Search users..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="pl-10 pr-4 py-3 text-sm border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                                <Filter className="w-4 h-4 text-gray-500" />
-                                <select
-                                    value={statusFilter}
-                                    onChange={(e) => setStatusFilter(e.target.value)}
-                                    className="px-6 py-3 text-sm border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl"
-                                >
-                                    <option value="all">All Status</option>
-                                    <option value="active">Active</option>
-                                    <option value="inactive">Inactive</option>
-                                </select>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                                <Shield className="w-4 h-4 text-gray-500" />
-                                <select
-                                    value={verificationFilter}
-                                    onChange={(e) => setVerificationFilter(e.target.value)}
-                                    className="px-6 py-3 text-sm border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl"
-                                >
-                                    <option value="all">All Verification</option>
-                                    <option value="verified">Verified</option>
-                                    <option value="unverified">Unverified</option>
-                                </select>
-                            </div>
+                        <div className="flex items-center gap-2">
+                            <Filter className="w-4 h-4 text-gray-400" />
+                            <select
+                                value={statusFilter}
+                                onChange={e => setStatusFilter(e.target.value)}
+                                className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 bg-gray-50"
+                            >
+                                <option value="all">All Status</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                            <select
+                                value={verificationFilter}
+                                onChange={e => setVerificationFilter(e.target.value)}
+                                className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 bg-gray-50"
+                            >
+                                <option value="all">All Verification</option>
+                                <option value="verified">Verified</option>
+                                <option value="unverified">Unverified</option>
+                            </select>
                         </div>
+                        <span className="text-xs text-gray-400 ml-auto">{filteredUsers.length} user{filteredUsers.length !== 1 ? 's' : ''}</span>
                     </div>
 
-                    <div className="p-8">
-                        {loading ? (
-                            <div className="space-y-6">
-                                {[1, 2, 3].map(i => (
-                                    <div key={i} className="h-32 bg-gradient-to-r from-gray-200 to-gray-300 rounded-2xl animate-pulse"></div>
-                                ))}
+                    {/* Table */}
+                    {loading ? (
+                        <div className="divide-y divide-gray-50">
+                            {[1, 2, 3, 4, 5].map(i => (
+                                <div key={i} className="px-5 py-4 flex items-center gap-4 animate-pulse">
+                                    <div className="w-9 h-9 bg-gray-200 rounded-full" />
+                                    <div className="flex-1 space-y-1.5">
+                                        <div className="h-3.5 bg-gray-200 rounded w-40" />
+                                        <div className="h-3 bg-gray-100 rounded w-56" />
+                                    </div>
+                                    <div className="h-6 bg-gray-200 rounded-full w-16" />
+                                    <div className="h-6 bg-gray-100 rounded-full w-16" />
+                                </div>
+                            ))}
+                        </div>
+                    ) : filteredUsers.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-16 text-center">
+                            <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center mb-3">
+                                <User className="w-7 h-7 text-gray-400" />
                             </div>
-                        ) : filteredUsers.length > 0 ? (
-                            <div className="space-y-6">
-                                {filteredUsers.map((user) => (
-                                    <div key={user._id} className="bg-white/50 backdrop-blur-sm border border-gray-200/50 rounded-3xl p-8 hover:shadow-xl hover:bg-white/70 transition-all duration-300 transform hover:scale-[1.02]">
-                                        <div className="flex items-start justify-between">
-                                            <div className="flex-1">
-                                                <div className="flex items-center space-x-4 mb-6">
-                                                    <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                            <p className="text-base font-semibold text-gray-700">No users found</p>
+                            <p className="text-sm text-gray-400 mt-1">
+                                {searchTerm || statusFilter !== 'all' || verificationFilter !== 'all'
+                                    ? 'Try adjusting your filters'
+                                    : 'No users have registered yet'}
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="bg-gray-50 border-b border-gray-100">
+                                        <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">User</th>
+                                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Contact</th>
+                                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Verification</th>
+                                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Joined</th>
+                                        <th className="text-right px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-50">
+                                    {filteredUsers.map(user => (
+                                        <tr key={user._id} className="hover:bg-gray-50/60 transition-colors">
+                                            <td className="px-5 py-3.5">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
                                                         {user.name?.charAt(0)?.toUpperCase() || 'U'}
                                                     </div>
                                                     <div>
-                                                        <h3 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent">
-                                                            {user.name || 'Unknown User'}
-                                                        </h3>
-                                                        <p className="text-gray-600 mt-1">{user.email}</p>
-                                                    </div>
-                                                    <div className="ml-auto flex gap-3">
-                                                        <UserStatusBadge isActive={user.isActive} />
-                                                        <VerificationBadge isEmailVerified={user.isEmailVerified} />
+                                                        <p className="font-semibold text-gray-900">{user.name || 'Unknown'}</p>
+                                                        <p className="text-xs text-gray-400">{user.email}</p>
                                                     </div>
                                                 </div>
-
-                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                                                    <div className="bg-gradient-to-r from-blue-50/50 to-indigo-50/50 rounded-2xl p-4 border border-blue-100/50">
-                                                        <div className="flex items-center gap-3 mb-2">
-                                                            <Mail className="w-5 h-5 text-blue-600" />
-                                                            <p className="text-sm font-bold text-gray-700">Email</p>
-                                                        </div>
-                                                        <p className="font-bold text-gray-900 text-lg">{user.email || 'N/A'}</p>
-                                                    </div>
-                                                    <div className="bg-gradient-to-r from-green-50/50 to-emerald-50/50 rounded-2xl p-4 border border-green-100/50">
-                                                        <div className="flex items-center gap-3 mb-2">
-                                                            <Phone className="w-5 h-5 text-green-600" />
-                                                            <p className="text-sm font-bold text-gray-700">Phone</p>
-                                                        </div>
-                                                        <p className="font-bold text-gray-900 text-lg">{user.phone || 'N/A'}</p>
-                                                    </div>
-                                                    <div className="bg-gradient-to-r from-purple-50/50 to-pink-50/50 rounded-2xl p-4 border border-purple-100/50">
-                                                        <div className="flex items-center gap-3 mb-2">
-                                                            <Calendar className="w-5 h-5 text-purple-600" />
-                                                            <p className="text-sm font-bold text-gray-700">Joined</p>
-                                                        </div>
-                                                        <p className="font-bold text-gray-900 text-lg">
-                                                            {new Date(user.createdAt).toLocaleDateString()}
-                                                        </p>
-                                                    </div>
-                                                </div>
-
-                                                {user.addresses && user.addresses.length > 0 && (
-                                                    <div className="mb-6">
-                                                        <p className="text-sm text-gray-600 mb-3 font-bold">Addresses ({user.addresses.length}):</p>
-                                                        <div className="space-y-2">
-                                                            {user.addresses.slice(0, 2).map((address, index) => (
-                                                                <div key={index} className="flex items-center gap-3 text-sm bg-gradient-to-r from-amber-50/50 to-orange-50/50 rounded-xl p-3 border border-amber-100/50">
-                                                                    <MapPin className="w-4 h-4 text-amber-600" />
-                                                                    <span className="text-gray-700 font-medium">
-                                                                        {address.address}, {address.city}, {address.state} {address.pincode}
-                                                                    </span>
-                                                                    {address.isDefault && (
-                                                                        <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full font-bold">Default</span>
-                                                                    )}
-                                                                </div>
-                                                            ))}
-                                                            {user.addresses.length > 2 && (
-                                                                <p className="text-xs text-gray-500 font-medium">
-                                                                    +{user.addresses.length - 2} more addresses
-                                                                </p>
-                                                            )}
-                                                        </div>
-                                                    </div>
+                                            </td>
+                                            <td className="px-4 py-3.5">
+                                                <p className="text-gray-700">{user.phone || <span className="text-gray-300">—</span>}</p>
+                                                {user.addresses?.length > 0 && (
+                                                    <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
+                                                        <MapPin className="w-3 h-3" />
+                                                        {user.addresses.length} address{user.addresses.length > 1 ? 'es' : ''}
+                                                    </p>
                                                 )}
-                                            </div>
-
-                                            <div className="flex flex-col space-y-3 ml-6">
-                                                <button
-                                                    onClick={() => handleViewUser(user)}
-                                                    className="group relative px-6 py-3 text-sm font-bold text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl shadow-xl shadow-blue-500/25 hover:shadow-2xl hover:shadow-blue-500/30 hover:from-blue-600 hover:to-blue-700 transform hover:scale-105 transition-all duration-200 flex items-center gap-2"
-                                                >
-                                                    <Eye className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                                                    View Details
-                                                </button>
-
-                                                <button
-                                                    onClick={() => handleEditUser(user)}
-                                                    className="group relative px-6 py-3 text-sm font-bold text-white bg-gradient-to-r from-gray-500 to-gray-600 rounded-2xl shadow-xl shadow-gray-500/25 hover:shadow-2xl hover:shadow-gray-500/30 hover:from-gray-600 hover:to-gray-700 transform hover:scale-105 transition-all duration-200 flex items-center gap-2"
-                                                >
-                                                    <Edit className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                                                    Edit
-                                                </button>
-
-                                                <button
-                                                    onClick={() => handleToggleStatus(user)}
-                                                    disabled={updateLoading}
-                                                    className={`group relative px-6 py-3 text-sm font-bold text-white rounded-2xl shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${user.isActive
-                                                        ? 'bg-gradient-to-r from-red-500 to-red-600 shadow-red-500/25 hover:shadow-2xl hover:shadow-red-500/30 hover:from-red-600 hover:to-red-700'
-                                                        : 'bg-gradient-to-r from-green-500 to-green-600 shadow-green-500/25 hover:shadow-2xl hover:shadow-green-500/30 hover:from-green-600 hover:to-green-700'
+                                            </td>
+                                            <td className="px-4 py-3.5">
+                                                <StatusBadge isActive={user.isActive} />
+                                            </td>
+                                            <td className="px-4 py-3.5">
+                                                <VerifyBadge verified={user.isEmailVerified} />
+                                            </td>
+                                            <td className="px-4 py-3.5 text-gray-500 text-xs">
+                                                {new Date(user.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                            </td>
+                                            <td className="px-5 py-3.5">
+                                                <div className="flex items-center justify-end gap-1.5">
+                                                    <button
+                                                        onClick={() => handleViewUser(user)}
+                                                        title="View Details"
+                                                        className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                    >
+                                                        <Eye className="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleEditUser(user)}
+                                                        title="Edit User"
+                                                        className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                                                    >
+                                                        <Edit className="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleToggleStatus(user)}
+                                                        disabled={updateLoading}
+                                                        title={user.isActive !== false ? 'Deactivate' : 'Activate'}
+                                                        className={`p-1.5 rounded-lg transition-colors disabled:opacity-40 ${user.isActive !== false
+                                                            ? 'text-gray-500 hover:text-red-600 hover:bg-red-50'
+                                                            : 'text-gray-500 hover:text-green-600 hover:bg-green-50'
                                                         }`}
-                                                >
-                                                    {user.isActive ? <XCircle className="w-4 h-4 group-hover:scale-110 transition-transform" /> : <CheckCircle className="w-4 h-4 group-hover:scale-110 transition-transform" />}
-                                                    {user.isActive ? 'Deactivate' : 'Activate'}
-                                                </button>
-
-                                                <button
-                                                    onClick={() => handleDeleteUser(user)}
-                                                    disabled={deleteLoading}
-                                                    className="group relative px-6 py-3 text-sm font-bold text-white bg-gradient-to-r from-red-500 to-red-600 rounded-2xl shadow-xl shadow-red-500/25 hover:shadow-2xl hover:shadow-red-500/30 hover:from-red-600 hover:to-red-700 transform hover:scale-105 transition-all duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                                                >
-                                                    <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                                                    Delete
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="text-center py-16">
-                                <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg">
-                                    <User className="w-12 h-12 text-gray-400" />
-                                </div>
-                                <h3 className="text-2xl font-bold text-gray-900 mb-2">No users found</h3>
-                                <p className="text-lg text-gray-600">
-                                    {searchTerm || statusFilter !== 'all' || verificationFilter !== 'all'
-                                        ? 'No users match your current filters.'
-                                        : 'No users have registered yet.'}
-                                </p>
-                            </div>
-                        )}
-                    </div>
+                                                    >
+                                                        {user.isActive !== false ? <XCircle className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteUser(user)}
+                                                        disabled={deleteLoading}
+                                                        title="Delete User"
+                                                        className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-40"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </div>
             </div>
 
-            {/* Modern User Details Modal */}
+            {/* User Details Modal */}
             {showUserDetails && selectedUser && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-50">
-                    <div className="relative top-10 mx-auto p-6 w-11/12 md:w-4/5 lg:w-3/4 xl:w-2/3 shadow-2xl rounded-3xl bg-white/95 backdrop-blur-sm border border-white/20">
-                        <div className="flex justify-between items-center mb-8">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-indigo-200 rounded-2xl flex items-center justify-center shadow-lg">
-                                    <User className="w-6 h-6 text-blue-600" />
+                <Portal>
+                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-start justify-center z-[9999] overflow-y-auto py-10 px-4">
+                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl border border-gray-100">
+                            {/* Modal Header */}
+                            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center">
+                                        <User className="w-5 h-5 text-blue-600" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-base font-bold text-gray-900">User Details</h3>
+                                        <p className="text-xs text-gray-400">{selectedUser.name}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h3 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent">
-                                        User Details - {selectedUser.name}
-                                    </h3>
-                                    <p className="text-gray-600 mt-1">Complete user information and account details</p>
-                                </div>
+                                <button
+                                    onClick={() => { setShowUserDetails(false); setSelectedUser(null) }}
+                                    className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                                >
+                                    <XCircle className="w-5 h-5" />
+                                </button>
                             </div>
-                            <button
-                                onClick={() => {
-                                    setShowUserDetails(false)
-                                    setSelectedUser(null)
-                                }}
-                                className="p-3 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-2xl transition-all duration-200"
-                            >
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </div>
 
-                        {currentUser ? (
-                            <div className="space-y-8">
-                                {/* Modern User Header */}
-                                <div className="bg-gradient-to-r from-blue-50/80 to-purple-50/80 backdrop-blur-sm p-8 rounded-3xl border border-blue-200/50 shadow-xl">
-                                    <div className="flex items-center gap-6">
-                                        <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-3xl flex items-center justify-center text-white font-bold text-3xl shadow-lg">
+                            {currentUser ? (
+                                <div className="p-6 space-y-5">
+                                    {/* Avatar + Status */}
+                                    <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
+                                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-2xl shrink-0">
                                             {currentUser.name?.charAt(0)?.toUpperCase() || 'U'}
                                         </div>
-                                        <div>
-                                            <h3 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent">{currentUser.name}</h3>
-                                            <p className="text-lg text-gray-600 mt-1">{currentUser.email}</p>
-                                            <div className="flex gap-3 mt-3">
-                                                <UserStatusBadge isActive={currentUser.isActive} />
-                                                <VerificationBadge isEmailVerified={currentUser.isEmailVerified} />
-                                            </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-bold text-gray-900 text-lg truncate">{currentUser.name}</p>
+                                            <p className="text-sm text-gray-500 truncate">{currentUser.email}</p>
                                         </div>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    {/* Modern Basic Information */}
-                                    <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-8 border border-white/20 shadow-xl">
-                                        <div className="flex items-center gap-3 mb-6">
-                                            <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-indigo-200 rounded-2xl flex items-center justify-center">
-                                                <User className="w-5 h-5 text-blue-600" />
-                                            </div>
-                                            <h4 className="text-xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent">
-                                                Basic Information
-                                            </h4>
-                                        </div>
-                                        <div className="space-y-4">
-                                            <div className="flex justify-between items-center">
-                                                <span className="font-bold text-gray-700">Name:</span>
-                                                <span className="text-gray-900 font-semibold">{currentUser.name || 'N/A'}</span>
-                                            </div>
-                                            <div className="flex justify-between items-center">
-                                                <span className="font-bold text-gray-700">Email:</span>
-                                                <span className="text-gray-900 font-semibold">{currentUser.email || 'N/A'}</span>
-                                            </div>
-                                            <div className="flex justify-between items-center">
-                                                <span className="font-bold text-gray-700">Phone:</span>
-                                                <span className="text-gray-900 font-semibold">{currentUser.phone || 'N/A'}</span>
-                                            </div>
-                                            <div className="flex justify-between items-center">
-                                                <span className="font-bold text-gray-700">Member Since:</span>
-                                                <span className="text-gray-900 font-semibold">
-                                                    {new Date(currentUser.createdAt).toLocaleDateString()}
-                                                </span>
-                                            </div>
-                                            <div className="flex justify-between items-center">
-                                                <span className="font-bold text-gray-700">Last Updated:</span>
-                                                <span className="text-gray-900 font-semibold">
-                                                    {new Date(currentUser.updatedAt).toLocaleDateString()}
-                                                </span>
-                                            </div>
+                                        <div className="flex flex-col gap-1.5 items-end">
+                                            <StatusBadge isActive={currentUser.isActive} />
+                                            <VerifyBadge verified={currentUser.isEmailVerified} />
                                         </div>
                                     </div>
 
-                                    {/* Modern Account Status */}
-                                    <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-8 border border-white/20 shadow-xl">
-                                        <div className="flex items-center gap-3 mb-6">
-                                            <div className="w-10 h-10 bg-gradient-to-br from-purple-100 to-pink-200 rounded-2xl flex items-center justify-center">
-                                                <Shield className="w-5 h-5 text-purple-600" />
-                                            </div>
-                                            <h4 className="text-xl font-bold bg-gradient-to-r from-gray-900 via-purple-900 to-pink-900 bg-clip-text text-transparent">
-                                                Account Status
-                                            </h4>
-                                        </div>
-                                        <div className="space-y-4">
-                                            <div className="flex justify-between items-center">
-                                                <span className="font-bold text-gray-700">Status:</span>
-                                                <UserStatusBadge isActive={currentUser.isActive} />
-                                            </div>
-                                            <div className="flex justify-between items-center">
-                                                <span className="font-bold text-gray-700">Email Verified:</span>
-                                                <VerificationBadge isEmailVerified={currentUser.isEmailVerified} />
-                                            </div>
-                                            {currentUser.emailVerificationExpires && (
-                                                <div className="flex justify-between items-center">
-                                                    <span className="font-bold text-gray-700">Verification Expires:</span>
-                                                    <span className="text-gray-900 font-semibold">
-                                                        {new Date(currentUser.emailVerificationExpires).toLocaleString()}
-                                                    </span>
+                                    {/* Info Grid */}
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {[
+                                            { icon: Mail, label: 'Email', value: currentUser.email },
+                                            { icon: Phone, label: 'Phone', value: currentUser.phone || '—' },
+                                            { icon: Calendar, label: 'Member Since', value: new Date(currentUser.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) },
+                                            { icon: Calendar, label: 'Last Updated', value: new Date(currentUser.updatedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) },
+                                        ].map(({ icon: Icon, label, value }) => (
+                                            <div key={label} className="bg-gray-50 rounded-xl p-3.5">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <Icon className="w-3.5 h-3.5 text-gray-400" />
+                                                    <span className="text-xs text-gray-400 font-medium">{label}</span>
                                                 </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Modern Addresses */}
-                                {currentUser.addresses && currentUser.addresses.length > 0 && (
-                                    <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-8 border border-white/20 shadow-xl">
-                                        <div className="flex items-center gap-3 mb-6">
-                                            <div className="w-10 h-10 bg-gradient-to-br from-amber-100 to-orange-200 rounded-2xl flex items-center justify-center">
-                                                <MapPin className="w-5 h-5 text-amber-600" />
+                                                <p className="text-sm font-semibold text-gray-800 truncate">{value}</p>
                                             </div>
-                                            <h4 className="text-xl font-bold bg-gradient-to-r from-gray-900 via-amber-900 to-orange-900 bg-clip-text text-transparent">
+                                        ))}
+                                    </div>
+
+                                    {/* Addresses */}
+                                    {currentUser.addresses?.length > 0 && (
+                                        <div>
+                                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                                                 Addresses ({currentUser.addresses.length})
-                                            </h4>
-                                        </div>
-                                        <div className="space-y-4">
-                                            {currentUser.addresses.map((address, index) => (
-                                                <div key={index} className="bg-gradient-to-r from-amber-50/50 to-orange-50/50 p-6 rounded-2xl border border-amber-100/50">
-                                                    <div className="flex items-start justify-between">
-                                                        <div className="flex-1">
-                                                            <p className="font-bold text-gray-900 text-lg">{address.name || 'Address'}</p>
-                                                            <p className="text-gray-700 mt-1">{address.address}</p>
-                                                            <p className="text-gray-700">
-                                                                {address.city}, {address.state} {address.pincode}
+                                            </p>
+                                            <div className="space-y-2">
+                                                {currentUser.addresses.map((addr, i) => (
+                                                    <div key={i} className="flex items-start gap-3 p-3 bg-amber-50 rounded-xl border border-amber-100">
+                                                        <MapPin className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-sm text-gray-700">
+                                                                {addr.address}, {addr.city}, {addr.state} {addr.pincode}
                                                             </p>
-                                                            {address.landmark && (
-                                                                <p className="text-sm text-gray-600 mt-1">Landmark: {address.landmark}</p>
-                                                            )}
+                                                            {addr.landmark && <p className="text-xs text-gray-400 mt-0.5">Near {addr.landmark}</p>}
                                                         </div>
-                                                        {address.isDefault && (
-                                                            <span className="px-3 py-1 text-xs bg-blue-100 text-blue-800 rounded-full font-bold">
-                                                                Default
-                                                            </span>
+                                                        {addr.isDefault && (
+                                                            <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full font-semibold shrink-0">Default</span>
                                                         )}
                                                     </div>
-                                                </div>
-                                            ))}
+                                                ))}
+                                            </div>
                                         </div>
-                                    </div>
-                                )}
+                                    )}
 
-                                <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200/50">
-                                    <button
-                                        onClick={() => {
-                                            setShowUserDetails(false)
-                                            setSelectedUser(null)
-                                        }}
-                                        className="group relative px-6 py-3 text-sm font-bold text-gray-700 bg-white border-2 border-gray-300 rounded-2xl hover:border-gray-400 hover:bg-gray-50 transform hover:scale-105 transition-all duration-200"
-                                    >
-                                        Close
-                                    </button>
-                                    <button
-                                        onClick={() => handleEditUser(currentUser)}
-                                        className="group relative px-6 py-3 text-sm font-bold text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl shadow-xl shadow-blue-500/25 hover:shadow-2xl hover:shadow-blue-500/30 hover:from-blue-600 hover:to-blue-700 transform hover:scale-105 transition-all duration-200"
-                                    >
-                                        Edit User
-                                    </button>
+                                    {/* Footer */}
+                                    <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
+                                        <button
+                                            onClick={() => { setShowUserDetails(false); setSelectedUser(null) }}
+                                            className="px-4 py-2 text-sm font-semibold text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                                        >
+                                            Close
+                                        </button>
+                                        <button
+                                            onClick={() => { setShowUserDetails(false); handleEditUser(currentUser) }}
+                                            className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                                        >
+                                            <Edit className="w-4 h-4" />
+                                            Edit User
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                        ) : (
-                            <div className="text-center py-16">
-                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                                <p className="mt-4 text-lg text-gray-600">Loading user details...</p>
-                            </div>
-                        )}
+                            ) : (
+                                <div className="flex flex-col items-center justify-center py-16">
+                                    <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent" />
+                                    <p className="text-sm text-gray-500 mt-3">Loading user details…</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
-                </div>
+                </Portal>
             )}
 
-            {/* Modern Edit User Modal */}
+            {/* Edit User Modal */}
             {showEditModal && selectedUser && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-                    <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl p-8 w-full max-w-md mx-4 border border-white/20">
-                        <div className="flex items-center justify-between mb-6">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-indigo-200 rounded-2xl flex items-center justify-center">
-                                    <Edit className="w-5 h-5 text-blue-600" />
+                <Portal>
+                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999] px-4">
+                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md border border-gray-100">
+                            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-9 h-9 bg-gray-100 rounded-xl flex items-center justify-center">
+                                        <Edit className="w-5 h-5 text-gray-600" />
+                                    </div>
+                                    <h3 className="text-base font-bold text-gray-900">Edit User</h3>
                                 </div>
-                                <h3 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent">Edit User</h3>
-                            </div>
-                            <button
-                                onClick={() => setShowEditModal(false)}
-                                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-all duration-200"
-                            >
-                                <XCircle className="w-6 h-6" />
-                            </button>
-                        </div>
-
-                        <form onSubmit={handleEditSubmit} className="space-y-6">
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-3">
-                                    Name
-                                </label>
-                                <input
-                                    type="text"
-                                    value={editForm.name}
-                                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                                    className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 bg-white/80 backdrop-blur-sm shadow-lg"
-                                    required
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-3">
-                                    Email
-                                </label>
-                                <input
-                                    type="email"
-                                    value={editForm.email}
-                                    onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                                    className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 bg-white/80 backdrop-blur-sm shadow-lg"
-                                    required
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-3">
-                                    Phone
-                                </label>
-                                <input
-                                    type="tel"
-                                    value={editForm.phone}
-                                    onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                                    className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 bg-white/80 backdrop-blur-sm shadow-lg"
-                                />
-                            </div>
-
-                            <div className="flex items-center p-4 bg-gradient-to-r from-green-50/50 to-emerald-50/50 rounded-2xl border border-green-100/50">
-                                <input
-                                    type="checkbox"
-                                    id="isActive"
-                                    checked={editForm.isActive}
-                                    onChange={(e) => setEditForm({ ...editForm, isActive: e.target.checked })}
-                                    className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                />
-                                <label htmlFor="isActive" className="ml-3 text-sm font-bold text-gray-700">
-                                    Active User
-                                </label>
-                            </div>
-
-                            <div className="flex justify-end space-x-4 pt-6">
                                 <button
-                                    type="button"
                                     onClick={() => setShowEditModal(false)}
-                                    className="group relative px-6 py-3 text-sm font-bold text-gray-700 bg-white border-2 border-gray-300 rounded-2xl hover:border-gray-400 hover:bg-gray-50 transform hover:scale-105 transition-all duration-200"
+                                    className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                                 >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={updateLoading}
-                                    className="group relative px-6 py-3 text-sm font-bold text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl shadow-xl shadow-blue-500/25 hover:shadow-2xl hover:shadow-blue-500/30 hover:from-blue-600 hover:to-blue-700 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                                >
-                                    {updateLoading ? (
-                                        <div className="flex items-center gap-2">
-                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                                            Updating...
-                                        </div>
-                                    ) : (
-                                        'Update User'
-                                    )}
+                                    <XCircle className="w-5 h-5" />
                                 </button>
                             </div>
-                        </form>
+
+                            <form onSubmit={handleEditSubmit} className="p-6 space-y-4">
+                                {[
+                                    { label: 'Name', type: 'text', key: 'name', required: true },
+                                    { label: 'Email', type: 'email', key: 'email', required: true },
+                                    { label: 'Phone', type: 'tel', key: 'phone', required: false },
+                                ].map(({ label, type, key, required }) => (
+                                    <div key={key}>
+                                        <label className="block text-xs font-semibold text-gray-600 mb-1.5">{label}</label>
+                                        <input
+                                            type={type}
+                                            value={editForm[key]}
+                                            onChange={e => setEditForm({ ...editForm, [key]: e.target.value })}
+                                            required={required}
+                                            className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 bg-gray-50 transition-colors"
+                                        />
+                                    </div>
+                                ))}
+
+                                <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer select-none">
+                                    <input
+                                        type="checkbox"
+                                        checked={editForm.isActive}
+                                        onChange={e => setEditForm({ ...editForm, isActive: e.target.checked })}
+                                        className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                                    />
+                                    <span className="text-sm font-semibold text-gray-700">Active User</span>
+                                </label>
+
+                                <div className="flex justify-end gap-3 pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowEditModal(false)}
+                                        className="px-4 py-2 text-sm font-semibold text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={updateLoading}
+                                        className="px-5 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center gap-2"
+                                    >
+                                        {updateLoading ? (
+                                            <>
+                                                <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-white border-t-transparent" />
+                                                Saving…
+                                            </>
+                                        ) : 'Save Changes'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                </div>
+                </Portal>
             )}
         </div>
     )

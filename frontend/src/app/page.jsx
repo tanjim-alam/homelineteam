@@ -1,4 +1,5 @@
 import Hero from '@/components/Hero';
+import OfferBannerSection from '@/components/OfferBannerSection';
 import CategorySection from '@/components/CategorySection';
 import FeaturedProducts from '@/components/FeaturedProducts';
 import WhyChooseUs from '@/components/WhyChooseUs';
@@ -10,6 +11,9 @@ export default function Home() {
     <main className="min-h-screen">
       {/* Hero Section */}
       <Hero />
+
+      {/* Offer Banners */}
+      <OfferBannerSection />
 
       {/* Category Section */}
       <CategorySection />

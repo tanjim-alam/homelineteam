@@ -26,10 +26,10 @@ exports.getDashboardAnalytics = async (req, res, next) => {
         });
 
         // Calculate this month's revenue
-        const thisMonthRevenue = thisMonthOrders.reduce((total, order) => total + (order.totalAmount || 0), 0);
+        const thisMonthRevenue = thisMonthOrders.reduce((total, order) => total + (order.total || 0), 0);
 
         // Calculate last month's revenue
-        const lastMonthRevenue = lastMonthOrders.reduce((total, order) => total + (order.totalAmount || 0), 0);
+        const lastMonthRevenue = lastMonthOrders.reduce((total, order) => total + (order.total || 0), 0);
 
         // Calculate revenue growth percentage
         const revenueGrowth = lastMonthRevenue > 0
@@ -55,7 +55,7 @@ exports.getDashboardAnalytics = async (req, res, next) => {
                         month: { $month: '$createdAt' },
                         day: { $dayOfMonth: '$createdAt' }
                     },
-                    revenue: { $sum: '$totalAmount' },
+                    revenue: { $sum: '$total' },
                     orders: { $sum: 1 }
                 }
             },

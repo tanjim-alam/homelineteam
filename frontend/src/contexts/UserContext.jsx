@@ -23,13 +23,15 @@ export const UserProvider = ({ children }) => {
         checkAuthStatus();
     }, []);
 
+    const normaliseUser = (u) => u ? ({ ...u, id: u.id || u._id }) : null;
+
     const checkAuthStatus = async () => {
         try {
             setLoading(true);
             const response = await apiService.getUserProfile();
 
             if (response.success && response.user) {
-                setUser(response.user);
+                setUser(normaliseUser(response.user));
                 setIsAuthenticated(true);
             } else {
                 setUser(null);
@@ -44,7 +46,6 @@ export const UserProvider = ({ children }) => {
     };
 
     const register = async (userData) => {
-        // Prevent multiple simultaneous registrations
         if (isRegistering) {
             return { success: false, error: 'Registration already in progress' };
         }
@@ -55,7 +56,7 @@ export const UserProvider = ({ children }) => {
             if (response.success) {
                 return { success: true, data: response };
             }
-            return { success: false, error: response.message };
+            return { success: false, error: response.error || response.message || 'Registration failed' };
         } catch (error) {
             return { success: false, error: error.message };
         } finally {
@@ -67,12 +68,12 @@ export const UserProvider = ({ children }) => {
         try {
             const response = await apiService.verifyUserEmail(email, otp);
             if (response.success) {
-                setUser(response.user);
+                setUser(normaliseUser(response.user));
                 setIsAuthenticated(true);
                 apiService.storeToken(response.token);
                 return { success: true, data: response };
             }
-            return { success: false, error: response.message };
+            return { success: false, error: response.error || response.message || 'Verification failed' };
         } catch (error) {
             return { success: false, error: error.message };
         }
@@ -81,7 +82,8 @@ export const UserProvider = ({ children }) => {
     const resendEmailOTP = async (email) => {
         try {
             const response = await apiService.resendUserEmailOTP(email);
-            return { success: response.success, message: response.message };
+            if (response.success) return { success: true, message: response.message };
+            return { success: false, error: response.error || response.message || 'Failed to resend code' };
         } catch (error) {
             return { success: false, error: error.message };
         }
@@ -92,12 +94,11 @@ export const UserProvider = ({ children }) => {
             const response = await apiService.loginUser(credentials);
 
             if (response.success) {
-                setUser(response.user);
+                setUser(normaliseUser(response.user));
                 setIsAuthenticated(true);
                 apiService.storeToken(response.token);
                 return { success: true, data: response };
             } else if (response.requiresVerification) {
-                // User needs email verification
                 return {
                     success: false,
                     requiresVerification: true,
@@ -106,7 +107,7 @@ export const UserProvider = ({ children }) => {
                     developmentOTP: response.developmentOTP
                 };
             }
-            return { success: false, error: response.message };
+            return { success: false, error: response.error || response.message || 'Login failed' };
         } catch (error) {
             return { success: false, error: error.message };
         }
@@ -132,10 +133,10 @@ export const UserProvider = ({ children }) => {
         try {
             const response = await apiService.updateUserProfile(profileData);
             if (response.success) {
-                setUser(response.user);
+                setUser(normaliseUser(response.user));
                 return { success: true, data: response };
             }
-            return { success: false, error: response.message };
+            return { success: false, error: response.error || response.message || 'Failed to update profile' };
         } catch (error) {
             return { success: false, error: error.message };
         }
@@ -145,11 +146,10 @@ export const UserProvider = ({ children }) => {
         try {
             const response = await apiService.addUserAddress(addressData);
             if (response.success) {
-                // Refresh user data to get updated addresses
                 await checkAuthStatus();
                 return { success: true, data: response };
             }
-            return { success: false, error: response.message };
+            return { success: false, error: response.error || response.message || 'Failed to add address' };
         } catch (error) {
             return { success: false, error: error.message };
         }
@@ -159,11 +159,10 @@ export const UserProvider = ({ children }) => {
         try {
             const response = await apiService.updateUserAddress(addressId, addressData);
             if (response.success) {
-                // Refresh user data to get updated addresses
                 await checkAuthStatus();
                 return { success: true, data: response };
             }
-            return { success: false, error: response.message };
+            return { success: false, error: response.error || response.message || 'Failed to update address' };
         } catch (error) {
             return { success: false, error: error.message };
         }
@@ -173,11 +172,10 @@ export const UserProvider = ({ children }) => {
         try {
             const response = await apiService.deleteUserAddress(addressId);
             if (response.success) {
-                // Refresh user data to get updated addresses
                 await checkAuthStatus();
                 return { success: true, data: response };
             }
-            return { success: false, error: response.message };
+            return { success: false, error: response.error || response.message || 'Failed to delete address' };
         } catch (error) {
             return { success: false, error: error.message };
         }
@@ -186,7 +184,8 @@ export const UserProvider = ({ children }) => {
     const forgotPassword = async (email) => {
         try {
             const response = await apiService.forgotUserPassword(email);
-            return { success: response.success, message: response.message };
+            if (response.success) return { success: true, message: response.message };
+            return { success: false, error: response.error || response.message || 'Failed to send reset code' };
         } catch (error) {
             return { success: false, error: error.message };
         }
@@ -195,7 +194,8 @@ export const UserProvider = ({ children }) => {
     const resetPassword = async (email, token, newPassword) => {
         try {
             const response = await apiService.resetUserPassword(email, token, newPassword);
-            return { success: response.success, message: response.message };
+            if (response.success) return { success: true, message: response.message };
+            return { success: false, error: response.error || response.message || 'Password reset failed' };
         } catch (error) {
             return { success: false, error: error.message };
         }

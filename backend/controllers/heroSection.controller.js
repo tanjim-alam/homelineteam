@@ -1,5 +1,5 @@
 const HeroSection = require('../models/HeroSection');
-const { uploadBuffer } = require('../utils/cloudinary');
+const { uploadBuffer, cloudinary } = require('../utils/cloudinary');
 
 // Get hero section data
 const getHeroSection = async (req, res) => {

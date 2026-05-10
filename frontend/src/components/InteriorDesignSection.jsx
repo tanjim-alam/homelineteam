@@ -1,5 +1,3 @@
-'use client';
-
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, Home, Palette, Users, Award, Clock, CheckCircle } from 'lucide-react';
@@ -22,7 +20,7 @@ const InteriorDesignSection = () => {
       features: ['Layout Design', 'Cabinet Selection', 'Countertop Options', 'Appliance Integration'],
       gradient: 'from-orange-500 to-red-500',
       hoverBorder: 'orange-500',
-      href: '/collections/kitchen'
+      href: '/interior-design/kitchen'
     },
     {
       icon: Users,
@@ -31,7 +29,7 @@ const InteriorDesignSection = () => {
       features: ['1 BHK Packages', 'Custom Solutions'],
       gradient: 'from-green-500 to-emerald-500',
       hoverBorder: 'green-500',
-      href: '/collections/1-bhk-package'
+      href: '/interior-design/1-bhk-package'
     }
   ];
 

@@ -37,7 +37,7 @@ exports.createTwoBHKPackage = async (req, res, next) => {
             availableWardrobeTypes: parseMaybe(availableWardrobeTypes) || [],
             availableMaterials: parseMaybe(availableMaterials) || [],
             availableFeatures: parseMaybe(availableFeatures) || [],
-            hasVariants: !!hasVariants,
+            hasVariants: hasVariants === 'true' || hasVariants === true,
             variants: parseMaybe(variants) || [],
             variantOptions: parseMaybe(variantOptions) || {},
             dynamicFields: parseMaybe(dynamicFields) || {},

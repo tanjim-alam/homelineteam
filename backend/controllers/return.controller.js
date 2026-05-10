@@ -2,6 +2,8 @@ const Return = require('../models/Return');
 const Order = require('../models/Order');
 const User = require('../models/User');
 const Product = require('../models/Product');
+const Settings = require('../models/Settings');
+const { sendReturnAdminNotificationEmail } = require('../utils/emailService');
 
 // Create a new return/exchange request
 exports.createReturnRequest = async (req, res, next) => {
@@ -76,6 +78,11 @@ exports.createReturnRequest = async (req, res, next) => {
             { path: 'user', select: 'name email' },
             { path: 'items.productId', select: 'name price images' }
         ]);
+
+        Settings.findOne().then(s => {
+            const adminEmail = s?.returnNotificationEmail || process.env.EMAIL_TO || '';
+            sendReturnAdminNotificationEmail(returnRequest, adminEmail).catch(() => {});
+        }).catch(() => {});
 
         res.status(201).json({
             success: true,

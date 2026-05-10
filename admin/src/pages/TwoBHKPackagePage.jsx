@@ -1,1040 +1,958 @@
-'use client';
-
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Package, Home, ChefHat } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { Plus, Edit, Trash2, X, Eye, Home, ToggleLeft, ToggleRight } from 'lucide-react';
 import apiClient from '../api/client';
+import { useToast } from '../context/ToastContext';
+
+const KITCHEN_LAYOUTS = [
+  { type: 'straight', name: 'Straight', description: 'Single-wall design' },
+  { type: 'l-shape',  name: 'L-Shape',  description: 'Corner design' },
+  { type: 'u-shape',  name: 'U-Shape',  description: 'Three-wall design' },
+  { type: 'parallel', name: 'Parallel', description: 'Two-wall design' },
+  { type: 'island',   name: 'Island',   description: 'Island kitchen' },
+];
+
+const WARDROBE_TYPES = [
+  { type: '2-door',  name: '2-Door',  description: 'Two panel door' },
+  { type: '3-door',  name: '3-Door',  description: 'Three panel door' },
+  { type: '4-door',  name: '4-Door',  description: 'Four panel door' },
+  { type: '5-door',  name: '5-Door',  description: 'Five panel door' },
+  { type: 'sliding', name: 'Sliding', description: 'Sliding door' },
+];
+
+const MATERIAL_OPTIONS = [
+  'Plywood', 'MDF', 'Particle Board', 'Granite', 'Quartz', 'Marble',
+  'Laminate', 'Tiles', 'Glass', 'Acrylic', 'Veneer', 'SS Hardware',
+];
+
+const FEATURE_OPTIONS = [
+  { id: 'led-lighting',      name: 'LED Lighting',        category: 'lighting' },
+  { id: 'soft-close',        name: 'Soft Close Drawers',  category: 'hardware' },
+  { id: 'pull-out',          name: 'Pull-out Storage',    category: 'storage' },
+  { id: 'corner-solution',   name: 'Corner Solutions',    category: 'storage' },
+  { id: 'tall-unit',         name: 'Tall Storage Unit',   category: 'storage' },
+  { id: 'breakfast-counter', name: 'Breakfast Counter',   category: 'convenience' },
+  { id: 'island',            name: 'Kitchen Island',      category: 'kitchen' },
+  { id: 'pantry',            name: 'Pantry Storage',      category: 'storage' },
+  { id: 'walk-in-wardrobe',  name: 'Walk-in Wardrobe',    category: 'wardrobe' },
+  { id: 'built-in-storage',  name: 'Built-in Storage',    category: 'storage' },
+];
+
+const INCLUSION_OPTIONS = [
+  { item: 'Modular Kitchen',         category: 'kitchen',   quantity: 1 },
+  { item: 'Master Bedroom Wardrobe', category: 'wardrobe',  quantity: 1 },
+  { item: 'Second Bedroom Wardrobe', category: 'wardrobe',  quantity: 1 },
+  { item: 'Kitchen Sink',            category: 'kitchen',   quantity: 1 },
+  { item: 'Faucet',                  category: 'kitchen',   quantity: 1 },
+  { item: 'Chimney',                 category: 'kitchen',   quantity: 1 },
+  { item: 'Gas Hob',                 category: 'kitchen',   quantity: 1 },
+  { item: 'LED Lights',              category: 'lighting',  quantity: 6 },
+  { item: 'Soft Close Hinges',       category: 'hardware',  quantity: 1 },
+  { item: 'Living Room Storage',     category: 'furniture', quantity: 1 },
+];
+
+const STYLE_OPTIONS  = ['modern', 'traditional', 'contemporary', 'minimalist', 'industrial', 'scandinavian'];
+const COLOR_OPTIONS  = ['white', 'wood', 'grey', 'colorful', 'black', 'neutral'];
+const SUITABLE_FOR   = ['2bhk', '2bhk+study', 'small-family', 'couple', 'family'];
+
+const EMPTY_FORM = {
+  name: '', slug: '', description: '',
+  basePrice: '', mrp: '', discount: '',
+  mainImages: [], imagePreviews: [],
+  category: '2bhk-package',
+  kitchenLayout: 'l-shape',
+  wardrobe1Type: '3-door',
+  wardrobe2Type: '3-door',
+  materials: [], features: [], inclusions: [],
+  availableLayouts: [], availableWardrobeTypes: [], availableMaterials: [], availableFeatures: [],
+  hasVariants: false,
+  variants: [],
+  variantOptions: {}, dynamicFields: {},
+  packageMetadata: {
+    suitableFor: [], style: [], colorScheme: [],
+    deliveryTime: '', warranty: '',
+    area: { min: '', max: '' },
+  },
+  metaData: { title: '', description: '', keywords: '' },
+  tags: '',
+};
+
+const Field = ({ label, children }) => (
+  <div>
+    <label className="block text-xs font-semibold text-gray-600 mb-1">{label}</label>
+    {children}
+  </div>
+);
+
+const inp = 'w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent';
+
+const TagToggle = ({ values, selected, onToggle }) => (
+  <div className="flex flex-wrap gap-2">
+    {values.map(v => (
+      <button
+        key={v}
+        type="button"
+        onClick={() => onToggle(v)}
+        className={`px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${
+          selected.includes(v)
+            ? 'bg-indigo-600 text-white border-indigo-600'
+            : 'bg-white text-gray-600 border-gray-300 hover:border-indigo-400'
+        }`}
+      >
+        {v}
+      </button>
+    ))}
+  </div>
+);
 
 export default function TwoBHKPackagePage() {
-    const [items, setItems] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [showForm, setShowForm] = useState(false);
-    const [editing, setEditing] = useState(null);
-    const [saving, setSaving] = useState(false);
-    const [error, setError] = useState('');
+  const [items, setItems]       = useState([]);
+  const { showToast } = useToast();
+  const [loading, setLoading]   = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing]   = useState(null);
+  const [saving, setSaving]     = useState(false);
+  const [viewItem, setViewItem] = useState(null);
+  const [form, setForm]         = useState(EMPTY_FORM);
 
-    const [form, setForm] = useState({
-        name: '',
-        slug: '',
-        description: '',
-        basePrice: '',
-        mrp: '',
-        discount: '',
-        mainImages: [],
-        imagePreviews: [], // For preview URLs
-        category: '2bhk-package',
-        kitchenLayout: 'l-shape',
-        wardrobe1Type: '3-door',
-        wardrobe2Type: '4-door',
-        materials: [],
-        features: [],
-        inclusions: [],
-        availableLayouts: [],
-        availableWardrobeTypes: [],
-        availableMaterials: [],
-        availableFeatures: [],
-        hasVariants: false,
-        variants: [],
-        variantOptions: {},
-        dynamicFields: {},
-        packageMetadata: {
-            suitableFor: [],
-            style: [],
-            colorScheme: [],
-            deliveryTime: '',
-            warranty: '',
-            budget: { min: '', max: '' },
-            installation: { included: false, cost: '' },
-            area: { min: '', max: '' },
-            rooms: {
-                kitchen: true,
-                bedroom1: true,
-                bedroom2: true,
-                living: true,
-                dining: false
-            }
-        },
-        metaData: { title: '', description: '', keywords: '', ogImage: null },
-        tags: ''
-    });
+  const set   = (k, v) => setForm(f => ({ ...f, [k]: v }));
+  const setPM = (k, v) => setForm(f => ({ ...f, packageMetadata: { ...f.packageMetadata, [k]: v } }));
 
-    const layoutOptions = [
-        { value: 'straight', label: 'Straight Layout' },
-        { value: 'l-shape', label: 'L-Shape Layout' },
-        { value: 'parallel', label: 'Parallel Layout' },
-        { value: 'u-shape', label: 'U-Shape Layout' },
-        { value: 'island', label: 'Island Layout' }
-    ];
+  const toggleArr = (arr, val) =>
+    arr.includes(val) ? arr.filter(x => x !== val) : [...arr, val];
 
-    const wardrobeTypeOptions = [
-        { value: '2-door', label: '2 Door' },
-        { value: '3-door', label: '3 Door' },
-        { value: '4-door', label: '4 Door' },
-        { value: '5-door', label: '5 Door' },
-        { value: 'sliding', label: 'Sliding' }
-    ];
+  useEffect(() => { fetchItems(); }, []);
 
-    const materialOptions = [
-        'Plywood', 'MDF', 'Particle Board', 'Granite', 'Quartz', 'Marble',
-        'Laminate', 'Tiles', 'Glass', 'Ceramic Tiles', 'Vitrified Tiles',
-        'Soft Close Hinges', 'Standard Hinges', 'Wood', 'Metal', 'Acrylic'
-    ];
-
-    const featureOptions = [
-        { id: 'led-lighting', name: 'LED Lighting', category: 'lighting' },
-        { id: 'soft-close', name: 'Soft Close Drawers', category: 'hardware' },
-        { id: 'pull-out', name: 'Pull-out Storage', category: 'storage' },
-        { id: 'corner-solution', name: 'Corner Solutions', category: 'storage' },
-        { id: 'tall-unit', name: 'Tall Storage Unit', category: 'storage' },
-        { id: 'breakfast-counter', name: 'Breakfast Counter', category: 'convenience' },
-        { id: 'island', name: 'Kitchen Island', category: 'kitchen' },
-        { id: 'pantry', name: 'Pantry Storage', category: 'storage' },
-        { id: 'walk-in-wardrobe', name: 'Walk-in Wardrobe', category: 'wardrobe' },
-        { id: 'built-in-storage', name: 'Built-in Storage', category: 'storage' }
-    ];
-
-    const inclusionOptions = [
-        { item: 'Modular Kitchen', category: 'kitchen', quantity: 1 },
-        { item: 'Master Bedroom Wardrobe', category: 'wardrobe', quantity: 1 },
-        { item: 'Second Bedroom Wardrobe', category: 'wardrobe', quantity: 1 },
-        { item: 'Kitchen Sink', category: 'kitchen', quantity: 1 },
-        { item: 'Faucet', category: 'kitchen', quantity: 1 },
-        { item: 'Chimney', category: 'kitchen', quantity: 1 },
-        { item: 'Gas Hob', category: 'kitchen', quantity: 1 },
-        { item: 'LED Lights', category: 'lighting', quantity: 6 },
-        { item: 'Soft Close Hinges', category: 'hardware', quantity: 1 },
-        { item: 'Living Room Storage', category: 'furniture', quantity: 1 }
-    ];
-
-    const styleOptions = ['modern', 'traditional', 'contemporary', 'minimalist', 'industrial', 'scandinavian'];
-    const colorSchemeOptions = ['white', 'wood', 'grey', 'colorful', 'black', 'neutral'];
-    const suitableForOptions = ['2bhk', 'family', 'couple-with-kids', 'working-professionals', 'extended-family'];
-
-    useEffect(() => { fetchItems(); }, []);
-
-    const fetchItems = async () => {
-        try {
-            setLoading(true);
-            const res = await apiClient.get('/2bhk-packages');
-            const data = res?.data || res;
-            setItems(Array.isArray(data) ? data : []);
-        } catch (e) {
-            setError('Failed to load 2BHK packages');
-            setItems([]);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const generateSlug = (name) => {
-        if (!name) return;
-        const slug = name.toLowerCase().replace(/[^a-z0-9 -]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
-        setForm({ ...form, slug });
-    };
-
-    const handleImageChange = (e) => {
-        const files = Array.from(e.target.files);
-        if (files.length > 0) {
-            // Create preview URLs for all selected files
-            const previews = files.map(file => URL.createObjectURL(file));
-            setForm({
-                ...form,
-                mainImages: files,
-                imagePreviews: previews
-            });
-        }
-    };
-
-    const removeImagePreview = (index) => {
-        const newFiles = form.mainImages.filter((_, i) => i !== index);
-        const newPreviews = form.imagePreviews.filter((_, i) => i !== index);
-        setForm({
-            ...form,
-            mainImages: newFiles,
-            imagePreviews: newPreviews
-        });
-    };
-
-    const resetForm = () => {
-        setForm({
-            name: '', slug: '', description: '', basePrice: '', mrp: '', discount: '', mainImages: [], imagePreviews: [],
-            category: '2bhk-package', kitchenLayout: 'l-shape', wardrobe1Type: '3-door', wardrobe2Type: '4-door',
-            materials: [], features: [], inclusions: [],
-            availableLayouts: [], availableWardrobeTypes: [], availableMaterials: [], availableFeatures: [],
-            hasVariants: false, variants: [], variantOptions: {}, dynamicFields: {},
-            packageMetadata: {
-                suitableFor: [], style: [], colorScheme: [], deliveryTime: '', warranty: '',
-                budget: { min: '', max: '' }, installation: { included: false, cost: '' },
-                area: { min: '', max: '' },
-                rooms: {
-                    kitchen: true,
-                    bedroom1: true,
-                    bedroom2: true,
-                    living: true,
-                    dining: false
-                }
-            },
-            metaData: { title: '', description: '', keywords: '', ogImage: null }, tags: ''
-        });
-        setEditing(null);
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError('');
-        try {
-            setSaving(true);
-            const fd = new FormData();
-            fd.append('name', form.name);
-            fd.append('slug', form.slug);
-            fd.append('description', form.description);
-            fd.append('basePrice', form.basePrice);
-            fd.append('mrp', form.mrp);
-            fd.append('discount', form.discount);
-            fd.append('category', form.category);
-            fd.append('kitchenLayout', form.kitchenLayout);
-            fd.append('wardrobe1Type', form.wardrobe1Type);
-            fd.append('wardrobe2Type', form.wardrobe2Type);
-            fd.append('materials', JSON.stringify(form.materials));
-            fd.append('features', JSON.stringify(form.features));
-            fd.append('inclusions', JSON.stringify(form.inclusions));
-            fd.append('availableLayouts', JSON.stringify(form.availableLayouts));
-            fd.append('availableWardrobeTypes', JSON.stringify(form.availableWardrobeTypes));
-            fd.append('availableMaterials', JSON.stringify(form.availableMaterials));
-            fd.append('availableFeatures', JSON.stringify(form.availableFeatures));
-            fd.append('hasVariants', form.hasVariants);
-            fd.append('variants', JSON.stringify(form.variants));
-            fd.append('variantOptions', JSON.stringify(form.variantOptions));
-            fd.append('dynamicFields', JSON.stringify(form.dynamicFields));
-            fd.append('packageMetadata', JSON.stringify(form.packageMetadata));
-            fd.append('metaData[title]', form.metaData.title || '');
-            fd.append('metaData[description]', form.metaData.description || '');
-            fd.append('metaData[keywords]', form.metaData.keywords || '');
-            fd.append('tags', form.tags);
-            if (form.mainImages?.length) {
-                const files = form.mainImages.filter(f => f instanceof File);
-                files.forEach(f => fd.append('images', f));
-            }
-
-            if (editing) {
-                await apiClient.put(`/2bhk-packages/${editing._id}`, fd);
-            } else {
-                await apiClient.post('/2bhk-packages', fd);
-            }
-            setShowForm(false);
-            resetForm();
-            fetchItems();
-        } catch (e) {
-            setError(e?.response?.data?.message || 'Failed to save 2BHK package');
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    const handleEdit = (item) => {
-        setEditing(item);
-        setForm({
-            name: item.name,
-            slug: item.slug,
-            description: item.description || '',
-            basePrice: item.basePrice || '',
-            mrp: item.mrp || '',
-            discount: item.discount || '',
-            mainImages: [], // Start with empty array for new uploads
-            imagePreviews: [], // Start with empty array for new previews
-            category: item.category || '2bhk-package',
-            kitchenLayout: item.kitchenLayout || 'l-shape',
-            wardrobe1Type: item.wardrobe1Type || '3-door',
-            wardrobe2Type: item.wardrobe2Type || '4-door',
-            materials: item.materials || [],
-            features: item.features || [],
-            inclusions: item.inclusions || [],
-            availableLayouts: item.availableLayouts || [],
-            availableWardrobeTypes: item.availableWardrobeTypes || [],
-            availableMaterials: item.availableMaterials || [],
-            availableFeatures: item.availableFeatures || [],
-            hasVariants: item.hasVariants || false,
-            variants: item.variants || [],
-            variantOptions: item.variantOptions || {},
-            dynamicFields: item.dynamicFields || {},
-            packageMetadata: item.packageMetadata || {
-                suitableFor: [], style: [], colorScheme: [], deliveryTime: '', warranty: '',
-                budget: { min: '', max: '' }, installation: { included: false, cost: '' },
-                area: { min: '', max: '' },
-                rooms: {
-                    kitchen: true,
-                    bedroom1: true,
-                    bedroom2: true,
-                    living: true,
-                    dining: false
-                }
-            },
-            metaData: {
-                title: item.metaData?.title || '',
-                description: item.metaData?.description || '',
-                keywords: Array.isArray(item.metaData?.keywords) ? item.metaData.keywords.join(', ') : (item.metaData?.keywords || ''),
-                ogImage: item.metaData?.ogImage || null
-            },
-            tags: Array.isArray(item.tags) ? item.tags.join(', ') : (item.tags || '')
-        });
-        setShowForm(true);
-
-        // Scroll to top when edit form opens
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        });
-    };
-
-    const handleDelete = async (id) => {
-        if (!window.confirm('Delete this 2BHK package?')) return;
-        try {
-            await apiClient.delete(`/2bhk-packages/${id}`);
-            fetchItems();
-        } catch (e) {
-            setError('Failed to delete 2BHK package');
-        }
-    };
-
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600"></div>
-            </div>
-        );
+  const fetchItems = async () => {
+    try {
+      setLoading(true);
+      const res  = await apiClient.get('/2bhk-packages');
+      const data = res?.data || res;
+      setItems(Array.isArray(data) ? data : []);
+    } catch {
+      showToast('error', 'Failed to load 2BHK packages');
+      setItems([]);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-pink-100">
-            <div className="p-6 max-w-7xl mx-auto space-y-8">
-                {/* Modern Header */}
-                <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-8">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-purple-900 to-pink-900 bg-clip-text text-transparent mb-2">
-                                2BHK Packages
-                            </h1>
-                            <p className="text-lg text-gray-600">Manage complete 2BHK interior design packages</p>
-                        </div>
-                        <button
-                            onClick={() => {
-                                setShowForm(true);
-                                // Scroll to top when form opens
-                                window.scrollTo({
-                                    top: 0,
-                                    behavior: 'smooth'
-                                });
-                            }}
-                            className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-2xl font-bold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 flex items-center gap-3"
-                        >
-                            <Plus size={20} />
-                            Add 2BHK Package
-                        </button>
-                    </div>
-                </div>
+  const generateSlug = name => {
+    if (!name) return;
+    set('slug', name.toLowerCase().replace(/[^a-z0-9 -]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-'));
+  };
 
-                {/* Modern Error Alert */}
-                {error && (
-                    <div className="bg-red-50/80 backdrop-blur-sm border border-red-200/50 rounded-3xl p-6 shadow-xl">
-                        <div className="flex items-center space-x-3">
-                            <div className="w-10 h-10 bg-gradient-to-br from-red-100 to-pink-200 rounded-2xl flex items-center justify-center">
-                                <svg className="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                                </svg>
-                            </div>
-                            <div>
-                                <h3 className="text-sm font-bold text-red-800">Error</h3>
-                                <p className="text-sm text-red-700 mt-1">{error}</p>
-                            </div>
-                        </div>
-                    </div>
-                )}
+  const openNew = () => { setEditing(null); setForm(EMPTY_FORM); setShowForm(true); };
 
-                {showForm && (
-                    <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 overflow-hidden">
-                        <div className="p-8 border-b border-white/20 bg-gradient-to-r from-purple-50/50 to-pink-50/50">
-                            <div className="flex justify-between items-center">
-                                <div className="flex items-center space-x-4">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-pink-200 rounded-2xl flex items-center justify-center">
-                                        <Package className="w-6 h-6 text-purple-600" />
-                                    </div>
-                                    <div>
-                                        <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-purple-900 to-pink-900 bg-clip-text text-transparent">
-                                            {editing ? 'Edit 2BHK Package' : 'Add New 2BHK Package'}
-                                        </h2>
-                                        <p className="text-gray-600 mt-1 text-lg">
-                                            {editing ? 'Update your 2BHK package information' : 'Create a new 2BHK interior design package'}
-                                        </p>
-                                    </div>
-                                </div>
-                                <button
-                                    onClick={() => { setShowForm(false); resetForm(); }}
-                                    className="p-3 text-gray-400 hover:text-gray-600 hover:bg-white/50 rounded-2xl transition-all duration-200"
-                                >
-                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-                        <form onSubmit={handleSubmit} className="p-8 space-y-8">
-                            {/* Basic Information Section */}
-                            <div className="bg-gradient-to-r from-purple-50/50 to-pink-50/50 rounded-3xl p-8 border border-purple-100/50 shadow-lg">
-                                <div className="flex items-center gap-4 mb-8">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-pink-200 rounded-2xl flex items-center justify-center">
-                                        <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                    </div>
-                                    <h3 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-purple-900 to-pink-900 bg-clip-text text-transparent">Basic Information</h3>
-                                </div>
+  const openEdit = item => {
+    setEditing(item);
+    setForm({
+      ...EMPTY_FORM,
+      name:              item.name,
+      slug:              item.slug,
+      description:       item.description || '',
+      basePrice:         item.basePrice ?? '',
+      mrp:               item.mrp ?? '',
+      discount:          item.discount ?? '',
+      mainImages:        [],
+      imagePreviews:     [],
+      category:          item.category || '2bhk-package',
+      kitchenLayout:     item.kitchenLayout || 'l-shape',
+      wardrobe1Type:     item.wardrobe1Type || '3-door',
+      wardrobe2Type:     item.wardrobe2Type || '3-door',
+      materials:         item.materials || [],
+      features:          item.features || [],
+      inclusions:        item.inclusions || [],
+      availableLayouts:  item.availableLayouts || [],
+      availableWardrobeTypes: item.availableWardrobeTypes || [],
+      availableMaterials: item.availableMaterials || [],
+      availableFeatures:  item.availableFeatures || [],
+      hasVariants:       item.hasVariants || false,
+      variants:          item.variants || [],
+      variantOptions:    item.variantOptions || {},
+      dynamicFields:     item.dynamicFields || {},
+      packageMetadata:   item.packageMetadata || EMPTY_FORM.packageMetadata,
+      metaData: {
+        title:       item.metaData?.title || '',
+        description: item.metaData?.description || '',
+        keywords:    Array.isArray(item.metaData?.keywords)
+                       ? item.metaData.keywords.join(', ')
+                       : (item.metaData?.keywords || ''),
+      },
+      tags: Array.isArray(item.tags) ? item.tags.join(', ') : (item.tags || ''),
+    });
+    setShowForm(true);
+  };
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    <div className="space-y-3">
-                                        <label className="block text-sm font-bold text-gray-700">Package Name *</label>
-                                        <input
-                                            className="w-full border-2 border-gray-200 rounded-2xl px-6 py-4 focus:ring-4 focus:ring-purple-500/20 focus:border-purple-500 transition-all duration-200 bg-white/50 backdrop-blur-sm hover:bg-white/70 focus:bg-white shadow-lg"
-                                            value={form.name}
-                                            onChange={(e) => setForm({ ...form, name: e.target.value })}
-                                            onBlur={() => generateSlug(form.name)}
-                                            placeholder="Enter 2BHK package name"
-                                            required
-                                        />
-                                        <p className="text-xs text-gray-500 font-medium">This will be the main title of your 2BHK package</p>
-                                    </div>
-                                    <div className="space-y-3">
-                                        <label className="block text-sm font-bold text-gray-700">Package URL (Slug) *</label>
-                                        <input
-                                            className="w-full border-2 border-gray-200 rounded-2xl px-6 py-4 focus:ring-4 focus:ring-purple-500/20 focus:border-purple-500 transition-all duration-200 bg-white/50 backdrop-blur-sm hover:bg-white/70 focus:bg-white shadow-lg"
-                                            value={form.slug}
-                                            onChange={(e) => setForm({ ...form, slug: e.target.value })}
-                                            placeholder="2bhk-package-url-slug"
-                                            required
-                                        />
-                                        <p className="text-xs text-gray-500 font-medium">This creates the URL for your package page (auto-generated from name)</p>
-                                    </div>
-                                </div>
+  const closeForm = () => { setShowForm(false); setEditing(null); setForm(EMPTY_FORM); };
 
-                                <div className="mt-8">
-                                    <label className="block text-sm font-bold text-gray-700 mb-3">Package Description</label>
-                                    <textarea
-                                        className="w-full border-2 border-gray-200 rounded-2xl px-6 py-4 focus:ring-4 focus:ring-purple-500/20 focus:border-purple-500 transition-all duration-200 bg-white/50 backdrop-blur-sm hover:bg-white/70 focus:bg-white shadow-lg"
-                                        rows={4}
-                                        value={form.description}
-                                        onChange={(e) => setForm({ ...form, description: e.target.value })}
-                                        placeholder="Describe your 2BHK package in detail. What makes it special? What are its key features?"
-                                    />
-                                    <p className="text-xs text-gray-500 font-medium mt-2">Help customers understand what they're getting in this package</p>
-                                </div>
-                            </div>
+  const handleImageChange = e => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    set('mainImages', files);
+    set('imagePreviews', files.map(f => URL.createObjectURL(f)));
+  };
 
-                            {/* Pricing Section */}
-                            <div className="bg-gradient-to-r from-green-50/50 to-emerald-50/50 rounded-3xl p-8 border border-green-100/50 shadow-lg">
-                                <div className="flex items-center gap-4 mb-8">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-emerald-200 rounded-2xl flex items-center justify-center">
-                                        <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                                        </svg>
-                                    </div>
-                                    <h3 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-green-900 to-emerald-900 bg-clip-text text-transparent">Pricing & Offers</h3>
-                                </div>
+  const handleSubmit = async e => {
+    e.preventDefault();
+    try {
+      setSaving(true);
+      const fd = new FormData();
+      fd.append('name',          form.name);
+      fd.append('slug',          form.slug);
+      fd.append('description',   form.description);
+      fd.append('basePrice',     form.basePrice);
+      fd.append('mrp',           form.mrp);
+      fd.append('discount',      form.discount);
+      fd.append('category',      form.category);
+      fd.append('kitchenLayout', form.kitchenLayout);
+      fd.append('wardrobe1Type', form.wardrobe1Type);
+      fd.append('wardrobe2Type', form.wardrobe2Type);
+      fd.append('materials',     JSON.stringify(form.materials));
+      fd.append('features',      JSON.stringify(form.features));
+      fd.append('inclusions',    JSON.stringify(form.inclusions));
+      fd.append('availableLayouts',       JSON.stringify(form.availableLayouts));
+      fd.append('availableWardrobeTypes', JSON.stringify(form.availableWardrobeTypes));
+      fd.append('availableMaterials',     JSON.stringify(form.availableMaterials));
+      fd.append('availableFeatures',      JSON.stringify(form.availableFeatures));
+      fd.append('hasVariants',   String(form.hasVariants));
+      fd.append('variants',      JSON.stringify(form.variants.map(v => ({
+        ...v,
+        price: Number(v.price) || 0,
+        mrp:   Number(v.mrp)   || 0,
+        stock: Number(v.stock) || 0,
+      }))));
+      fd.append('variantOptions',  JSON.stringify(form.variantOptions));
+      fd.append('dynamicFields',   JSON.stringify(form.dynamicFields));
+      fd.append('packageMetadata', JSON.stringify(form.packageMetadata));
+      fd.append('metaData',        JSON.stringify(form.metaData));
+      fd.append('tags',            form.tags);
+      form.mainImages.filter(f => f instanceof File).forEach(f => fd.append('images', f));
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                                    <div className="space-y-3">
-                                        <label className="block text-sm font-bold text-gray-700">Package Price *</label>
-                                        <div className="relative">
-                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                                <span className="text-gray-500 text-sm font-medium">₹</span>
-                                            </div>
-                                            <input
-                                                type="number"
-                                                className="w-full border-2 border-gray-200 rounded-2xl pl-10 pr-6 py-4 focus:ring-4 focus:ring-green-500/20 focus:border-green-500 transition-all duration-200 bg-white/50 backdrop-blur-sm hover:bg-white/70 focus:bg-white shadow-lg"
-                                                value={form.basePrice}
-                                                onChange={(e) => setForm({ ...form, basePrice: e.target.value })}
-                                                placeholder="0"
-                                                required
-                                            />
-                                        </div>
-                                        <p className="text-xs text-gray-500 font-medium">The total price customers will pay for this package</p>
-                                    </div>
+      if (editing) {
+        await apiClient.put(`/2bhk-packages/${editing._id}`, fd);
+      } else {
+        await apiClient.post('/2bhk-packages', fd);
+      }
+      closeForm();
+      fetchItems();
+      showToast('success', editing ? '2BHK package updated' : '2BHK package created');
+    } catch (e) {
+      showToast('error', e?.response?.data?.message || 'Failed to save 2BHK package');
+    } finally {
+      setSaving(false);
+    }
+  };
 
-                                    <div className="space-y-3">
-                                        <label className="block text-sm font-bold text-gray-700">MRP (Optional)</label>
-                                        <div className="relative">
-                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                                <span className="text-gray-500 text-sm font-medium">₹</span>
-                                            </div>
-                                            <input
-                                                type="number"
-                                                className="w-full border-2 border-gray-200 rounded-2xl pl-10 pr-6 py-4 focus:ring-4 focus:ring-green-500/20 focus:border-green-500 transition-all duration-200 bg-white/50 backdrop-blur-sm hover:bg-white/70 focus:bg-white shadow-lg"
-                                                value={form.mrp}
-                                                onChange={(e) => setForm({ ...form, mrp: e.target.value })}
-                                                placeholder="0"
-                                            />
-                                        </div>
-                                        <p className="text-xs text-gray-500 font-medium">Original price before discount</p>
-                                    </div>
+  const handleDelete = async id => {
+    if (!window.confirm('Delete this 2BHK package?')) return;
+    try {
+      await apiClient.delete(`/2bhk-packages/${id}`);
+      fetchItems();
+      showToast('success', '2BHK package deleted');
+    } catch {
+      showToast('error', 'Failed to delete 2BHK package');
+    }
+  };
 
-                                    <div className="space-y-3">
-                                        <label className="block text-sm font-bold text-gray-700">Discount % (Optional)</label>
-                                        <div className="relative">
-                                            <input
-                                                type="number"
-                                                className="w-full border-2 border-gray-200 rounded-2xl px-6 py-4 focus:ring-4 focus:ring-green-500/20 focus:border-green-500 transition-all duration-200 bg-white/50 backdrop-blur-sm hover:bg-white/70 focus:bg-white shadow-lg"
-                                                value={form.discount}
-                                                onChange={(e) => setForm({ ...form, discount: e.target.value })}
-                                                placeholder="0"
-                                                min="0"
-                                                max="100"
-                                            />
-                                            <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-                                                <span className="text-gray-500 text-sm font-medium">%</span>
-                                            </div>
-                                        </div>
-                                        <p className="text-xs text-gray-500 font-medium">Percentage off MRP</p>
-                                    </div>
-                                </div>
-                            </div>
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
 
-                            {/* Package Configuration Section */}
-                            <div className="bg-gradient-to-r from-amber-50/50 to-orange-50/50 rounded-3xl p-8 border border-amber-100/50 shadow-lg">
-                                <div className="flex items-center gap-4 mb-8">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-amber-100 to-orange-200 rounded-2xl flex items-center justify-center">
-                                        <Home className="w-6 h-6 text-amber-600" />
-                                    </div>
-                                    <h3 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-amber-900 to-orange-900 bg-clip-text text-transparent">Package Configuration</h3>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                                    <div className="space-y-3">
-                                        <label className="block text-sm font-bold text-gray-700">Kitchen Layout *</label>
-                                        <select
-                                            className="w-full border-2 border-gray-200 rounded-2xl px-6 py-4 focus:ring-4 focus:ring-amber-500/20 focus:border-amber-500 transition-all duration-200 bg-white/50 backdrop-blur-sm hover:bg-white/70 focus:bg-white shadow-lg"
-                                            value={form.kitchenLayout}
-                                            onChange={(e) => setForm({ ...form, kitchenLayout: e.target.value })}
-                                            required
-                                        >
-                                            {layoutOptions.map(option => (
-                                                <option key={option.value} value={option.value}>{option.label}</option>
-                                            ))}
-                                        </select>
-                                        <p className="text-xs text-gray-500 font-medium">Choose the default kitchen layout for this package</p>
-                                    </div>
-                                    <div className="space-y-3">
-                                        <label className="block text-sm font-bold text-gray-700">Master Bedroom Wardrobe *</label>
-                                        <select
-                                            className="w-full border-2 border-gray-200 rounded-2xl px-6 py-4 focus:ring-4 focus:ring-amber-500/20 focus:border-amber-500 transition-all duration-200 bg-white/50 backdrop-blur-sm hover:bg-white/70 focus:bg-white shadow-lg"
-                                            value={form.wardrobe1Type}
-                                            onChange={(e) => setForm({ ...form, wardrobe1Type: e.target.value })}
-                                            required
-                                        >
-                                            {wardrobeTypeOptions.map(option => (
-                                                <option key={option.value} value={option.value}>{option.label}</option>
-                                            ))}
-                                        </select>
-                                        <p className="text-xs text-gray-500 font-medium">Choose the master bedroom wardrobe type</p>
-                                    </div>
-                                    <div className="space-y-3">
-                                        <label className="block text-sm font-bold text-gray-700">Second Bedroom Wardrobe *</label>
-                                        <select
-                                            className="w-full border-2 border-gray-200 rounded-2xl px-6 py-4 focus:ring-4 focus:ring-amber-500/20 focus:border-amber-500 transition-all duration-200 bg-white/50 backdrop-blur-sm hover:bg-white/70 focus:bg-white shadow-lg"
-                                            value={form.wardrobe2Type}
-                                            onChange={(e) => setForm({ ...form, wardrobe2Type: e.target.value })}
-                                            required
-                                        >
-                                            {wardrobeTypeOptions.map(option => (
-                                                <option key={option.value} value={option.value}>{option.label}</option>
-                                            ))}
-                                        </select>
-                                        <p className="text-xs text-gray-500 font-medium">Choose the second bedroom wardrobe type</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Materials, Features & Inclusions Section */}
-                            <div className="bg-gradient-to-r from-blue-50/50 to-indigo-50/50 rounded-3xl p-8 border border-blue-100/50 shadow-lg">
-                                <div className="flex items-center gap-4 mb-8">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-indigo-200 rounded-2xl flex items-center justify-center">
-                                        <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                    </div>
-                                    <h3 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent">Materials, Features & Inclusions</h3>
-                                </div>
-
-                                <div className="space-y-8">
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-4">Materials Used</label>
-                                        <div className="bg-white/50 backdrop-blur-sm rounded-2xl border border-blue-100/50 p-6 max-h-64 overflow-y-auto">
-                                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                                {materialOptions.map((material, i) => (
-                                                    <label key={i} className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/70 transition-all duration-200 bg-white/30 backdrop-blur-sm border cursor-pointer">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={form.materials.includes(material)}
-                                                            onChange={() => {
-                                                                const exists = form.materials.includes(material);
-                                                                setForm({
-                                                                    ...form,
-                                                                    materials: exists
-                                                                        ? form.materials.filter(m => m !== material)
-                                                                        : [...form.materials, material]
-                                                                });
-                                                            }}
-                                                            className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 focus:ring-2"
-                                                        />
-                                                        <span className="text-sm font-medium text-gray-700">{material}</span>
-                                                    </label>
-                                                ))}
-                                            </div>
-                                        </div>
-                                        <p className="text-xs text-gray-500 font-medium mt-3">Select the materials used in this package</p>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-4">Package Features</label>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {featureOptions.map(feature => (
-                                                <label key={feature.id} className="flex items-center gap-3 p-4 rounded-xl hover:bg-white/70 transition-all duration-200 bg-white/50 backdrop-blur-sm border cursor-pointer">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={form.features.some(f => f.id === feature.id)}
-                                                        onChange={() => {
-                                                            const exists = form.features.some(f => f.id === feature.id);
-                                                            setForm({
-                                                                ...form,
-                                                                features: exists
-                                                                    ? form.features.filter(f => f.id !== feature.id)
-                                                                    : [...form.features, feature]
-                                                            });
-                                                        }}
-                                                        className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 focus:ring-2"
-                                                    />
-                                                    <span className="text-sm font-medium text-gray-700">{feature.name}</span>
-                                                </label>
-                                            ))}
-                                        </div>
-                                        <p className="text-xs text-gray-500 font-medium mt-3">Select the features included in this package</p>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-4">Package Inclusions</label>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {inclusionOptions.map((inclusion, i) => (
-                                                <label key={i} className="flex items-center gap-3 p-4 rounded-xl hover:bg-white/70 transition-all duration-200 bg-white/50 backdrop-blur-sm border cursor-pointer">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={form.inclusions.some(inc => inc.item === inclusion.item)}
-                                                        onChange={() => {
-                                                            const exists = form.inclusions.some(inc => inc.item === inclusion.item);
-                                                            setForm({
-                                                                ...form,
-                                                                inclusions: exists
-                                                                    ? form.inclusions.filter(inc => inc.item !== inclusion.item)
-                                                                    : [...form.inclusions, inclusion]
-                                                            });
-                                                        }}
-                                                        className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 focus:ring-2"
-                                                    />
-                                                    <div>
-                                                        <span className="text-sm font-medium text-gray-700">{inclusion.item}</span>
-                                                        <span className="text-xs text-gray-500 ml-2">({inclusion.category})</span>
-                                                    </div>
-                                                </label>
-                                            ))}
-                                        </div>
-                                        <p className="text-xs text-gray-500 font-medium mt-3">Select what's included in this package</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Package Metadata Section */}
-                            <div className="bg-gradient-to-r from-violet-50/50 to-purple-50/50 rounded-3xl p-8 border border-violet-100/50 shadow-lg">
-                                <div className="flex items-center gap-4 mb-8">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-violet-100 to-purple-200 rounded-2xl flex items-center justify-center">
-                                        <svg className="w-6 h-6 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                                        </svg>
-                                    </div>
-                                    <h3 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-violet-900 to-purple-900 bg-clip-text text-transparent">Package Metadata</h3>
-                                </div>
-
-                                <div className="space-y-8">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                        <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-4">Suitable For</label>
-                                            <div className="flex flex-wrap gap-3">
-                                                {suitableForOptions.map(option => (
-                                                    <button
-                                                        key={option}
-                                                        type="button"
-                                                        onClick={() => {
-                                                            const exists = form.packageMetadata.suitableFor.includes(option);
-                                                            setForm({
-                                                                ...form,
-                                                                packageMetadata: {
-                                                                    ...form.packageMetadata,
-                                                                    suitableFor: exists
-                                                                        ? form.packageMetadata.suitableFor.filter(x => x !== option)
-                                                                        : [...form.packageMetadata.suitableFor, option]
-                                                                }
-                                                            });
-                                                        }}
-                                                        className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 ${form.packageMetadata.suitableFor.includes(option)
-                                                            ? 'bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow-violet-200'
-                                                            : 'bg-white/50 backdrop-blur-sm border border-gray-200 hover:border-violet-300 hover:bg-violet-50/50 text-gray-700'
-                                                            }`}
-                                                    >
-                                                        {option}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                            <p className="text-xs text-gray-500 font-medium mt-3">Select the target audience for this package</p>
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-4">Design Style</label>
-                                            <div className="flex flex-wrap gap-3">
-                                                {styleOptions.map(option => (
-                                                    <button
-                                                        key={option}
-                                                        type="button"
-                                                        onClick={() => {
-                                                            const exists = form.packageMetadata.style.includes(option);
-                                                            setForm({
-                                                                ...form,
-                                                                packageMetadata: {
-                                                                    ...form.packageMetadata,
-                                                                    style: exists
-                                                                        ? form.packageMetadata.style.filter(x => x !== option)
-                                                                        : [...form.packageMetadata.style, option]
-                                                                }
-                                                            });
-                                                        }}
-                                                        className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 ${form.packageMetadata.style.includes(option)
-                                                            ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-purple-200'
-                                                            : 'bg-white/50 backdrop-blur-sm border border-gray-200 hover:border-purple-300 hover:bg-purple-50/50 text-gray-700'
-                                                            }`}
-                                                    >
-                                                        {option}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                            <p className="text-xs text-gray-500 font-medium mt-3">Choose the design style for this package</p>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-4">Color Scheme</label>
-                                        <div className="flex flex-wrap gap-3">
-                                            {colorSchemeOptions.map(option => (
-                                                <button
-                                                    key={option}
-                                                    type="button"
-                                                    onClick={() => {
-                                                        const exists = form.packageMetadata.colorScheme.includes(option);
-                                                        setForm({
-                                                            ...form,
-                                                            packageMetadata: {
-                                                                ...form.packageMetadata,
-                                                                colorScheme: exists
-                                                                    ? form.packageMetadata.colorScheme.filter(x => x !== option)
-                                                                    : [...form.packageMetadata.colorScheme, option]
-                                                            }
-                                                        });
-                                                    }}
-                                                    className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 ${form.packageMetadata.colorScheme.includes(option)
-                                                        ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-pink-200'
-                                                        : 'bg-white/50 backdrop-blur-sm border border-gray-200 hover:border-pink-300 hover:bg-pink-50/50 text-gray-700'
-                                                        }`}
-                                                >
-                                                    {option}
-                                                </button>
-                                            ))}
-                                        </div>
-                                        <p className="text-xs text-gray-500 font-medium mt-3">Select the color schemes available for this package</p>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                        <div className="space-y-3">
-                                            <label className="block text-sm font-bold text-gray-700">Delivery Time</label>
-                                            <input
-                                                className="w-full border-2 border-gray-200 rounded-2xl px-6 py-4 focus:ring-4 focus:ring-violet-500/20 focus:border-violet-500 transition-all duration-200 bg-white/50 backdrop-blur-sm hover:bg-white/70 focus:bg-white shadow-lg"
-                                                value={form.packageMetadata.deliveryTime}
-                                                onChange={(e) => setForm({
-                                                    ...form,
-                                                    packageMetadata: { ...form.packageMetadata, deliveryTime: e.target.value }
-                                                })}
-                                                placeholder="e.g., 20-25 days"
-                                            />
-                                            <p className="text-xs text-gray-500 font-medium">Expected delivery timeframe</p>
-                                        </div>
-                                        <div className="space-y-3">
-                                            <label className="block text-sm font-bold text-gray-700">Warranty</label>
-                                            <input
-                                                className="w-full border-2 border-gray-200 rounded-2xl px-6 py-4 focus:ring-4 focus:ring-violet-500/20 focus:border-violet-500 transition-all duration-200 bg-white/50 backdrop-blur-sm hover:bg-white/70 focus:bg-white shadow-lg"
-                                                value={form.packageMetadata.warranty}
-                                                onChange={(e) => setForm({
-                                                    ...form,
-                                                    packageMetadata: { ...form.packageMetadata, warranty: e.target.value }
-                                                })}
-                                                placeholder="e.g., 2 years"
-                                            />
-                                            <p className="text-xs text-gray-500 font-medium">Warranty period for this package</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Package Images Section */}
-                            <div className="bg-gradient-to-r from-pink-50/50 to-rose-50/50 rounded-3xl p-8 border border-pink-100/50 shadow-lg">
-                                <div className="flex items-center gap-4 mb-8">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-pink-100 to-rose-200 rounded-2xl flex items-center justify-center">
-                                        <svg className="w-6 h-6 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                        </svg>
-                                    </div>
-                                    <h3 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-pink-900 to-rose-900 bg-clip-text text-transparent">Package Images</h3>
-                                </div>
-
-                                <div className="space-y-3">
-                                    <label className="block text-sm font-bold text-gray-700">Upload Images</label>
-                                    <div className="border-2 border-dashed border-gray-300 rounded-3xl p-8 text-center hover:border-pink-400 transition-all duration-200 bg-white/50 backdrop-blur-sm hover:bg-white/70">
-                                        <input
-                                            key={editing ? `edit-${editing._id}` : 'new-2bhk-package'}
-                                            type="file"
-                                            multiple
-                                            accept="image/*"
-                                            onChange={handleImageChange}
-                                            className="hidden"
-                                            id="package-image-upload"
-                                        />
-                                        <label htmlFor="package-image-upload" className="cursor-pointer">
-                                            <div className="flex flex-col items-center gap-4">
-                                                <div className="w-16 h-16 bg-gradient-to-br from-pink-100 to-rose-200 rounded-2xl flex items-center justify-center shadow-lg">
-                                                    <svg className="w-8 h-8 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                                    </svg>
-                                                </div>
-                                                <div>
-                                                    <p className="text-lg font-semibold text-gray-900">
-                                                        {editing ? 'Click to add new images' : 'Click to upload package images'}
-                                                    </p>
-                                                    <p className="text-sm text-gray-500 mt-2">
-                                                        {editing ?
-                                                            'Replace existing images (optional)' :
-                                                            'Upload multiple images for your 2BHK package gallery'
-                                                        }
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </label>
-                                    </div>
-
-                                    {/* New Image Previews */}
-                                    {form.imagePreviews && form.imagePreviews.length > 0 && (
-                                        <div className="mt-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-200/50 shadow-lg">
-                                            <p className="text-sm font-bold text-blue-700 mb-4">New images to upload:</p>
-                                            <div className="flex flex-wrap gap-4">
-                                                {form.imagePreviews.map((preview, index) => (
-                                                    <div key={index} className="relative group">
-                                                        <img
-                                                            src={preview}
-                                                            alt={`Preview ${index + 1}`}
-                                                            className="w-24 h-24 object-cover rounded-2xl border-2 border-blue-200 shadow-lg"
-                                                        />
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => removeImagePreview(index)}
-                                                            className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full flex items-center justify-center hover:from-red-600 hover:to-pink-600 transition-all duration-200 shadow-lg"
-                                                        >
-                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                            </svg>
-                                                        </button>
-                                                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-2xl transition-all duration-200 flex items-center justify-center">
-                                                            <span className="text-white text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                                                New
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Existing Images Display (for editing) */}
-                                    {editing && editing.mainImages && editing.mainImages.length > 0 && (
-                                        <div className="mt-6 p-6 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl border border-gray-200/50 shadow-lg">
-                                            <p className="text-sm font-bold text-gray-700 mb-4">Current images:</p>
-                                            <div className="flex flex-wrap gap-4">
-                                                {editing.mainImages.map((img, index) => (
-                                                    <div key={index} className="relative group">
-                                                        <img
-                                                            src={img}
-                                                            alt={`Current image ${index + 1}`}
-                                                            className="w-24 h-24 object-cover rounded-2xl border-2 border-gray-200 shadow-lg"
-                                                        />
-                                                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-2xl transition-all duration-200 flex items-center justify-center">
-                                                            <span className="text-white text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                                                Current
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Form Actions */}
-                            <div className="flex justify-end gap-4 pt-6">
-                                <button
-                                    type="button"
-                                    className="px-8 py-4 border-2 border-gray-300 rounded-2xl text-gray-700 font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
-                                    onClick={() => { setShowForm(false); resetForm(); }}
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={saving}
-                                    className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-2xl font-bold shadow-xl hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 disabled:transform-none"
-                                >
-                                    {saving ? (
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                            Saving...
-                                        </div>
-                                    ) : (
-                                        <div className="flex items-center gap-2">
-                                            <Package className="w-5 h-5" />
-                                            {editing ? 'Update Package' : 'Create Package'}
-                                        </div>
-                                    )}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                )}
-
-                {/* Modern Packages List */}
-                <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 overflow-hidden">
-                    <div className="p-8 border-b border-white/20 bg-gradient-to-r from-purple-50/50 to-pink-50/50">
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-pink-200 rounded-2xl flex items-center justify-center">
-                                <Package className="w-6 h-6 text-purple-600" />
-                            </div>
-                            <div>
-                                <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-purple-900 to-pink-900 bg-clip-text text-transparent">
-                                    2BHK Packages
-                                </h2>
-                                <p className="text-gray-600 mt-1 text-lg">Manage your complete 2BHK interior design packages</p>
-                            </div>
-                            <div className="ml-auto">
-                                <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-100 to-pink-100 rounded-2xl">
-                                    <Package size={20} className="text-purple-600" />
-                                    <span className="font-bold text-purple-700">{items.length} packages</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
-                                <tr>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Package</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Kitchen Layout</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Wardrobes</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Price & Offers</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                                {items.map(item => (
-                                    <tr key={item._id} className="hover:bg-gray-50 transition-colors duration-200">
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex items-center gap-4">
-                                                <div className="flex-shrink-0 h-12 w-12 rounded-xl overflow-hidden bg-gray-100 shadow-lg">
-                                                    {item.mainImages?.[0] ? (
-                                                        <img src={item.mainImages[0]} alt={item.name} className="h-12 w-12 object-cover" />
-                                                    ) : (
-                                                        <div className="h-12 w-12 flex items-center justify-center">
-                                                            <Home size={20} className="text-gray-400" />
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <div>
-                                                    <div className="text-sm font-semibold text-gray-900 max-w-xs truncate">
-                                                        {item.name}
-                                                    </div>
-                                                    <div className="text-xs text-gray-500">
-                                                        {item.slug}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm text-gray-900">
-                                                {item.kitchenLayout || 'Not specified'}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="space-y-2">
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-2 h-2 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full"></div>
-                                                    <span className="text-xs text-gray-600">Master: {item.wardrobe1Type || 'Not specified'}</span>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-2 h-2 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full"></div>
-                                                    <span className="text-xs text-gray-600">Second: {item.wardrobe2Type || 'Not specified'}</span>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="space-y-1">
-                                                <div className="text-sm font-semibold text-gray-900">
-                                                    ₹{item.basePrice || 0}
-                                                </div>
-                                                {item.mrp && item.mrp > item.basePrice && (
-                                                    <div className="text-xs text-gray-500 line-through">
-                                                        MRP: ₹{item.mrp}
-                                                    </div>
-                                                )}
-                                                {item.discount && item.discount > 0 && (
-                                                    <div className="text-xs text-green-600 font-medium">
-                                                        {item.discount}% OFF
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <div className="flex items-center gap-2">
-                                                <button
-                                                    onClick={() => handleEdit(item)}
-                                                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 rounded-lg hover:from-blue-100 hover:to-blue-200 transition-all duration-200 text-xs font-medium shadow-sm hover:shadow-md"
-                                                >
-                                                    <Edit size={14} />
-                                                    Edit
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(item._id)}
-                                                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-red-50 to-red-100 text-red-700 rounded-lg hover:from-red-100 hover:to-red-200 transition-all duration-200 text-xs font-medium shadow-sm hover:shadow-md"
-                                                >
-                                                    <Trash2 size={14} />
-                                                    Delete
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+  return (
+    <div className="p-6 max-w-7xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">2BHK Packages</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Manage complete 2BHK interior design packages</p>
         </div>
-    );
-}
+        <button
+          onClick={openNew}
+          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 transition-colors shadow-sm"
+        >
+          <Plus className="w-4 h-4" /> Add 2BHK Package
+        </button>
+      </div>
 
+      {/* Table */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center">
+              <Home className="w-4 h-4 text-indigo-600" />
+            </div>
+            <h2 className="font-semibold text-gray-900">All Packages</h2>
+          </div>
+          <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">{items.length} packages</span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-100">
+            <thead>
+              <tr className="bg-gray-50">
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Package</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Price</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Kitchen</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Wardrobes</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Variants</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {items.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-gray-400 text-sm">
+                    No 2BHK packages yet. Click &quot;Add 2BHK Package&quot; to create one.
+                  </td>
+                </tr>
+              ) : items.map(item => (
+                <tr key={item._id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                        {item.mainImages?.[0]
+                          ? <img src={item.mainImages[0]} alt={item.name} className="w-10 h-10 object-cover" />
+                          : <div className="w-10 h-10 flex items-center justify-center"><Home className="w-4 h-4 text-gray-400" /></div>
+                        }
+                      </div>
+                      <div className="max-w-[200px]">
+                        <div className="text-sm font-semibold text-gray-900 truncate">{item.name}</div>
+                        <div className="text-xs text-gray-400 truncate">{item.category}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-sm font-semibold text-gray-900">₹{(item.basePrice || 0).toLocaleString()}</div>
+                    {item.mrp > item.basePrice && <div className="text-xs text-gray-400 line-through">₹{item.mrp.toLocaleString()}</div>}
+                    {item.discount > 0 && <div className="text-xs text-green-600 font-medium">{item.discount}% off</div>}
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="inline-block px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded text-xs font-medium capitalize">
+                      {item.kitchenLayout || '—'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-xs text-gray-700 whitespace-nowrap">
+                      {item.wardrobe1Type || '—'} / {item.wardrobe2Type || '—'}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    {item.hasVariants && item.variants?.length > 0 ? (
+                      <span className="inline-block px-2 py-0.5 bg-green-50 text-green-700 rounded-full text-xs font-semibold whitespace-nowrap">
+                        {item.variants.length} variant{item.variants.length !== 1 ? 's' : ''}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-gray-400">—</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setViewItem(item)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-500 text-white rounded-lg text-xs font-semibold hover:bg-gray-600 transition-colors shadow-sm"
+                      >
+                        <Eye className="w-3.5 h-3.5" /> View
+                      </button>
+                      <button
+                        onClick={() => openEdit(item)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500 text-white rounded-lg text-xs font-semibold hover:bg-blue-600 transition-colors shadow-sm"
+                      >
+                        <Edit className="w-3.5 h-3.5" /> Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(item._id)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-semibold hover:bg-red-600 transition-colors shadow-sm"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Slide-in Form Panel */}
+      {showForm && createPortal(
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex' }}>
+          <div style={{ flex: 1, background: 'rgba(0,0,0,0.4)' }} onClick={closeForm} />
+          <div style={{
+            width: '100%', maxWidth: '42rem', height: '100%',
+            background: '#fff', overflowY: 'auto', display: 'flex', flexDirection: 'column',
+            boxShadow: '-4px 0 24px rgba(0,0,0,0.15)',
+          }}>
+            {/* Panel header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-white sticky top-0 z-10">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center">
+                  <Home className="w-4 h-4 text-indigo-600" />
+                </div>
+                <h2 className="font-bold text-gray-900">{editing ? 'Edit 2BHK Package' : 'New 2BHK Package'}</h2>
+              </div>
+              <button onClick={closeForm} className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="flex-1 px-6 py-5 space-y-6">
+
+              {/* Basic Info */}
+              <section>
+                <h3 className="text-sm font-bold text-gray-900 mb-3 pb-2 border-b border-gray-100">Basic Information</h3>
+                <div className="space-y-3">
+                  <Field label="Package Name *">
+                    <input
+                      className={inp}
+                      value={form.name}
+                      onChange={e => set('name', e.target.value)}
+                      onBlur={() => !editing && generateSlug(form.name)}
+                      placeholder="e.g. Premium 2BHK Package"
+                      required
+                    />
+                  </Field>
+                  <Field label="Slug *">
+                    <input className={inp} value={form.slug} onChange={e => set('slug', e.target.value)} placeholder="premium-2bhk-package" required />
+                  </Field>
+                  <Field label="Description">
+                    <textarea className={inp} rows={3} value={form.description} onChange={e => set('description', e.target.value)} placeholder="Describe this package..." />
+                  </Field>
+                  <Field label="Category">
+                    <input className={inp} value={form.category} onChange={e => set('category', e.target.value)} />
+                  </Field>
+                  <Field label="Tags (comma-separated)">
+                    <input className={inp} value={form.tags} onChange={e => set('tags', e.target.value)} placeholder="2bhk, modern, complete" />
+                  </Field>
+                </div>
+              </section>
+
+              {/* Pricing */}
+              <section>
+                <h3 className="text-sm font-bold text-gray-900 mb-3 pb-2 border-b border-gray-100">Pricing</h3>
+                <div className="grid grid-cols-3 gap-3">
+                  <Field label="Base Price *">
+                    <input type="number" className={inp} value={form.basePrice} onChange={e => set('basePrice', e.target.value)} placeholder="0" required />
+                  </Field>
+                  <Field label="MRP">
+                    <input type="number" className={inp} value={form.mrp} onChange={e => set('mrp', e.target.value)} placeholder="0" />
+                  </Field>
+                  <Field label="Discount %">
+                    <input type="number" className={inp} value={form.discount} onChange={e => set('discount', e.target.value)} placeholder="0" min="0" max="100" />
+                  </Field>
+                </div>
+              </section>
+
+              {/* Images */}
+              <section>
+                <h3 className="text-sm font-bold text-gray-900 mb-3 pb-2 border-b border-gray-100">Images</h3>
+                <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-indigo-400 hover:bg-indigo-50 transition-colors">
+                  <span className="text-xs text-gray-500">{editing ? 'Upload new images (optional)' : 'Click to upload images'}</span>
+                  <input type="file" className="hidden" multiple accept="image/*" onChange={handleImageChange} />
+                </label>
+                {form.imagePreviews?.length > 0 && (
+                  <div className="flex gap-2 mt-3 flex-wrap">
+                    {form.imagePreviews.map((src, i) => (
+                      <div key={i} className="relative">
+                        <img src={src} alt="" className="w-14 h-14 rounded-lg object-cover border border-gray-200" />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            set('mainImages', form.mainImages.filter((_, j) => j !== i));
+                            set('imagePreviews', form.imagePreviews.filter((_, j) => j !== i));
+                          }}
+                          className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-xs leading-none"
+                        >×</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {editing?.mainImages?.length > 0 && (
+                  <div className="mt-3">
+                    <p className="text-xs text-gray-500 mb-2">Current images:</p>
+                    <div className="flex gap-2 flex-wrap">
+                      {editing.mainImages.map((src, i) => (
+                        <img key={i} src={src} alt="" className="w-14 h-14 rounded-lg object-cover border border-gray-200 opacity-60" />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </section>
+
+              {/* Package Configuration */}
+              <section>
+                <h3 className="text-sm font-bold text-gray-900 mb-3 pb-2 border-b border-gray-100">Package Configuration</h3>
+                <div className="space-y-4">
+                  <Field label="Kitchen Layout">
+                    <div className="grid grid-cols-3 gap-2">
+                      {KITCHEN_LAYOUTS.map(l => (
+                        <button
+                          key={l.type}
+                          type="button"
+                          onClick={() => set('kitchenLayout', l.type)}
+                          className={`p-2 rounded-lg border text-xs font-semibold transition-colors text-left ${
+                            form.kitchenLayout === l.type
+                              ? 'bg-indigo-600 text-white border-indigo-600'
+                              : 'bg-white text-gray-700 border-gray-200 hover:border-indigo-400'
+                          }`}
+                        >
+                          <div className="font-bold">{l.name}</div>
+                          <div className="text-[10px] opacity-75">{l.description}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </Field>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <Field label="Wardrobe 1 (Master Bedroom)">
+                      <div className="grid grid-cols-2 gap-2 mt-1">
+                        {WARDROBE_TYPES.map(w => (
+                          <button
+                            key={w.type}
+                            type="button"
+                            onClick={() => set('wardrobe1Type', w.type)}
+                            className={`p-1.5 rounded-lg border text-xs font-semibold transition-colors text-center ${
+                              form.wardrobe1Type === w.type
+                                ? 'bg-indigo-600 text-white border-indigo-600'
+                                : 'bg-white text-gray-700 border-gray-200 hover:border-indigo-400'
+                            }`}
+                          >
+                            {w.name}
+                          </button>
+                        ))}
+                      </div>
+                    </Field>
+
+                    <Field label="Wardrobe 2 (Bedroom 2)">
+                      <div className="grid grid-cols-2 gap-2 mt-1">
+                        {WARDROBE_TYPES.map(w => (
+                          <button
+                            key={w.type}
+                            type="button"
+                            onClick={() => set('wardrobe2Type', w.type)}
+                            className={`p-1.5 rounded-lg border text-xs font-semibold transition-colors text-center ${
+                              form.wardrobe2Type === w.type
+                                ? 'bg-indigo-600 text-white border-indigo-600'
+                                : 'bg-white text-gray-700 border-gray-200 hover:border-indigo-400'
+                            }`}
+                          >
+                            {w.name}
+                          </button>
+                        ))}
+                      </div>
+                    </Field>
+                  </div>
+                </div>
+              </section>
+
+              {/* Materials */}
+              <section>
+                <h3 className="text-sm font-bold text-gray-900 mb-3 pb-2 border-b border-gray-100">Materials</h3>
+                <div className="flex flex-wrap gap-2">
+                  {MATERIAL_OPTIONS.map(m => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => set('materials', toggleArr(form.materials, m))}
+                      className={`px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${
+                        form.materials.includes(m)
+                          ? 'bg-indigo-600 text-white border-indigo-600'
+                          : 'bg-white text-gray-600 border-gray-300 hover:border-indigo-400'
+                      }`}
+                    >
+                      {m}
+                    </button>
+                  ))}
+                </div>
+              </section>
+
+              {/* Features */}
+              <section>
+                <h3 className="text-sm font-bold text-gray-900 mb-3 pb-2 border-b border-gray-100">Features</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {FEATURE_OPTIONS.map(f => (
+                    <label key={f.id} className="flex items-center gap-2 p-2 rounded-lg border border-gray-200 cursor-pointer hover:border-indigo-400 transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={form.features.some(x => x.id === f.id)}
+                        onChange={() => set('features', form.features.some(x => x.id === f.id)
+                          ? form.features.filter(x => x.id !== f.id)
+                          : [...form.features, f]
+                        )}
+                        className="rounded text-indigo-600"
+                      />
+                      <span className="text-xs text-gray-700">{f.name}</span>
+                    </label>
+                  ))}
+                </div>
+              </section>
+
+              {/* Inclusions */}
+              <section>
+                <h3 className="text-sm font-bold text-gray-900 mb-3 pb-2 border-b border-gray-100">Inclusions</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {INCLUSION_OPTIONS.map((inc, i) => (
+                    <label key={i} className="flex items-center gap-2 p-2 rounded-lg border border-gray-200 cursor-pointer hover:border-indigo-400 transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={form.inclusions.some(x => x.item === inc.item)}
+                        onChange={() => set('inclusions', form.inclusions.some(x => x.item === inc.item)
+                          ? form.inclusions.filter(x => x.item !== inc.item)
+                          : [...form.inclusions, inc]
+                        )}
+                        className="rounded text-indigo-600"
+                      />
+                      <span className="text-xs text-gray-700">{inc.item}</span>
+                    </label>
+                  ))}
+                </div>
+              </section>
+
+              {/* Variants */}
+              <section>
+                <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-100">
+                  <h3 className="text-sm font-bold text-gray-900">Variants</h3>
+                  <button
+                    type="button"
+                    onClick={() => set('hasVariants', !form.hasVariants)}
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+                      form.hasVariants ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {form.hasVariants ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
+                    {form.hasVariants ? 'Enabled' : 'Disabled'}
+                  </button>
+                </div>
+                {form.hasVariants && (
+                  <div className="space-y-3">
+                    {form.variants.map((v, i) => (
+                      <div key={i} className="border border-gray-200 rounded-xl p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-semibold text-gray-600">Variant {i + 1}</span>
+                          <button
+                            type="button"
+                            onClick={() => set('variants', form.variants.filter((_, j) => j !== i))}
+                            className="text-red-400 hover:text-red-600"
+                          ><X className="w-4 h-4" /></button>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Field label="Label">
+                            <input className={inp} value={v.label || ''} onChange={e => {
+                              const nv = [...form.variants]; nv[i] = { ...nv[i], label: e.target.value }; set('variants', nv);
+                            }} placeholder="e.g. Premium" />
+                          </Field>
+                          <Field label="Kitchen Layout">
+                            <select className={inp} value={v.kitchenLayout || ''} onChange={e => {
+                              const nv = [...form.variants]; nv[i] = { ...nv[i], kitchenLayout: e.target.value }; set('variants', nv);
+                            }}>
+                              <option value="">Select</option>
+                              {KITCHEN_LAYOUTS.map(l => <option key={l.type} value={l.type}>{l.name}</option>)}
+                            </select>
+                          </Field>
+                          <Field label="Wardrobe 1 Type">
+                            <select className={inp} value={v.wardrobe1Type || ''} onChange={e => {
+                              const nv = [...form.variants]; nv[i] = { ...nv[i], wardrobe1Type: e.target.value }; set('variants', nv);
+                            }}>
+                              <option value="">Select</option>
+                              {WARDROBE_TYPES.map(w => <option key={w.type} value={w.type}>{w.name}</option>)}
+                            </select>
+                          </Field>
+                          <Field label="Wardrobe 2 Type">
+                            <select className={inp} value={v.wardrobe2Type || ''} onChange={e => {
+                              const nv = [...form.variants]; nv[i] = { ...nv[i], wardrobe2Type: e.target.value }; set('variants', nv);
+                            }}>
+                              <option value="">Select</option>
+                              {WARDROBE_TYPES.map(w => <option key={w.type} value={w.type}>{w.name}</option>)}
+                            </select>
+                          </Field>
+                          <Field label="SKU">
+                            <input className={inp} value={v.sku || ''} onChange={e => {
+                              const nv = [...form.variants]; nv[i] = { ...nv[i], sku: e.target.value }; set('variants', nv);
+                            }} placeholder="SKU-001" />
+                          </Field>
+                          <Field label="Stock">
+                            <input type="number" className={inp} value={v.stock ?? ''} onChange={e => {
+                              const nv = [...form.variants]; nv[i] = { ...nv[i], stock: e.target.value }; set('variants', nv);
+                            }} placeholder="0" />
+                          </Field>
+                          <Field label="Price">
+                            <input type="number" className={inp} value={v.price ?? ''} onChange={e => {
+                              const nv = [...form.variants]; nv[i] = { ...nv[i], price: e.target.value }; set('variants', nv);
+                            }} placeholder="0" />
+                          </Field>
+                          <Field label="MRP">
+                            <input type="number" className={inp} value={v.mrp ?? ''} onChange={e => {
+                              const nv = [...form.variants]; nv[i] = { ...nv[i], mrp: e.target.value }; set('variants', nv);
+                            }} placeholder="0" />
+                          </Field>
+                        </div>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => set('variants', [...form.variants, { label: '', kitchenLayout: '', wardrobe1Type: '', wardrobe2Type: '', sku: '', price: '', mrp: '', stock: '', isActive: true }])}
+                      className="w-full py-2.5 border-2 border-dashed border-indigo-200 text-indigo-600 text-xs font-semibold rounded-xl hover:border-indigo-400 hover:bg-indigo-50 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <Plus className="w-4 h-4" /> Add Variant
+                    </button>
+                  </div>
+                )}
+              </section>
+
+              {/* Package Specs */}
+              <section>
+                <h3 className="text-sm font-bold text-gray-900 mb-3 pb-2 border-b border-gray-100">Package Specifications</h3>
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-xs font-semibold text-gray-600 mb-2">Suitable For</p>
+                    <TagToggle
+                      values={SUITABLE_FOR}
+                      selected={form.packageMetadata.suitableFor || []}
+                      onToggle={v => setPM('suitableFor', toggleArr(form.packageMetadata.suitableFor || [], v))}
+                    />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-gray-600 mb-2">Style</p>
+                    <TagToggle
+                      values={STYLE_OPTIONS}
+                      selected={form.packageMetadata.style || []}
+                      onToggle={v => setPM('style', toggleArr(form.packageMetadata.style || [], v))}
+                    />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-gray-600 mb-2">Color Scheme</p>
+                    <TagToggle
+                      values={COLOR_OPTIONS}
+                      selected={form.packageMetadata.colorScheme || []}
+                      onToggle={v => setPM('colorScheme', toggleArr(form.packageMetadata.colorScheme || [], v))}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field label="Delivery Time">
+                      <input className={inp} value={form.packageMetadata.deliveryTime || ''} onChange={e => setPM('deliveryTime', e.target.value)} placeholder="e.g. 30-35 days" />
+                    </Field>
+                    <Field label="Warranty">
+                      <input className={inp} value={form.packageMetadata.warranty || ''} onChange={e => setPM('warranty', e.target.value)} placeholder="e.g. 2 years" />
+                    </Field>
+                    <Field label="Min Area (sq ft)">
+                      <input type="number" className={inp} value={form.packageMetadata.area?.min || ''} onChange={e => setPM('area', { ...form.packageMetadata.area, min: e.target.value })} placeholder="600" />
+                    </Field>
+                    <Field label="Max Area (sq ft)">
+                      <input type="number" className={inp} value={form.packageMetadata.area?.max || ''} onChange={e => setPM('area', { ...form.packageMetadata.area, max: e.target.value })} placeholder="900" />
+                    </Field>
+                  </div>
+                </div>
+              </section>
+
+              {/* Form actions */}
+              <div className="flex gap-3 pt-2 pb-6">
+                <button
+                  type="button"
+                  onClick={closeForm}
+                  className="flex-1 py-2.5 border border-gray-200 text-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="flex-1 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
+                >
+                  {saving
+                    ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Saving...</>
+                    : (editing ? 'Update Package' : 'Create Package')
+                  }
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* View Modal */}
+      {viewItem && createPortal(
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.5)', padding: '1rem' }}>
+          <div style={{ background: '#fff', borderRadius: '1rem', width: '100%', maxWidth: '36rem', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <h3 className="font-bold text-gray-900 text-base">{viewItem.name}</h3>
+              <button onClick={() => setViewItem(null)} className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 space-y-5">
+              {/* Images */}
+              {viewItem.mainImages?.length > 0 && (
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {viewItem.mainImages.map((img, i) => (
+                    <img key={i} src={img} alt="" className="h-32 w-40 object-cover rounded-xl flex-shrink-0 border border-gray-100" />
+                  ))}
+                </div>
+              )}
+
+              {/* Pricing */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-indigo-50 rounded-xl p-3 text-center">
+                  <p className="text-xs text-indigo-600 font-medium">Base Price</p>
+                  <p className="text-lg font-bold text-indigo-900">₹{(viewItem.basePrice || 0).toLocaleString()}</p>
+                </div>
+                {viewItem.mrp > 0 && (
+                  <div className="bg-gray-50 rounded-xl p-3 text-center">
+                    <p className="text-xs text-gray-500 font-medium">MRP</p>
+                    <p className="text-lg font-bold text-gray-700">₹{viewItem.mrp.toLocaleString()}</p>
+                  </div>
+                )}
+                {viewItem.discount > 0 && (
+                  <div className="bg-green-50 rounded-xl p-3 text-center">
+                    <p className="text-xs text-green-600 font-medium">Discount</p>
+                    <p className="text-lg font-bold text-green-700">{viewItem.discount}%</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Description */}
+              {viewItem.description && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Description</p>
+                  <p className="text-sm text-gray-700">{viewItem.description}</p>
+                </div>
+              )}
+
+              {/* Config */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-gray-50 rounded-xl p-3">
+                  <p className="text-xs text-gray-500 font-medium mb-1">Kitchen</p>
+                  <p className="text-sm font-semibold text-gray-900 capitalize">{viewItem.kitchenLayout || '—'}</p>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-3">
+                  <p className="text-xs text-gray-500 font-medium mb-1">Wardrobe 1</p>
+                  <p className="text-sm font-semibold text-gray-900 capitalize">{viewItem.wardrobe1Type || '—'}</p>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-3">
+                  <p className="text-xs text-gray-500 font-medium mb-1">Wardrobe 2</p>
+                  <p className="text-sm font-semibold text-gray-900 capitalize">{viewItem.wardrobe2Type || '—'}</p>
+                </div>
+              </div>
+
+              {/* Materials */}
+              {viewItem.materials?.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Materials</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {viewItem.materials.map((m, i) => (
+                      <span key={i} className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-full text-xs font-medium">{m}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Features */}
+              {viewItem.features?.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Features</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {viewItem.features.map((f, i) => (
+                      <span key={i} className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full text-xs font-medium">{f.name || f}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Inclusions */}
+              {viewItem.inclusions?.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Inclusions</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {viewItem.inclusions.map((inc, i) => (
+                      <span key={i} className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-full text-xs font-medium">{inc.item || inc}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Variants */}
+              {viewItem.hasVariants && viewItem.variants?.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Variants</p>
+                  <div className="space-y-2">
+                    {viewItem.variants.map((v, i) => (
+                      <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl text-xs">
+                        <span className="font-semibold text-gray-800">{v.label || `Variant ${i + 1}`}</span>
+                        <div className="flex items-center gap-3 text-gray-600">
+                          {v.kitchenLayout && <span className="capitalize">{v.kitchenLayout}</span>}
+                          {v.wardrobe1Type && <span>{v.wardrobe1Type} / {v.wardrobe2Type}</span>}
+                          {v.price > 0 && <span className="font-semibold text-gray-900">₹{Number(v.price).toLocaleString()}</span>}
+                          {v.stock != null && <span>Qty: {v.stock}</span>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Package Metadata */}
+              {(viewItem.packageMetadata?.suitableFor?.length > 0 || viewItem.packageMetadata?.deliveryTime) && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Package Details</p>
+                  <div className="grid grid-cols-2 gap-3 text-xs mb-3">
+                    {viewItem.packageMetadata?.deliveryTime && (
+                      <div className="bg-gray-50 rounded-xl p-3">
+                        <p className="text-gray-500 mb-0.5">Delivery</p>
+                        <p className="font-semibold text-gray-900">{viewItem.packageMetadata.deliveryTime}</p>
+                      </div>
+                    )}
+                    {viewItem.packageMetadata?.warranty && (
+                      <div className="bg-gray-50 rounded-xl p-3">
+                        <p className="text-gray-500 mb-0.5">Warranty</p>
+                        <p className="font-semibold text-gray-900">{viewItem.packageMetadata.warranty}</p>
+                      </div>
+                    )}
+                  </div>
+                  {viewItem.packageMetadata?.suitableFor?.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {viewItem.packageMetadata.suitableFor.map((s, i) => (
+                        <span key={i} className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-full text-xs font-medium">{s}</span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Tags */}
+              {viewItem.tags?.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Tags</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {viewItem.tags.map((t, i) => (
+                      <span key={i} className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs">{t}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Footer */}
+              <div className="flex gap-3 pt-2 border-t border-gray-100">
+                <button
+                  onClick={() => { setViewItem(null); openEdit(viewItem); }}
+                  className="flex-1 py-2.5 bg-blue-500 text-white rounded-xl text-sm font-semibold hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
+                >
+                  <Edit className="w-4 h-4" /> Edit
+                </button>
+                <button
+                  onClick={() => setViewItem(null)}
+                  className="flex-1 py-2.5 border border-gray-200 text-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+    </div>
+  );
+}

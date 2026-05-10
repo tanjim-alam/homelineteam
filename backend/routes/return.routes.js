@@ -14,10 +14,10 @@ router.put('/:id/cancel', authenticateUser, controller.cancelReturnRequest);
 // Admin routes (admin authentication required)
 router.get('/admin/all', authenticate, requireAdmin, controller.getAllReturns);
 router.get('/admin/products', authenticate, requireAdmin, controller.getAllReturnProducts);
+router.get('/admin/stats', authenticate, requireAdmin, controller.getReturnStats);
 router.get('/admin/:id', authenticate, requireAdmin, controller.getReturnByIdAdmin);
 router.put('/admin/:id/status', authenticate, requireAdmin, controller.updateReturnStatus);
 router.put('/admin/:id/process-refund', authenticate, requireAdmin, controller.processRefund);
 router.put('/admin/:id/complete-refund', authenticate, requireAdmin, controller.completeRefund);
-router.get('/admin/stats', authenticate, requireAdmin, controller.getReturnStats);
 
 module.exports = router;

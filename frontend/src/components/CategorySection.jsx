@@ -1,208 +1,146 @@
-'use client';
+// Server Component — no 'use client'
+import Link from 'next/link'
+import Image from 'next/image'
+import { ArrowRight } from 'lucide-react'
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { ArrowRight, Sparkles } from 'lucide-react';
-import api from '@/services/api';
+async function fetchCategories() {
+  const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.homelineteam.com'
+  try {
+    const res = await fetch(`${base}/categories/hierarchical`, {
+      next: { revalidate: 3600 },
+    })
+    if (!res.ok) return []
+    const data = await res.json()
 
-export default function CategorySection() {
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
+    let raw = []
+    if (Array.isArray(data))       raw = data
+    else if (data?.categories)     raw = data.categories
+    else if (data?.data)           raw = data.data
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        // Use hierarchical categories to get proper mainCategory/subcategory structure
-        const data = await api.getHierarchicalCategories();
-
-        // Handle different possible data structures
-        let categoriesData = [];
-        if (data && Array.isArray(data)) {
-          // If API returns array directly
-          categoriesData = data;
-        } else if (data && data.categories && Array.isArray(data.categories)) {
-          // If API returns { categories: [...] }
-          categoriesData = data.categories;
-        } else if (data && data.data && Array.isArray(data.data)) {
-          // If API returns { data: [...] }
-          categoriesData = data.data;
-        }
-
-        // Flatten the hierarchical structure to get all subcategories
-        const flattenedCategories = [];
-        categoriesData.forEach(mainCategory => {
-          if (mainCategory.subcategories && mainCategory.subcategories.length > 0) {
-            mainCategory.subcategories.forEach(subcategory => {
-              flattenedCategories.push({
-                ...subcategory,
-                mainCategory: {
-                  _id: mainCategory._id,
-                  name: mainCategory.name,
-                  slug: mainCategory.slug
-                }
-              });
-            });
-          }
-        });
-
-        if (flattenedCategories.length > 0) {
-          setCategories(flattenedCategories);
-        } else {
-          // Fallback to main categories if no subcategories
-          setCategories(categoriesData);
-        }
-      } catch (error) {
-        setCategories([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCategories();
-  }, []);
-
-
-
-  if (loading) {
-    return (
-      <section className="py-20 bg-gray-50">
-        <div className="container-custom">
-          <div className="text-center mb-16">
-            <div className="animate-pulse">
-              <div className="h-8 bg-gray-200 rounded w-64 mx-auto mb-4"></div>
-              <div className="h-4 bg-gray-200 rounded w-96 mx-auto"></div>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="animate-pulse text-center">
-                <div className="w-48 h-48 bg-gray-200 rounded-full mx-auto mb-4"></div>
-                <div className="h-6 bg-gray-200 rounded w-3/4 mx-auto mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded w-full mb-3"></div>
-                <div className="h-8 bg-gray-200 rounded-full w-24 mx-auto"></div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-    );
+    const flat = []
+    raw.forEach(main => {
+      ;(main.subcategories || []).forEach(sub => {
+        flat.push({ ...sub, mainCategory: { _id: main._id, name: main.name, slug: main.slug } })
+      })
+    })
+    return flat.length > 0 ? flat : raw
+  } catch {
+    return []
   }
+}
+
+const getHref = (cat) =>
+  cat.mainCategory ? `/${cat.mainCategory.slug}/${cat.slug}` : `/collections/${cat.slug}`
+
+const PLACEHOLDER = 'https://placehold.co/200x200/f3f4f6/9ca3af?text=...'
+
+export default async function CategorySection() {
+  const categories = await fetchCategories()
+  if (categories.length === 0) return null
 
   return (
-    <section className="py-12 sm:py-16 lg:py-20 bg-gray-50">
-      <div className="container-custom px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div className="text-center mb-12 sm:mb-16">
-          <div className="inline-flex items-center gap-2 bg-glass px-3 sm:px-4 py-2 rounded-full mb-4 sm:mb-6">
-            <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-primary-500" />
-            <span className="text-xs sm:text-sm font-medium text-gray-700">Explore Our Collections</span>
-          </div>
-          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 sm:mb-6">
+    <section aria-labelledby="cat-heading" className="bg-white">
+
+      {/* ══════════ MOBILE (< md) — app-style circles ══════════════ */}
+      <div className="md:hidden">
+        <div className="flex items-center justify-between px-4 pt-4 pb-2">
+          <h2 id="cat-heading" className="text-base font-extrabold text-gray-900 tracking-tight">
             Shop by Category
           </h2>
-          <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto px-4">
-            Discover our carefully curated collections designed to transform every room in your home with style, comfort, and elegance.
-          </p>
+          <Link href="/collections"
+            className="text-xs font-bold text-blue-600 flex items-center gap-0.5">
+            See all <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
         </div>
 
-        {/* Categories Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 sm:gap-8">
-          {categories.map((category, index) => (
+        {/* Horizontal scroll row */}
+        <div className="flex gap-3 px-4 pb-4 overflow-x-auto scrollbar-hide">
+          {categories.map((cat) => (
             <Link
-              key={category._id}
-              href={category.mainCategory ? `/${category.mainCategory.slug}/${category.slug}` : `/collections/${category.slug}`}
-              className="group block"
+              key={cat._id}
+              href={getHref(cat)}
+              aria-label={`Shop ${cat.name}`}
+              className="flex-shrink-0 flex flex-col items-center gap-1.5 active:scale-95 transition-transform"
             >
-              <div className="relative text-center">
-                {/* Circular Card */}
-                <div className="relative w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 mx-auto mb-3 sm:mb-4 overflow-hidden rounded-full bg-gradient-to-br from-white to-gray-50 shadow-lg hover:shadow-2xl transition-all duration-500 group-hover:scale-110 border-4 border-gray-100 group-hover:border-primary-200">
-
-                  {/* Background Pattern */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary-50/40 via-transparent to-secondary-50/40 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-full"></div>
-
-                  {/* Category Image */}
-                  <div className="relative w-full h-full overflow-hidden rounded-full">
-                    <Image
-                      src={category.image || 'https://via.placeholder.com/400x400?text=Category'}
-                      alt={category.name}
-                      fill
-                      className="object-cover group-hover:scale-110 transition-transform duration-700"
-                    />
-
-                    {/* Gradient Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent group-hover:from-black/70 transition-all duration-500 rounded-full"></div>
-
-                    {/* Featured Badge */}
-                    {category.metaData?.featured && (
-                      <div className="absolute top-2 sm:top-3 left-2 sm:left-3 bg-gradient-to-r from-primary-500 to-primary-600 text-white text-xs font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full shadow-lg backdrop-blur-sm">
-                        <span className="flex items-center gap-0.5 sm:gap-1">
-                          <div className="w-0.5 h-0.5 sm:w-1 sm:h-1 bg-white rounded-full animate-pulse"></div>
-                          ★
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Popular Badge */}
-                    {category.metaData?.popular && (
-                      <div className="absolute top-2 sm:top-3 right-2 sm:right-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-xs font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full shadow-lg backdrop-blur-sm">
-                        <span className="flex items-center gap-0.5 sm:gap-1">
-                          <div className="w-0.5 h-0.5 sm:w-1 sm:h-1 bg-white rounded-full animate-pulse"></div>
-                          🔥
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Product Count Badge */}
-                    <div className="absolute bottom-2 sm:bottom-3 left-1/2 transform -translate-x-1/2 bg-white/95 backdrop-blur-sm text-gray-800 text-xs font-semibold px-2 sm:px-3 py-0.5 sm:py-1 rounded-full shadow-lg">
-                      {category.productCount} items
-                    </div>
-                  </div>
-
-                  {/* Hover Effect Ring */}
-                  <div className="absolute inset-0 rounded-full border-4 border-transparent group-hover:border-primary-300/50 transition-all duration-500"></div>
-                </div>
-
-                {/* Category Info Below Circle */}
-                <div className="text-center">
-                  <h3 className="font-bold text-gray-900 text-sm sm:text-base lg:text-lg mb-1 sm:mb-2 group-hover:text-primary-600 transition-colors duration-300">
-                    {category.name}
-                  </h3>
-                  {category.mainCategory && (
-                    <p className="text-xs text-gray-500 mb-1 font-medium">
-                      {category.mainCategory.name}
-                    </p>
-                  )}
-
-                  <p className="text-gray-600 text-xs sm:text-sm leading-relaxed mb-2 sm:mb-3 line-clamp-2 px-1 sm:px-2">
-                    {category.description}
-                  </p>
-
-                  {/* Action Button */}
-                  <div className="inline-flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-primary-500 to-primary-600 text-white text-xs sm:text-sm font-medium px-3 sm:px-4 py-1.5 sm:py-2 rounded-full shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105">
-                    <span>Explore</span>
-                    <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 group-hover:translate-x-0.5 transition-transform duration-300" />
-                  </div>
-                </div>
-
-                {/* Floating Decorative Elements */}
-                <div className="absolute -top-1 sm:-top-2 -right-1 sm:-right-2 w-3 h-3 sm:w-4 sm:h-4 bg-gradient-to-r from-primary-400 to-primary-500 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-500 group-hover:scale-150"></div>
-                <div className="absolute -bottom-1 sm:-bottom-2 -left-1 sm:-left-2 w-2 h-2 sm:w-3 sm:h-3 bg-gradient-to-r from-secondary-400 to-secondary-500 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-500 group-hover:scale-150" style={{ transitionDelay: '0.1s' }}></div>
+              {/* Circle image */}
+              <div className="w-[68px] h-[68px] rounded-full overflow-hidden bg-gray-100 border-2 border-gray-100 shadow-sm">
+                <Image
+                  src={cat.image || PLACEHOLDER}
+                  alt={cat.name}
+                  width={68}
+                  height={68}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
               </div>
+              {/* Name */}
+              <span className="text-[11px] font-semibold text-gray-700 text-center leading-tight w-[72px] line-clamp-2">
+                {cat.name}
+              </span>
             </Link>
           ))}
         </div>
+      </div>
 
-        {/* View All Button */}
-        <div className="text-center mt-8 sm:mt-12">
-          <Link href="/collections">
-            <button className="btn-primary group flex items-center gap-2 mx-auto">
-              <span>View All Collections</span>
-              <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform duration-300" />
-            </button>
-          </Link>
+      {/* ══════════ DESKTOP (md+) — grid cards ═════════════════════ */}
+      <div className="hidden md:block py-12 px-6 lg:px-10 xl:px-16">
+        <div className="max-w-7xl mx-auto">
+
+          {/* Header */}
+          <div className="flex items-end justify-between mb-8">
+            <div>
+              <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-1">Collections</p>
+              <h2 id="cat-heading" className="text-3xl lg:text-4xl font-extrabold text-gray-900 leading-tight">
+                Shop by <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Category</span>
+              </h2>
+              <p className="mt-2 text-sm text-gray-500 max-w-md">
+                Curated collections to transform every room with style.
+              </p>
+            </div>
+            <Link
+              href="/collections"
+              className="flex items-center gap-2 px-5 py-2.5 border-2 border-gray-200 rounded-xl text-sm font-bold text-gray-700 hover:border-blue-500 hover:text-blue-600 transition-colors flex-shrink-0"
+            >
+              View All <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+
+          {/* Grid — 4 cols lg, 5 cols xl, scroll fallback on md */}
+          <div className="grid grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            {categories.map((cat) => (
+              <Link
+                key={cat._id}
+                href={getHref(cat)}
+                aria-label={`Shop ${cat.name}`}
+                className="group block"
+              >
+                <div className="relative aspect-square rounded-2xl overflow-hidden bg-gray-100 shadow-sm group-hover:shadow-xl transition-all duration-300 group-hover:-translate-y-1">
+                  <Image
+                    src={cat.image || PLACEHOLDER}
+                    alt={cat.name}
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-110"
+                    sizes="(max-width: 768px) 25vw, (max-width: 1280px) 20vw, 16vw"
+                    loading="lazy"
+                  />
+                  {/* Gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                  {/* Name */}
+                  <div className="absolute bottom-0 inset-x-0 px-2 pb-2.5">
+                    <h3 className="text-white font-bold text-xs sm:text-sm leading-snug line-clamp-2 drop-shadow-sm">
+                      {cat.name}
+                    </h3>
+                  </div>
+                  {/* Hover shine */}
+                  <div className="absolute inset-0 bg-white/0 group-hover:bg-white/5 transition-colors duration-300 rounded-2xl" />
+                </div>
+              </Link>
+            ))}
+          </div>
+
         </div>
       </div>
+
     </section>
-  );
+  )
 }

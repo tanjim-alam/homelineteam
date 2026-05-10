@@ -1,18 +1,22 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useUser } from '@/contexts/UserContext';
-import { ArrowLeft, Mail, Key, CheckCircle } from 'lucide-react';
+import { Mail, Key, Lock, Eye, EyeOff, CheckCircle, AlertCircle, ArrowLeft, Send } from 'lucide-react';
 import Metadata from '@/components/Metadata';
 
 export default function ForgotPasswordPage() {
     const { forgotPassword, resetPassword } = useUser();
-    const [step, setStep] = useState('request'); // 'request' or 'reset'
+    const router = useRouter();
+    const [step, setStep] = useState('request');
     const [email, setEmail] = useState('');
     const [token, setToken] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -22,30 +26,23 @@ export default function ForgotPasswordPage() {
         setError('');
         setSuccess('');
 
-        if (!email) {
-            setError('Email is required');
-            return;
-        }
-
-        // Email validation
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
+        if (!email) { setError('Email address is required'); return; }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
             setError('Please enter a valid email address');
             return;
         }
 
         setLoading(true);
-
         try {
             const result = await forgotPassword(email);
             if (result.success) {
-                setSuccess('Password reset token sent to your email. Please check your inbox.');
+                setSuccess('Reset code sent! Please check your email inbox.');
                 setStep('reset');
             } else {
-                setError(result.error || 'Failed to send reset token');
+                setError(result.error || 'No account found with this email address.');
             }
-        } catch (error) {
-            setError('An error occurred while sending reset token');
+        } catch {
+            setError('Something went wrong. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -56,227 +53,178 @@ export default function ForgotPasswordPage() {
         setError('');
         setSuccess('');
 
-        if (!token || !newPassword || !confirmPassword) {
-            setError('All fields are required');
-            return;
-        }
-
-        if (token.length !== 6) {
-            setError('Please enter a valid 6-digit reset code');
-            return;
-        }
-
-        if (newPassword !== confirmPassword) {
-            setError('Passwords do not match');
-            return;
-        }
-
-        if (newPassword.length < 6) {
-            setError('Password must be at least 6 characters long');
-            return;
-        }
+        if (!token || !newPassword || !confirmPassword) { setError('All fields are required'); return; }
+        if (token.length !== 6) { setError('Please enter the 6-digit reset code from your email'); return; }
+        if (newPassword !== confirmPassword) { setError('Passwords do not match'); return; }
+        if (newPassword.length < 6) { setError('Password must be at least 6 characters'); return; }
 
         setLoading(true);
-
         try {
             const result = await resetPassword(email, token, newPassword);
             if (result.success) {
-                setSuccess('Password reset successfully! You can now sign in with your new password.');
-                setTimeout(() => {
-                    window.location.href = '/auth/login';
-                }, 3000);
+                setSuccess('Password reset successfully! Redirecting to sign in...');
+                setTimeout(() => router.push('/auth/login'), 2000);
             } else {
-                setError(result.error || 'Password reset failed');
+                setError(result.error || 'Invalid or expired reset code. Please request a new one.');
             }
-        } catch (error) {
-            setError('An error occurred while resetting password');
+        } catch {
+            setError('Something went wrong. Please try again.');
         } finally {
             setLoading(false);
         }
     };
 
+    const Alert = ({ type, message }) => (
+        <div role={type === 'error' ? 'alert' : 'status'} className={`flex items-start gap-3 rounded-xl p-4 mb-6 ${type === 'error' ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'}`}>
+            {type === 'error'
+                ? <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" aria-hidden="true" />
+                : <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" aria-hidden="true" />}
+            <p className={`text-sm font-medium ${type === 'error' ? 'text-red-700' : 'text-green-700'}`}>{message}</p>
+        </div>
+    );
+
+    /* ── Reset Password Step ───────────────────────────────────────────── */
     if (step === 'reset') {
         return (
             <>
-                <Metadata
-                    title="Reset Password - HomeLine Teams"
-                    description="Reset your password using the token sent to your email"
-                />
-                <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 flex items-center justify-center py-12 px-4">
-                    <div className="max-w-md w-full">
-                        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg shadow-gray-200/50 border border-gray-100 p-8">
-                            <div className="text-center mb-8">
-                                <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <Key className="w-8 h-8 text-primary-600" />
-                                </div>
-                                <h1 className="text-2xl font-bold text-gray-900 mb-2">Reset Password</h1>
-                                <p className="text-gray-600">
-                                    Enter the reset token sent to<br />
-                                    <span className="font-semibold text-gray-900">{email}</span>
-                                </p>
+                <Metadata title="Reset Password — HomelineTeam" description="Set a new password for your HomelineTeam account." noIndex />
+                <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-primary-50 flex items-center justify-center px-4 py-12">
+                    <div className="w-full max-w-md">
+                        <div className="text-center mb-8">
+                            <div className="w-14 h-14 bg-primary-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-primary-200">
+                                <Key className="w-7 h-7 text-white" aria-hidden="true" />
                             </div>
+                            <h1 className="text-2xl font-extrabold text-gray-900">Set new password</h1>
+                            <p className="text-gray-500 mt-1 text-sm">
+                                Enter the code sent to{' '}
+                                <span className="font-semibold text-gray-800">{email}</span>
+                            </p>
+                        </div>
 
-                            {error && (
-                                <div className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6">
-                                    <div className="flex items-center gap-3">
-                                        <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-                                        <p className="text-red-700 font-medium">{error}</p>
-                                    </div>
-                                </div>
-                            )}
+                        <div className="bg-white rounded-2xl shadow-lg shadow-gray-200/60 border border-gray-100 p-8">
+                            {error && <Alert type="error" message={error} />}
+                            {success && <Alert type="success" message={success} />}
 
-                            {success && (
-                                <div className="bg-green-50 border border-green-200 rounded-2xl p-4 mb-6">
-                                    <div className="flex items-center gap-3">
-                                        <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-                                        <p className="text-green-700 font-medium">{success}</p>
-                                    </div>
-                                </div>
-                            )}
-
-                            <form onSubmit={handleResetPassword} className="space-y-6">
+                            <form onSubmit={handleResetPassword} className="space-y-4" noValidate>
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    <label htmlFor="reset-token" className="block text-sm font-semibold text-gray-700 mb-1.5">
                                         Reset Code (6 digits)
                                     </label>
                                     <div className="relative">
-                                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400">
-                                            <Key className="w-5 h-5" />
-                                        </div>
+                                        <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" aria-hidden="true" />
                                         <input
+                                            id="reset-token"
                                             type="text"
                                             value={token}
-                                            onChange={(e) => {
-                                                // Only allow numbers and limit to 6 digits
-                                                const value = e.target.value.replace(/\D/g, '').slice(0, 6);
-                                                setToken(value);
-                                            }}
-                                            placeholder="Enter 6-digit code from email"
-                                            className="w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-center text-lg tracking-widest transition-all duration-200 text-gray-700"
-                                            maxLength="6"
+                                            onChange={(e) => { setToken(e.target.value.replace(/\D/g, '').slice(0, 6)); if (error) setError(''); }}
+                                            placeholder="Enter 6-digit code"
+                                            className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-center text-xl tracking-widest font-bold text-gray-800 text-sm transition-all"
+                                            maxLength={6}
                                             inputMode="numeric"
-                                            pattern="[0-9]*"
+                                            autoFocus
                                             required
                                         />
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        New Password
-                                    </label>
+                                    <label htmlFor="new-password" className="block text-sm font-semibold text-gray-700 mb-1.5">New Password</label>
                                     <div className="relative">
-                                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400">
-                                            <Key className="w-5 h-5" />
-                                        </div>
+                                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" aria-hidden="true" />
                                         <input
-                                            type="password"
+                                            id="new-password"
+                                            type={showNewPassword ? 'text' : 'password'}
                                             value={newPassword}
-                                            onChange={(e) => setNewPassword(e.target.value)}
-                                            placeholder="Enter new password"
-                                            className="w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-gray-700"
+                                            onChange={(e) => { setNewPassword(e.target.value); if (error) setError(''); }}
+                                            placeholder="Min. 6 characters"
+                                            autoComplete="new-password"
+                                            className="w-full pl-10 pr-12 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-800 text-sm transition-all"
                                             required
                                         />
+                                        <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} aria-label={showNewPassword ? 'Hide' : 'Show'} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                            {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                        </button>
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        Confirm New Password
-                                    </label>
+                                    <label htmlFor="confirm-new-password" className="block text-sm font-semibold text-gray-700 mb-1.5">Confirm New Password</label>
                                     <div className="relative">
-                                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400">
-                                            <Key className="w-5 h-5" />
-                                        </div>
+                                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" aria-hidden="true" />
                                         <input
-                                            type="password"
+                                            id="confirm-new-password"
+                                            type={showConfirmPassword ? 'text' : 'password'}
                                             value={confirmPassword}
-                                            onChange={(e) => setConfirmPassword(e.target.value)}
-                                            placeholder="Confirm new password"
-                                            className="w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-gray-700"
+                                            onChange={(e) => { setConfirmPassword(e.target.value); if (error) setError(''); }}
+                                            placeholder="Re-enter new password"
+                                            autoComplete="new-password"
+                                            className="w-full pl-10 pr-12 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-800 text-sm transition-all"
                                             required
                                         />
+                                        <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} aria-label={showConfirmPassword ? 'Hide' : 'Show'} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                            {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                        </button>
                                     </div>
                                 </div>
 
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="w-full btn-primary py-3 px-4 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed font-semibold transition-all duration-200"
+                                    className="w-full flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-primary-200 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed mt-2 cursor-pointer"
                                 >
-                                    {loading ? 'Resetting...' : 'Reset Password'}
+                                    {loading ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" aria-hidden="true" />
+                                            Resetting...
+                                        </>
+                                    ) : 'Reset Password'}
                                 </button>
 
-                                <div className="text-center">
-                                    <button
-                                        type="button"
-                                        onClick={() => setStep('request')}
-                                        className="text-gray-600 hover:text-gray-800 text-sm"
-                                    >
-                                        ← Back to Request Reset
-                                    </button>
-                                </div>
+                                <button type="button" onClick={() => setStep('request')} className="w-full flex items-center justify-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors mt-1">
+                                    <ArrowLeft className="w-4 h-4" aria-hidden="true" />
+                                    Request new code
+                                </button>
                             </form>
                         </div>
                     </div>
-                </div>
+                </main>
             </>
         );
     }
 
+    /* ── Request Reset Step ────────────────────────────────────────────── */
     return (
         <>
-            <Metadata
-                title="Forgot Password - HomeLine Teams"
-                description="Reset your password if you've forgotten it"
-            />
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 flex items-center justify-center py-12 px-4">
-                <div className="max-w-md w-full">
-                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg shadow-gray-200/50 border border-gray-100 p-8">
-                        <div className="text-center mb-8">
-                            <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <Mail className="w-8 h-8 text-primary-600" />
-                            </div>
-                            <h1 className="text-2xl font-bold text-gray-900 mb-2">Forgot Password?</h1>
-                            <p className="text-gray-600">
-                                No worries! Enter your email and we'll send you a reset token.
-                            </p>
+            <Metadata title="Forgot Password — HomelineTeam" description="Reset your HomelineTeam account password." noIndex />
+            <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-primary-50 flex items-center justify-center px-4 py-12">
+                <div className="w-full max-w-md">
+                    <div className="text-center mb-8">
+                        <div className="w-14 h-14 bg-primary-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-primary-200">
+                            <Mail className="w-7 h-7 text-white" aria-hidden="true" />
                         </div>
+                        <h1 className="text-2xl font-extrabold text-gray-900">Forgot your password?</h1>
+                        <p className="text-gray-500 mt-1 text-sm">Enter your email and we&apos;ll send you a reset code</p>
+                    </div>
 
-                        {error && (
-                            <div className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6">
-                                <div className="flex items-center gap-3">
-                                    <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-                                    <p className="text-red-700 font-medium">{error}</p>
-                                </div>
-                            </div>
-                        )}
+                    <div className="bg-white rounded-2xl shadow-lg shadow-gray-200/60 border border-gray-100 p-8">
+                        {error && <Alert type="error" message={error} />}
+                        {success && <Alert type="success" message={success} />}
 
-                        {success && (
-                            <div className="bg-green-50 border border-green-200 rounded-2xl p-4 mb-6">
-                                <div className="flex items-center gap-3">
-                                    <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-                                    <p className="text-green-700 font-medium">{success}</p>
-                                </div>
-                            </div>
-                        )}
-
-                        <form onSubmit={handleRequestReset} className="space-y-6">
+                        <form onSubmit={handleRequestReset} className="space-y-5" noValidate>
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Email Address
-                                </label>
+                                <label htmlFor="forgot-email" className="block text-sm font-semibold text-gray-700 mb-1.5">Email Address</label>
                                 <div className="relative">
-                                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400">
-                                        <Mail className="w-5 h-5" />
-                                    </div>
+                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" aria-hidden="true" />
                                     <input
+                                        id="forgot-email"
                                         type="email"
                                         value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        placeholder="Enter your email address"
-                                        className="w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-gray-700"
+                                        onChange={(e) => { setEmail(e.target.value); if (error) setError(''); }}
+                                        placeholder="you@example.com"
+                                        autoComplete="email"
+                                        className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-800 text-sm transition-all"
                                         required
+                                        autoFocus
                                     />
                                 </div>
                             </div>
@@ -284,33 +232,31 @@ export default function ForgotPasswordPage() {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full btn-primary cursor-pointer py-3 px-4 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed font-semibold transition-all duration-200"
+                                className="w-full flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-primary-200 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
                             >
-                                {loading ? 'Sending...' : 'Send Reset Token'}
+                                {loading ? (
+                                    <>
+                                        <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" aria-hidden="true" />
+                                        Sending...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Send className="w-4 h-4" aria-hidden="true" />
+                                        Send Reset Code
+                                    </>
+                                )}
                             </button>
-
-                            <div className="text-center">
-                                <Link
-                                    href="/auth/login"
-                                    className="text-primary-600 hover:text-primary-800 text-sm font-semibold transition-colors duration-200"
-                                >
-                                    ← Back to Sign In
-                                </Link>
-                            </div>
-
-                            <div className="text-center">
-                                <Link
-                                    href="/"
-                                    className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-800 text-sm transition-colors duration-200"
-                                >
-                                    <ArrowLeft className="w-4 h-4" />
-                                    Back to Home
-                                </Link>
-                            </div>
                         </form>
+
+                        <div className="flex items-center justify-center mt-6">
+                            <Link href="/auth/login" className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-primary-600 font-medium transition-colors">
+                                <ArrowLeft className="w-4 h-4" aria-hidden="true" />
+                                Back to Sign In
+                            </Link>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </main>
         </>
     );
 }

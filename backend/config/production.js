@@ -46,5 +46,11 @@ module.exports = {
     MAX_REQUEST_SIZE: "10mb",
 
     // Error Handling
-    SHOW_STACK_TRACE: false
+    SHOW_STACK_TRACE: false,
+
+    // Razorpay
+    RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID,
+    RAZORPAY_KEY_SECRET: process.env.RAZORPAY_KEY_SECRET,
+    RAZORPAY_WEBHOOK_SECRET: process.env.RAZORPAY_WEBHOOK_SECRET,
+    RAZORPAY_CURRENCY: 'INR'
 };

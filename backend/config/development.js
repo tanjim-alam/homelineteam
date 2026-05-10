@@ -34,5 +34,10 @@ module.exports = {
     REQUEST_TIMEOUT: 30000,
     MAX_REQUEST_SIZE: "10mb",
 
-    SHOW_STACK_TRACE: false
+    SHOW_STACK_TRACE: false,
+
+    RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID || 'rzp_live_SmwWeG1u2O6wdg',
+    RAZORPAY_KEY_SECRET: process.env.RAZORPAY_KEY_SECRET || 'tr6VgUpY4mNiBIYFhyYyQ1eg',
+    RAZORPAY_WEBHOOK_SECRET: process.env.RAZORPAY_WEBHOOK_SECRET || 'RazorpayWebhook#4uT8xP2mN7qLz9KsV5cD',
+    RAZORPAY_CURRENCY: 'INR'
 };

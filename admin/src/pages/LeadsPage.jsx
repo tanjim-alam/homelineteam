@@ -1,324 +1,471 @@
-import { useEffect, useState } from 'react'
-import api from '../api/client'
-import { ChevronDown, ChevronRight, Phone, MapPin, Home, Calendar, MessageSquare, Package, RefreshCw } from 'lucide-react'
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
+import {
+  Phone, MapPin, Home, Calendar, MessageSquare, Package,
+  RefreshCw, Trash2, X, Eye, ChevronDown, User, Tag,
+} from 'lucide-react';
+import api from '../api/client';
+import { useToast } from '../context/ToastContext';
+
+const STATUS_CONFIG = {
+  new:       { label: 'New',       color: 'bg-blue-100 text-blue-700',   dot: 'bg-blue-500' },
+  contacted: { label: 'Contacted', color: 'bg-amber-100 text-amber-700', dot: 'bg-amber-500' },
+  converted: { label: 'Converted', color: 'bg-green-100 text-green-700', dot: 'bg-green-500' },
+  closed:    { label: 'Closed',    color: 'bg-gray-100 text-gray-500',   dot: 'bg-gray-400' },
+};
+
+const STATUSES = ['new', 'contacted', 'converted', 'closed'];
+
+const StatusBadge = ({ status }) => {
+  const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.new;
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${cfg.color}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+      {cfg.label}
+    </span>
+  );
+};
+
+const formatDate = (d) => {
+  if (!d) return '—';
+  const date = new Date(d);
+  return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+};
+
+const formatDateTime = (d) => {
+  if (!d) return '—';
+  const date = new Date(d);
+  return date.toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+};
+
+const initials = (name = '') =>
+  name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) || '?';
 
 export default function LeadsPage() {
-  const [leads, setLeads] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [expandedLead, setExpandedLead] = useState(null)
+  const { showToast } = useToast();
+  const [leads, setLeads]         = useState([]);
+  const [loading, setLoading]     = useState(false);
+  const [filter, setFilter]       = useState('all');
+  const [viewLead, setViewLead]   = useState(null);
+  const [updatingId, setUpdatingId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
 
   const fetchLeads = async () => {
     try {
-      setLoading(true)
-      setError('')
-      const res = await api.get('/leads')
-      setLeads(res.data || [])
+      setLoading(true);
+      const res = await api.get('/leads');
+      setLeads(res.data || []);
     } catch (e) {
-      setError(e.message || 'Failed to load leads')
+      showToast('error', e.response?.data?.message || e.message || 'Failed to load leads');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
+  useEffect(() => { fetchLeads(); }, []);
 
-  const formatSelectedProduct = (meta) => {
-    if (!meta?.selectedProduct) return null
-
-    const product = meta.selectedProduct
-    return {
-      name: product.name || 'Not specified',
-      price: product.basePrice ? `₹${product.basePrice.toLocaleString()}` : 'Not specified',
-      layout: product.layout?.name || product.layout || 'Not specified',
-      materials: product.materials ?
-        (Array.isArray(product.materials) ?
-          product.materials.map(m => m.material).join(', ') :
-          product.materials) : 'Not specified',
-      type: product.type || 'Not specified',
-      doors: product.doors || 'Not specified',
-      kitchenLayout: product.kitchenLayout || 'Not specified',
-      wardrobe1Type: product.wardrobe1Type || 'Not specified',
-      wardrobe2Type: product.wardrobe2Type || 'Not specified',
-      image: product.image || null,
-      id: product.id || 'Not specified'
+  const updateStatus = async (id, status) => {
+    setUpdatingId(id);
+    try {
+      await api.patch(`/leads/${id}/status`, { status });
+      setLeads(prev => prev.map(l => l._id === id ? { ...l, status } : l));
+      if (viewLead?._id === id) setViewLead(v => ({ ...v, status }));
+    } catch (e) {
+      showToast('error', 'Failed to update status');
+    } finally {
+      setUpdatingId(null);
     }
-  }
+  };
 
+  const deleteLead = async (id) => {
+    if (!window.confirm('Delete this lead permanently?')) return;
+    setDeletingId(id);
+    try {
+      await api.delete(`/leads/${id}`);
+      setLeads(prev => prev.filter(l => l._id !== id));
+      if (viewLead?._id === id) setViewLead(null);
+      showToast('success', 'Lead deleted');
+    } catch (e) {
+      showToast('error', 'Failed to delete lead');
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
-  const toggleExpanded = (leadId) => {
-    setExpandedLead(expandedLead === leadId ? null : leadId)
-  }
+  const counts = STATUSES.reduce((acc, s) => {
+    acc[s] = leads.filter(l => l.status === s).length;
+    return acc;
+  }, {});
 
-  useEffect(() => { fetchLeads() }, [])
+  const filtered = filter === 'all' ? leads : leads.filter(l => l.status === filter);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      <div className="p-6 max-w-7xl mx-auto space-y-8">
-        {/* Modern Header */}
-        <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent mb-2">
-                Interior Design Leads
-              </h1>
-              <p className="text-lg text-gray-600">Manage and track all design inquiries</p>
-            </div>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={fetchLeads}
-                disabled={loading}
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-2xl font-bold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-              >
-                <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-                Refresh Leads
-              </button>
-            </div>
+    <div className="p-6 max-w-7xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Leads</h1>
+          <p className="text-sm text-gray-500 mt-0.5">All interior design inquiries from customers</p>
+        </div>
+        <button
+          onClick={fetchLeads}
+          disabled={loading}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 disabled:opacity-60 transition-colors shadow-sm"
+        >
+          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          Refresh
+        </button>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-5 gap-3">
+        {[
+          { label: 'Total', count: leads.length, color: 'bg-gray-50 border-gray-200', text: 'text-gray-900' },
+          { label: 'New',       count: counts.new,       color: 'bg-blue-50 border-blue-100',  text: 'text-blue-700' },
+          { label: 'Contacted', count: counts.contacted, color: 'bg-amber-50 border-amber-100', text: 'text-amber-700' },
+          { label: 'Converted', count: counts.converted, color: 'bg-green-50 border-green-100', text: 'text-green-700' },
+          { label: 'Closed',    count: counts.closed,    color: 'bg-gray-50 border-gray-200',  text: 'text-gray-500' },
+        ].map(s => (
+          <div key={s.label} className={`rounded-2xl border p-4 ${s.color}`}>
+            <p className="text-xs font-medium text-gray-500">{s.label}</p>
+            <p className={`text-2xl font-bold mt-1 ${s.text}`}>{s.count ?? 0}</p>
           </div>
+        ))}
+      </div>
+
+      {/* Table card */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        {/* Filter tabs */}
+        <div className="flex items-center gap-1 px-4 py-3 border-b border-gray-100">
+          {['all', ...STATUSES].map(s => (
+            <button
+              key={s}
+              onClick={() => setFilter(s)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-colors ${
+                filter === s
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-500 hover:bg-gray-100'
+              }`}
+            >
+              {s === 'all' ? `All (${leads.length})` : `${STATUS_CONFIG[s].label} (${counts[s]})`}
+            </button>
+          ))}
         </div>
 
-        {/* Modern Loading State */}
-        {loading && (
-          <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-12">
-            <div className="flex items-center justify-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-              <span className="ml-4 text-lg text-gray-600 font-medium">Loading leads...</span>
-            </div>
+        {loading ? (
+          <div className="flex items-center justify-center py-20 gap-3">
+            <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+            <span className="text-sm text-gray-500">Loading leads…</span>
           </div>
-        )}
-
-        {/* Modern Error State */}
-        {error && (
-          <div className="bg-red-50/80 backdrop-blur-sm border border-red-200/50 rounded-3xl p-6 shadow-xl">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-red-100 to-pink-200 rounded-2xl flex items-center justify-center">
-                <svg className="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-red-800">Error loading leads</h3>
-                <p className="text-sm text-red-700 mt-1">{error}</p>
-              </div>
+        ) : filtered.length === 0 ? (
+          <div className="py-20 text-center">
+            <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+              <User className="w-6 h-6 text-gray-400" />
             </div>
+            <p className="text-sm text-gray-500">
+              {filter === 'all' ? 'No leads yet.' : `No ${filter} leads.`}
+            </p>
           </div>
-        )}
-
-        {/* Modern Empty State */}
-        {!loading && !error && leads.length === 0 && (
-          <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-16 text-center">
-            <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg">
-              <span className="text-4xl">📋</span>
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">No leads found</h3>
-            <p className="text-lg text-gray-600">Interior design leads will appear here when customers submit forms.</p>
-          </div>
-        )}
-
-        {/* Modern Leads List */}
-        {!loading && !error && leads.length > 0 && (
-          <div className="space-y-6">
-            {leads.map((lead, index) => {
-              const selectedProduct = formatSelectedProduct(lead.meta)
-              const isExpanded = expandedLead === lead._id
-
-              return (
-                <div key={lead._id} className="bg-white/50 backdrop-blur-sm border border-gray-200/50 rounded-3xl shadow-xl hover:shadow-2xl hover:bg-white/70 transition-all duration-300 transform hover:scale-[1.02]">
-                  {/* Modern Lead Header */}
-                  <div
-                    className="p-8 cursor-pointer"
-                    onClick={() => toggleExpanded(lead._id)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-6">
-                        <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg">
-                          {lead.name.charAt(0).toUpperCase()}
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-100">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Lead</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Contact</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Details</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Source</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {filtered.map(lead => (
+                  <tr key={lead._id} className="hover:bg-gray-50 transition-colors">
+                    {/* Lead name + avatar */}
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                          {initials(lead.name)}
                         </div>
-                        <div>
-                          <h3 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent">{lead.name}</h3>
-                          <div className="flex items-center gap-6 text-sm text-gray-600 mt-2">
-                            <div className="flex items-center gap-2 bg-gradient-to-r from-blue-50/50 to-indigo-50/50 rounded-xl px-3 py-2 border border-blue-100/50">
-                              <Phone className="w-4 h-4 text-blue-600" />
-                              <a href={`tel:${lead.phone}`} className="hover:text-blue-600 font-medium">{lead.phone}</a>
-                            </div>
-                            {lead.city && (
-                              <div className="flex items-center gap-2 bg-gradient-to-r from-green-50/50 to-emerald-50/50 rounded-xl px-3 py-2 border border-green-100/50">
-                                <MapPin className="w-4 h-4 text-green-600" />
-                                <span className="font-medium">{lead.city}</span>
-                              </div>
-                            )}
-                            {lead.homeType && (
-                              <div className="flex items-center gap-2 bg-gradient-to-r from-purple-50/50 to-pink-50/50 rounded-xl px-3 py-2 border border-purple-100/50">
-                                <Home className="w-4 h-4 text-purple-600" />
-                                <span className="font-medium">{lead.homeType}</span>
-                              </div>
-                            )}
-                          </div>
+                        <div className="max-w-[160px]">
+                          <div className="text-sm font-semibold text-gray-900 truncate">{lead.name}</div>
+                          {lead.productDetails?.name && (
+                            <div className="text-xs text-gray-400 truncate">{lead.productDetails.name}</div>
+                          )}
                         </div>
                       </div>
-
-                      <div className="flex items-center gap-6">
-                        <div className="text-right">
-                          <div className="text-sm font-bold text-gray-900 bg-gradient-to-r from-amber-50/50 to-orange-50/50 rounded-xl px-4 py-2 border border-amber-100/50">
-                            {lead.sourcePage || 'Unknown'}
-                          </div>
-                          <div className="flex items-center gap-2 text-xs text-gray-500 mt-2">
-                            <Calendar className="w-3 h-3" />
-                            {new Date(lead.createdAt).toLocaleDateString()}
-                          </div>
-                        </div>
-                        <div className="text-gray-400 p-2 hover:bg-gray-100 rounded-xl transition-colors">
-                          {isExpanded ? <ChevronDown className="w-6 h-6" /> : <ChevronRight className="w-6 h-6" />}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Modern Expanded Details */}
-                  {isExpanded && (
-                    <div className="border-t border-gray-200/50 p-8 bg-gradient-to-r from-gray-50/50 to-blue-50/50">
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        {/* Modern Contact Information */}
-                        <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-8 border border-white/20 shadow-xl">
-                          <div className="flex items-center gap-3 mb-6">
-                            <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-indigo-200 rounded-2xl flex items-center justify-center">
-                              <MessageSquare className="w-5 h-5 text-blue-600" />
-                            </div>
-                            <h4 className="text-xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent">
-                              Contact Details
-                            </h4>
-                          </div>
-                          <div className="space-y-4">
-                            <div className="flex justify-between items-center">
-                              <span className="font-bold text-gray-700">Name:</span>
-                              <span className="text-gray-900 font-semibold">{lead.name}</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="font-bold text-gray-700">Phone:</span>
-                              <a href={`tel:${lead.phone}`} className="text-blue-600 hover:underline font-semibold">{lead.phone}</a>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="font-bold text-gray-700">City:</span>
-                              <span className="text-gray-900 font-semibold">{lead.city || 'Not specified'}</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="font-bold text-gray-700">Home Type:</span>
-                              <span className="text-gray-900 font-semibold">{lead.homeType || 'Not specified'}</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="font-bold text-gray-700">Source:</span>
-                              <span className="text-gray-900 font-semibold">{lead.sourcePage || 'Unknown'}</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="font-bold text-gray-700">Message:</span>
-                              <span className="text-gray-900 font-semibold">{lead.message || 'No message'}</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="font-bold text-gray-700">Submitted:</span>
-                              <span className="text-gray-900 font-semibold">{new Date(lead.createdAt).toLocaleString()}</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Modern Selected Product Details */}
-                        {selectedProduct && (
-                          <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-8 border border-white/20 shadow-xl">
-                            <div className="flex items-center gap-3 mb-6">
-                              <div className="w-10 h-10 bg-gradient-to-br from-purple-100 to-pink-200 rounded-2xl flex items-center justify-center">
-                                <Package className="w-5 h-5 text-purple-600" />
-                              </div>
-                              <h4 className="text-xl font-bold bg-gradient-to-r from-gray-900 via-purple-900 to-pink-900 bg-clip-text text-transparent">
-                                Selected Product Details
-                              </h4>
-                            </div>
-                            <div className="space-y-4">
-                              <div className="flex justify-between items-center">
-                                <span className="font-bold text-gray-700">Product Name:</span>
-                                <span className="text-gray-900 font-semibold">{selectedProduct.name}</span>
-                              </div>
-                              <div className="flex justify-between items-center">
-                                <span className="font-bold text-gray-700">Price:</span>
-                                <span className="text-green-600 font-bold text-lg">{selectedProduct.price}</span>
-                              </div>
-                              {selectedProduct.layout !== 'Not specified' && (
-                                <div className="flex justify-between items-center">
-                                  <span className="font-bold text-gray-700">Layout:</span>
-                                  <span className="text-gray-900 font-semibold">{selectedProduct.layout}</span>
-                                </div>
-                              )}
-                              {selectedProduct.materials !== 'Not specified' && (
-                                <div className="flex justify-between items-center">
-                                  <span className="font-bold text-gray-700">Materials:</span>
-                                  <span className="text-gray-900 font-semibold">{selectedProduct.materials}</span>
-                                </div>
-                              )}
-                              {selectedProduct.type !== 'Not specified' && (
-                                <div className="flex justify-between items-center">
-                                  <span className="font-bold text-gray-700">Type:</span>
-                                  <span className="text-gray-900 font-semibold">{selectedProduct.type}</span>
-                                </div>
-                              )}
-                              {selectedProduct.doors !== 'Not specified' && (
-                                <div className="flex justify-between items-center">
-                                  <span className="font-bold text-gray-700">Doors:</span>
-                                  <span className="text-gray-900 font-semibold">{selectedProduct.doors}</span>
-                                </div>
-                              )}
-                              {selectedProduct.kitchenLayout !== 'Not specified' && (
-                                <div className="flex justify-between items-center">
-                                  <span className="font-bold text-gray-700">Kitchen Layout:</span>
-                                  <span className="text-gray-900 font-semibold">{selectedProduct.kitchenLayout}</span>
-                                </div>
-                              )}
-                              {selectedProduct.wardrobe1Type !== 'Not specified' && (
-                                <div className="flex justify-between items-center">
-                                  <span className="font-bold text-gray-700">Wardrobe 1 Type:</span>
-                                  <span className="text-gray-900 font-semibold">{selectedProduct.wardrobe1Type}</span>
-                                </div>
-                              )}
-                              {selectedProduct.wardrobe2Type !== 'Not specified' && (
-                                <div className="flex justify-between items-center">
-                                  <span className="font-bold text-gray-700">Wardrobe 2 Type:</span>
-                                  <span className="text-gray-900 font-semibold">{selectedProduct.wardrobe2Type}</span>
-                                </div>
-                              )}
-                              <div className="flex justify-between items-center">
-                                <span className="font-bold text-gray-700">Product ID:</span>
-                                <span className="text-gray-900 font-semibold">{selectedProduct.id}</span>
-                              </div>
-                              {selectedProduct.image && (
-                                <div className="mt-6">
-                                  <span className="font-bold text-gray-700 block mb-3">Product Image:</span>
-                                  <div className="bg-gradient-to-r from-gray-50/50 to-blue-50/50 rounded-2xl p-4 border border-gray-200/50">
-                                    <a
-                                      href={selectedProduct.image}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="inline-block hover:scale-105 transition-transform duration-200"
-                                    >
-                                      <img
-                                        src={selectedProduct.image}
-                                        alt="Product"
-                                        className="w-40 h-32 object-cover rounded-xl border border-gray-200 hover:border-blue-300 transition-colors shadow-lg"
-                                      />
-                                    </a>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
+                    </td>
+                    {/* Phone */}
+                    <td className="px-4 py-3">
+                      <a href={`tel:${lead.phone}`} className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline font-medium whitespace-nowrap">
+                        <Phone className="w-3.5 h-3.5" />{lead.phone}
+                      </a>
+                    </td>
+                    {/* City + homeType */}
+                    <td className="px-4 py-3">
+                      <div className="space-y-0.5">
+                        {lead.city && (
+                          <div className="flex items-center gap-1 text-xs text-gray-600">
+                            <MapPin className="w-3 h-3 text-gray-400" />{lead.city}
                           </div>
                         )}
-
+                        {lead.homeType && (
+                          <div className="flex items-center gap-1 text-xs text-gray-600">
+                            <Home className="w-3 h-3 text-gray-400" />{lead.homeType}
+                          </div>
+                        )}
+                        {!lead.city && !lead.homeType && <span className="text-xs text-gray-400">—</span>}
                       </div>
-                    </div>
-                  )}
-                </div>
-              )
-            })}
+                    </td>
+                    {/* Source */}
+                    <td className="px-4 py-3">
+                      <span className="inline-block px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs font-medium max-w-[120px] truncate">
+                        {lead.sourcePage || 'Unknown'}
+                      </span>
+                    </td>
+                    {/* Date */}
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1 text-xs text-gray-500 whitespace-nowrap">
+                        <Calendar className="w-3 h-3" />{formatDate(lead.createdAt)}
+                      </div>
+                    </td>
+                    {/* Status dropdown */}
+                    <td className="px-4 py-3">
+                      <div className="relative">
+                        <select
+                          value={lead.status || 'new'}
+                          disabled={updatingId === lead._id}
+                          onChange={e => updateStatus(lead._id, e.target.value)}
+                          className={`appearance-none pr-6 pl-2 py-1 rounded-lg text-xs font-semibold border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors disabled:opacity-60 ${
+                            STATUS_CONFIG[lead.status]?.color || STATUS_CONFIG.new.color
+                          }`}
+                        >
+                          {STATUSES.map(s => (
+                            <option key={s} value={s}>{STATUS_CONFIG[s].label}</option>
+                          ))}
+                        </select>
+                        <ChevronDown className="w-3 h-3 absolute right-1 top-1/2 -translate-y-1/2 pointer-events-none text-current opacity-60" />
+                      </div>
+                    </td>
+                    {/* Actions */}
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setViewLead(lead)}
+                          className="flex items-center gap-1 px-2.5 py-1.5 bg-gray-500 text-white rounded-lg text-xs font-semibold hover:bg-gray-600 transition-colors"
+                        >
+                          <Eye className="w-3.5 h-3.5" /> View
+                        </button>
+                        <button
+                          onClick={() => deleteLead(lead._id)}
+                          disabled={deletingId === lead._id}
+                          className="flex items-center gap-1 px-2.5 py-1.5 bg-red-500 text-white rounded-lg text-xs font-semibold hover:bg-red-600 disabled:opacity-60 transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
+
+      {/* View Lead Modal */}
+      {viewLead && createPortal(
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.5)', padding: '1rem' }}
+          onClick={e => { if (e.target === e.currentTarget) setViewLead(null); }}
+        >
+          <div style={{ background: '#fff', borderRadius: '1rem', width: '100%', maxWidth: '40rem', maxHeight: '90vh', overflowY: 'auto' }}>
+            {/* Modal header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold">
+                  {initials(viewLead.name)}
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900">{viewLead.name}</h3>
+                  <p className="text-xs text-gray-400">{formatDateTime(viewLead.createdAt)}</p>
+                </div>
+              </div>
+              <button onClick={() => setViewLead(null)} className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-5">
+              {/* Status selector */}
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                <span className="text-sm font-semibold text-gray-700">Status</span>
+                <div className="flex gap-2">
+                  {STATUSES.map(s => (
+                    <button
+                      key={s}
+                      onClick={() => updateStatus(viewLead._id, s)}
+                      disabled={updatingId === viewLead._id}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                        viewLead.status === s
+                          ? `${STATUS_CONFIG[s].color} ring-2 ring-offset-1 ring-current`
+                          : 'bg-white border border-gray-200 text-gray-600 hover:border-gray-400'
+                      }`}
+                    >
+                      {STATUS_CONFIG[s].label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Contact Info */}
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <MessageSquare className="w-4 h-4 text-blue-600" />
+                  <h4 className="text-sm font-bold text-gray-900">Contact Information</h4>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+                  {[
+                    { label: 'Phone',     value: viewLead.phone,    link: `tel:${viewLead.phone}` },
+                    { label: 'City',      value: viewLead.city },
+                    { label: 'Home Type', value: viewLead.homeType },
+                    { label: 'Source',    value: viewLead.sourcePage },
+                  ].map(row => row.value ? (
+                    <div key={row.label} className="flex items-center justify-between text-sm">
+                      <span className="text-gray-500 font-medium">{row.label}</span>
+                      {row.link
+                        ? <a href={row.link} className="font-semibold text-blue-600 hover:underline">{row.value}</a>
+                        : <span className="font-semibold text-gray-900">{row.value}</span>
+                      }
+                    </div>
+                  ) : null)}
+                  {viewLead.message && (
+                    <div className="pt-2 border-t border-gray-200">
+                      <p className="text-xs text-gray-500 font-medium mb-1">Message</p>
+                      <p className="text-sm text-gray-700">{viewLead.message}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Product Details */}
+              {viewLead.productDetails?.name && (
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Package className="w-4 h-4 text-purple-600" />
+                    <h4 className="text-sm font-bold text-gray-900">Product Details</h4>
+                  </div>
+                  <div className="bg-purple-50 rounded-xl p-4 space-y-3">
+                    <div className="flex items-start gap-4">
+                      {viewLead.productDetails.image && (
+                        <img
+                          src={viewLead.productDetails.image}
+                          alt=""
+                          className="w-20 h-16 object-cover rounded-lg border border-purple-200 flex-shrink-0"
+                        />
+                      )}
+                      <div className="flex-1 space-y-2">
+                        <p className="text-sm font-bold text-gray-900">{viewLead.productDetails.name}</p>
+                        {viewLead.productDetails.price > 0 && (
+                          <p className="text-base font-bold text-green-600">₹{Number(viewLead.productDetails.price).toLocaleString()}</p>
+                        )}
+                        {viewLead.productDetails.category && (
+                          <span className="inline-block px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs font-medium">{viewLead.productDetails.category}</span>
+                        )}
+                      </div>
+                    </div>
+                    {[
+                      { label: 'Layout',    value: viewLead.productDetails.layout },
+                      { label: 'Materials', value: viewLead.productDetails.materials },
+                    ].map(row => row.value && row.value !== 'Not specified' ? (
+                      <div key={row.label} className="flex items-center justify-between text-sm border-t border-purple-100 pt-2">
+                        <span className="text-gray-500 font-medium">{row.label}</span>
+                        <span className="font-semibold text-gray-900">{row.value}</span>
+                      </div>
+                    ) : null)}
+                  </div>
+                </div>
+              )}
+
+              {/* Meta / Selected Product from meta */}
+              {viewLead.meta?.selectedProduct && (
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Tag className="w-4 h-4 text-indigo-600" />
+                    <h4 className="text-sm font-bold text-gray-900">Selected Configuration</h4>
+                  </div>
+                  <div className="bg-indigo-50 rounded-xl p-4 space-y-2">
+                    {[
+                      { label: 'Product',       value: viewLead.meta.selectedProduct.name },
+                      { label: 'Price',         value: viewLead.meta.selectedProduct.basePrice ? `₹${Number(viewLead.meta.selectedProduct.basePrice).toLocaleString()}` : null },
+                      { label: 'Kitchen Layout',value: viewLead.meta.selectedProduct.kitchenLayout },
+                      { label: 'Wardrobe 1',    value: viewLead.meta.selectedProduct.wardrobe1Type },
+                      { label: 'Wardrobe 2',    value: viewLead.meta.selectedProduct.wardrobe2Type },
+                      { label: 'Layout',        value: viewLead.meta.selectedProduct.layout?.name || viewLead.meta.selectedProduct.layout },
+                    ].map(row => row.value && row.value !== 'Not specified' ? (
+                      <div key={row.label} className="flex items-center justify-between text-sm">
+                        <span className="text-gray-500 font-medium">{row.label}</span>
+                        <span className="font-semibold text-gray-900 capitalize">{row.value}</span>
+                      </div>
+                    ) : null)}
+                    {viewLead.meta.selectedProduct.image && (
+                      <div className="pt-2 border-t border-indigo-100">
+                        <img src={viewLead.meta.selectedProduct.image} alt="" className="w-24 h-16 object-cover rounded-lg border border-indigo-200" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Calculator Meta */}
+              {viewLead.meta?.calculatorData && (
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Home className="w-4 h-4 text-green-600" />
+                    <h4 className="text-sm font-bold text-gray-900">Calculator Data</h4>
+                  </div>
+                  <div className="bg-green-50 rounded-xl p-4 space-y-2">
+                    {Object.entries(viewLead.meta.calculatorData).map(([k, v]) =>
+                      v != null ? (
+                        <div key={k} className="flex items-center justify-between text-sm">
+                          <span className="text-gray-500 font-medium capitalize">{k.replace(/([A-Z])/g, ' $1')}</span>
+                          <span className="font-semibold text-gray-900">{String(v)}</span>
+                        </div>
+                      ) : null
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Footer actions */}
+              <div className="flex gap-3 pt-2 border-t border-gray-100">
+                <a
+                  href={`tel:${viewLead.phone}`}
+                  className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                >
+                  <Phone className="w-4 h-4" /> Call Now
+                </a>
+                <button
+                  onClick={() => deleteLead(viewLead._id)}
+                  disabled={deletingId === viewLead._id}
+                  className="px-4 py-2.5 bg-red-500 text-white rounded-xl text-sm font-semibold hover:bg-red-600 disabled:opacity-60 transition-colors flex items-center gap-2"
+                >
+                  <Trash2 className="w-4 h-4" /> Delete
+                </button>
+                <button
+                  onClick={() => setViewLead(null)}
+                  className="px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
-  )
+  );
 }
-
-

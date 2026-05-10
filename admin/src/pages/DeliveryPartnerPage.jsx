@@ -1,16 +1,15 @@
-'use client';
-
 import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Truck, MapPin, Phone, Mail, Star, Clock, CheckCircle, XCircle } from 'lucide-react';
 import apiClient from '../api/client';
+import { useToast } from '../context/ToastContext';
 
 export default function DeliveryPartnerPage() {
+    const { showToast } = useToast();
     const [partners, setPartners] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
     const [editing, setEditing] = useState(null);
     const [saving, setSaving] = useState(false);
-    const [error, setError] = useState('');
 
     const [form, setForm] = useState({
         name: '',
@@ -118,7 +117,7 @@ export default function DeliveryPartnerPage() {
             const data = res?.data || res;
             setPartners(Array.isArray(data) ? data : []);
         } catch (e) {
-            setError('Failed to load delivery partners');
+            showToast('error', 'Failed to load delivery partners');
             setPartners([]);
         } finally {
             setLoading(false);
@@ -152,7 +151,6 @@ export default function DeliveryPartnerPage() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError('');
         try {
             setSaving(true);
             const fd = new FormData();
@@ -193,8 +191,9 @@ export default function DeliveryPartnerPage() {
             setShowForm(false);
             resetForm();
             fetchPartners();
+            showToast('success', editing ? 'Delivery partner updated' : 'Delivery partner added');
         } catch (e) {
-            setError(e?.response?.data?.message || 'Failed to save delivery partner');
+            showToast('error', e?.response?.data?.message || 'Failed to save delivery partner');
         } finally {
             setSaving(false);
         }
@@ -238,8 +237,9 @@ export default function DeliveryPartnerPage() {
         try {
             await apiClient.delete(`/delivery-partners/${id}`);
             fetchPartners();
+            showToast('success', 'Delivery partner deleted');
         } catch (e) {
-            setError('Failed to delete delivery partner');
+            showToast('error', 'Failed to delete delivery partner');
         }
     };
 
@@ -247,8 +247,9 @@ export default function DeliveryPartnerPage() {
         try {
             await apiClient.patch(`/delivery-partners/${id}/status`, { status, isAvailable });
             fetchPartners();
+            showToast('success', 'Status updated');
         } catch (e) {
-            setError('Failed to update status');
+            showToast('error', 'Failed to update status');
         }
     };
 
@@ -314,8 +315,6 @@ export default function DeliveryPartnerPage() {
             </div>
 
             <div className="py-6 space-y-6">
-                {error && <div className="mx-6 p-3 rounded bg-red-50 text-red-700 border border-red-200 text-sm">{error}</div>}
-
                 {showForm && (
                     <div className="mx-6 bg-white rounded-2xl border p-6 shadow max-h-[90vh] overflow-y-auto">
                         <div className="flex items-center justify-between mb-4">
@@ -652,7 +651,7 @@ export default function DeliveryPartnerPage() {
                                             {partner.serviceAreas?.length > 0 ? (
                                                 <div className="flex flex-wrap gap-1">
                                                     {partner.serviceAreas.slice(0, 2).map((area, idx) => (
-                                                        <span key={idx} className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                                                        <span key={idx} className="text-xs bg-blue-500 text-white px-2 py-1 rounded">
                                                             {area.city}, {area.state}
                                                         </span>
                                                     ))}
@@ -690,13 +689,13 @@ export default function DeliveryPartnerPage() {
                                         <td className="px-6 py-3">
                                             <div className="flex items-center gap-2">
                                                 <button
-                                                    className="px-3 py-1.5 text-xs rounded bg-blue-50 text-blue-700"
+                                                    className="flex items-center gap-1 px-3 py-1.5 text-xs rounded-lg bg-blue-500 text-white font-semibold hover:bg-blue-600 transition-colors shadow-sm"
                                                     onClick={() => handleEdit(partner)}
                                                 >
-                                                    <Edit size={14} /> Edit
+                                                    <Edit size={13} /> Edit
                                                 </button>
                                                 <button
-                                                    className="px-3 py-1.5 text-xs rounded bg-red-50 text-red-700"
+                                                    className="flex items-center gap-1 px-3 py-1.5 text-xs rounded-lg bg-red-500 text-white font-semibold hover:bg-red-600 transition-colors shadow-sm"
                                                     onClick={() => handleDelete(partner._id)}
                                                 >
                                                     <Trash2 size={14} /> Delete

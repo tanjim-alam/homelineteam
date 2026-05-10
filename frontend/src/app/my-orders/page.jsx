@@ -200,8 +200,9 @@ export default function MyOrdersPage() {
                                             </div>
                                             <div>
                                                 <h3 className="text-xl font-bold text-gray-900">
-                                                    Order #{order.orderNumber}
+                                                    Order #{order.orderNumber || order._id.slice(-8).toUpperCase()}
                                                 </h3>
+                                                <p className="text-gray-500 text-xs font-mono mt-0.5">ID: {order._id}</p>
                                                 <p className="text-gray-600 flex items-center gap-2 mt-1">
                                                     <Calendar className="w-4 h-4" />
                                                     {formatDate(order.createdAt)}

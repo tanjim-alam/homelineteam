@@ -23,6 +23,8 @@ router.post('/', authenticate, requireAdmin, uploadCategory, controller.createCa
 router.put('/:id', authenticate, requireAdmin, uploadCategory, controller.updateCategory);
 router.delete('/:id', authenticate, requireAdmin, controller.deleteCategory);
 router.post('/:categoryId/fields', authenticate, requireAdmin, controller.addCustomField);
+router.put('/:categoryId/fields/:fieldId', authenticate, requireAdmin, controller.updateCustomField);
+router.delete('/:categoryId/fields/:fieldId', authenticate, requireAdmin, controller.deleteCustomField);
 router.post('/:categoryId/variant-fields', authenticate, requireAdmin, controller.addVariantField);
 router.put('/:categoryId/variant-fields/:fieldId', authenticate, requireAdmin, controller.updateVariantField);
 router.delete('/:categoryId/variant-fields/:fieldId', authenticate, requireAdmin, controller.deleteVariantField);

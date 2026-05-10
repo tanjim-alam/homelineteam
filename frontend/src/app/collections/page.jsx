@@ -17,24 +17,52 @@ export default function CollectionsPage() {
     const fetchCategories = async () => {
       try {
         setLoading(true);
-        const categoriesData = await api.getCategories();
+        const data = await api.getHierarchicalCategories();
 
-        // Fetch product count for each category
+        // Handle different possible response shapes
+        let mainCategories = [];
+        if (Array.isArray(data)) {
+          mainCategories = data;
+        } else if (data && Array.isArray(data.categories)) {
+          mainCategories = data.categories;
+        } else if (data && Array.isArray(data.data)) {
+          mainCategories = data.data;
+        }
+
+        // Flatten hierarchical structure into subcategories with mainCategory ref
+        const flattened = [];
+        mainCategories.forEach((mc) => {
+          if (mc.subcategories && mc.subcategories.length > 0) {
+            mc.subcategories.forEach((sub) => {
+              flattened.push({
+                ...(sub.toObject ? sub.toObject() : sub),
+                mainCategory: { _id: mc._id, name: mc.name, slug: mc.slug },
+              });
+            });
+          }
+        });
+
+        // Fallback: if no subcategories at all, show main categories themselves
+        const baseList = flattened.length > 0 ? flattened : mainCategories;
+
+        // Enrich with product counts and features
         const categoriesWithCounts = await Promise.all(
-          categoriesData.map(async (category) => {
+          baseList.map(async (category) => {
             try {
               const products = await api.getProductsByCategory(category._id, { limit: 1000 });
+              const arr = Array.isArray(products)
+                ? products
+                : products?.products || products?.data || [];
               return {
                 ...category,
-                productCount: products.length,
-                // Generate features based on category data
-                features: generateCategoryFeatures(category)
+                productCount: arr.length,
+                features: generateCategoryFeatures(category),
               };
-            } catch (err) {
+            } catch {
               return {
                 ...category,
                 productCount: 0,
-                features: generateCategoryFeatures(category)
+                features: generateCategoryFeatures(category),
               };
             }
           })

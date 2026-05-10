@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { fetchMe } from './store/slices/authSlice'
+import { ToastProvider } from './context/ToastContext'
 import Layout from './components/Layout'
 import AuthLoading from './components/AuthLoading'
 import LoginPage from './pages/LoginPage'
@@ -18,6 +19,10 @@ import UsersPage from './pages/UsersPage'
 import HeroSectionPage from './pages/HeroSectionPage'
 import LeadsPage from './pages/LeadsPage'
 import ReturnsPage from './pages/ReturnsPage'
+import OfferBannerPage from './pages/OfferBannerPage'
+import AdminSettingsPage from './pages/AdminSettingsPage'
+import CategoryFormPage from './pages/CategoryFormPage'
+import MainCategoryFormPage from './pages/MainCategoryFormPage'
 
 function ProtectedRoute({ children }) {
   const user = useSelector((s) => s.auth.user)
@@ -44,10 +49,15 @@ function App() {
   }
 
   return (
+    <ToastProvider>
     <Layout>
       <Routes>
         <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
         <Route path="/categories" element={<ProtectedRoute><CategoriesPage /></ProtectedRoute>} />
+        <Route path="/categories/new" element={<ProtectedRoute><CategoryFormPage /></ProtectedRoute>} />
+        <Route path="/categories/edit/:id" element={<ProtectedRoute><CategoryFormPage /></ProtectedRoute>} />
+        <Route path="/categories/new-main" element={<ProtectedRoute><MainCategoryFormPage /></ProtectedRoute>} />
+        <Route path="/categories/edit-main/:id" element={<ProtectedRoute><MainCategoryFormPage /></ProtectedRoute>} />
         <Route path="/products" element={<ProtectedRoute><ProductsPage /></ProtectedRoute>} />
         <Route path="/kitchen-products" element={<ProtectedRoute><KitchenProductsPage /></ProtectedRoute>} />
         <Route path="/wardrobe-products" element={<ProtectedRoute><WardrobeProductsPage /></ProtectedRoute>} />
@@ -59,10 +69,13 @@ function App() {
         <Route path="/hero-section" element={<ProtectedRoute><HeroSectionPage /></ProtectedRoute>} />
         <Route path="/leads" element={<ProtectedRoute><LeadsPage /></ProtectedRoute>} />
         <Route path="/returns" element={<ProtectedRoute><ReturnsPage /></ProtectedRoute>} />
+        <Route path="/offer-banner" element={<ProtectedRoute><OfferBannerPage /></ProtectedRoute>} />
+        <Route path="/admin-settings" element={<ProtectedRoute><AdminSettingsPage /></ProtectedRoute>} />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </Layout>
+    </ToastProvider>
   )
 }
 

@@ -51,6 +51,24 @@ export const addCustomField = createAsyncThunk('categories/addCustomField', asyn
   }
 });
 
+export const updateCustomField = createAsyncThunk('categories/updateCustomField', async ({ id, fieldId, payload }, { rejectWithValue }) => {
+  try {
+    const res = await api.put(`/categories/${id}/fields/${fieldId}`, payload);
+    return res.data;
+  } catch (err) {
+    return rejectWithValue(err.response?.data?.message || 'Update custom field failed');
+  }
+});
+
+export const deleteCustomField = createAsyncThunk('categories/deleteCustomField', async ({ id, fieldId }, { rejectWithValue }) => {
+  try {
+    const res = await api.delete(`/categories/${id}/fields/${fieldId}`);
+    return res.data;
+  } catch (err) {
+    return rejectWithValue(err.response?.data?.message || 'Delete custom field failed');
+  }
+});
+
 export const addVariantField = createAsyncThunk('categories/addVariantField', async ({ id, payload }, { rejectWithValue }) => {
   try {
     const res = await api.post(`/categories/${id}/variant-fields`, payload);
@@ -153,9 +171,15 @@ const slice = createSlice({
 
       .addCase(addCustomField.fulfilled, (s, a) => {
         const index = s.items.findIndex(item => item._id === a.payload._id);
-        if (index !== -1) {
-          s.items[index] = a.payload;
-        }
+        if (index !== -1) s.items[index] = a.payload;
+      })
+      .addCase(updateCustomField.fulfilled, (s, a) => {
+        const index = s.items.findIndex(item => item._id === a.payload._id);
+        if (index !== -1) s.items[index] = a.payload;
+      })
+      .addCase(deleteCustomField.fulfilled, (s, a) => {
+        const index = s.items.findIndex(item => item._id === a.payload._id);
+        if (index !== -1) s.items[index] = a.payload;
       })
       .addCase(addVariantField.fulfilled, (s, a) => {
         const index = s.items.findIndex(item => item._id === a.payload._id);

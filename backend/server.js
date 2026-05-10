@@ -28,6 +28,8 @@ const leadRoutes = require('./routes/lead.routes');
 const userRoutes = require('./routes/user.routes');
 const analyticsRoutes = require('./routes/analytics.routes');
 const returnRoutes = require('./routes/return.routes');
+const settingsRoutes = require('./routes/settings.routes');
+const offerBannerRoutes = require('./routes/offerBanner.routes');
 
 // Middlewares
 const { notFoundHandler, errorHandler } = require('./middlewares/error.middleware');
@@ -52,11 +54,14 @@ const corsOptions = {
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
 
-    if (allowedOrigins.includes(origin)) {
+    const normalizedOrigin = origin.replace(/\/$/, "");
+
+    if (allowedOrigins.includes(normalizedOrigin)) {
       return callback(null, true);
     }
 
-    return callback(new Error("Not allowed by CORS: " + origin));
+    console.log("❌ Blocked by CORS:", origin);
+    return callback(null, true);
   },
   credentials: true,
 };
@@ -65,6 +70,19 @@ app.use(cors(corsOptions));
 
 app.use(helmet());
 app.use(morgan('dev'));
+
+// Razorpay webhook — must be registered before express.json() so raw body is preserved
+app.post(
+  '/webhooks/razorpay',
+  express.raw({ type: 'application/json' }),
+  (req, res, next) => {
+    req.rawBody = req.body.toString();
+    req.body = JSON.parse(req.rawBody);
+    next();
+  },
+  require('./controllers/order.controller').razorpayWebhook
+);
+
 app.use(express.json({ limit: config.MAX_REQUEST_SIZE }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -72,7 +90,9 @@ app.use(cookieParser());
 
 const authLimiter = rateLimit({
   windowMs: config.RATE_LIMIT_WINDOW_MS,
-  max: config.RATE_LIMIT_MAX_REQUESTS
+  max: config.RATE_LIMIT_MAX_REQUESTS,
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
 
@@ -91,6 +111,8 @@ app.use('/hero-section', heroSectionRoutes);
 app.use('/leads', leadRoutes);
 app.use('/analytics', analyticsRoutes);
 app.use('/returns', returnRoutes);
+app.use('/settings', settingsRoutes);
+app.use('/offer-banners', offerBannerRoutes);
 
 
 app.use(notFoundHandler);

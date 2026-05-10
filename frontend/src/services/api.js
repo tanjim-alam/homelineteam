@@ -1,10 +1,14 @@
 import serverStatus from '../utils/serverStatus';
 import config from '../config/production';
 
-// https://homelineteam-19e5.vercel.app
+// https://api.homelineteam.com
 class ApiService {
   constructor() {
-    this.baseURL = "https://api.homelineteam.com";
+    this.baseURL =
+      process.env.NEXT_PUBLIC_API_BASE_URL ||
+      (typeof window !== 'undefined' && window.location.hostname === 'localhost'
+        ? 'http://localhost:5000'
+        : 'https://api.homelineteam.com');
     this.timeout = config.REQUEST_TIMEOUT;
     this.maxRetries = config.MAX_RETRY_ATTEMPTS;
     this.cache = new Map();
@@ -476,6 +480,22 @@ class ApiService {
 
   async getOrderById(orderId) {
     return this.request(`/orders/user-order/${orderId}`);
+  }
+
+  // Razorpay — step 1: create Razorpay order (returns razorpayOrderId)
+  async createRazorpayOrder(amount) {
+    return this.request('/orders/razorpay/create-order', {
+      method: 'POST',
+      body: JSON.stringify({ amount }),
+    });
+  }
+
+  // Razorpay — step 2: verify payment + create DB order
+  async verifyRazorpayPayment(payload) {
+    return this.request('/orders/razorpay/verify-payment', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
   }
 
   // Hero Section

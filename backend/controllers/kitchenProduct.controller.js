@@ -35,7 +35,7 @@ exports.createKitchenProduct = async (req, res, next) => {
             availableMaterials: parseMaybe(availableMaterials) || [],
             availableAppliances: parseMaybe(availableAppliances) || [],
             availableFeatures: parseMaybe(availableFeatures) || [],
-            hasVariants: !!hasVariants,
+            hasVariants: hasVariants === 'true' || hasVariants === true,
             variants: parseMaybe(variants) || [],
             variantOptions: parseMaybe(variantOptions) || {},
             dynamicFields: parseMaybe(dynamicFields) || {},
@@ -156,6 +156,13 @@ exports.updateKitchenProduct = async (req, res, next) => {
         ].forEach(k => {
             if (updates[k] !== undefined) updates[k] = parseMaybe(updates[k]);
         });
+
+        if (updates.hasVariants !== undefined) {
+            updates.hasVariants = updates.hasVariants === 'true' || updates.hasVariants === true;
+        }
+        if (updates.tags !== undefined && typeof updates.tags === 'string') {
+            updates.tags = updates.tags.split(',').map(t => t.trim()).filter(Boolean);
+        }
 
         if (req.files && req.files.images) {
             updates.mainImages = [];

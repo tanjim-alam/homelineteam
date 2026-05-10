@@ -145,7 +145,7 @@ export default function InteriorDesignPage() {
                 title="Modular Kitchen"
                 description="Modern kitchen designs with premium finishes, smart storage solutions, and contemporary layouts."
                 features={["Custom Design", "Premium Materials", "Smart Storage"]}
-                href="/collections/kitchen"
+                href="/interior-design/kitchen"
                 buttonText="Explore Kitchens"
                 gradientFrom="from-orange-500"
                 gradientTo="to-red-500"
@@ -157,7 +157,7 @@ export default function InteriorDesignPage() {
                 title="Wardrobe Solutions"
                 description="Custom wardrobe designs that maximize storage space while enhancing your bedroom aesthetics."
                 features={["Space Optimization", "Custom Fittings", "Modern Designs"]}
-                href="/collections/wardrobes"
+                href="/interior-design/wardrobes"
                 buttonText="View Wardrobes"
                 gradientFrom="from-blue-500"
                 gradientTo="to-purple-500"
@@ -169,7 +169,7 @@ export default function InteriorDesignPage() {
                 title="1 BHK Package"
                 description="Complete interior design solution for 1 BHK apartments with all essential furniture and fixtures."
                 features={["Complete Setup", "Budget Friendly", "Quick Delivery"]}
-                href="/collections/1bhk-package"
+                href="/interior-design/1bhk-package"
                 buttonText="View Package"
                 gradientFrom="from-green-500"
                 gradientTo="to-teal-500"
@@ -181,7 +181,7 @@ export default function InteriorDesignPage() {
                 title="2 BHK Package"
                 description="Comprehensive interior design package for 2 BHK homes with premium furniture and modern designs."
                 features={["Premium Quality", "Full Home Design", "Expert Consultation"]}
-                href="/collections/2bhk-package"
+                href="/interior-design/2bhk-package"
                 buttonText="View Package"
                 gradientFrom="from-purple-500"
                 gradientTo="to-pink-500"

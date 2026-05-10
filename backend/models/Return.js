@@ -38,7 +38,7 @@ const returnSchema = new mongoose.Schema({
         },
         condition: {
             type: String,
-            enum: ['new', 'used', 'damaged'],
+            enum: ['new', 'used', 'damaged', 'defective'],
             default: 'used'
         }
     }],

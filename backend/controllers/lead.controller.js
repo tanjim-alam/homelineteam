@@ -1,4 +1,5 @@
 const Lead = require('../models/Lead');
+const Settings = require('../models/Settings');
 const { sendLeadNotificationEmail } = require('../utils/emailService');
 
 exports.createLead = async (req, res, next) => {
@@ -46,7 +47,9 @@ exports.createLead = async (req, res, next) => {
 
     // Send email notification for interior design leads
     try {
-      await sendLeadNotificationEmail(lead);
+      const settings = await Settings.findOne();
+      const adminEmail = settings?.leadNotificationEmail || process.env.EMAIL_TO || '';
+      await sendLeadNotificationEmail(lead, adminEmail);
     } catch (emailError) {
       // Don't fail the lead creation if email fails
     }
@@ -86,6 +89,16 @@ exports.updateLeadStatus = async (req, res, next) => {
     const lead = await Lead.findByIdAndUpdate(id, { status }, { new: true });
     if (!lead) return res.status(404).json({ message: 'Lead not found' });
     res.json(lead);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.deleteLead = async (req, res, next) => {
+  try {
+    const deleted = await Lead.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ message: 'Lead not found' });
+    res.json({ message: 'Lead deleted successfully' });
   } catch (err) {
     next(err);
   }

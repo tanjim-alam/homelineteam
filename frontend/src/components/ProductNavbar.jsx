@@ -120,7 +120,7 @@ export default function ProductNavbar() {
                                                 {subcategories[mainCategory._id].map((subcategory) => (
                                                     <Link
                                                         key={subcategory._id || subcategory.slug}
-                                                        href={`/${mainCategory.slug}/${subcategory.slug}`}
+                                                        href={`/collections/${subcategory.slug}`}
                                                         className="block px-4 py-2 text-md font-medium text-white border-b border-gray-200 transition-colors"
                                                     >
                                                         {subcategory.name}

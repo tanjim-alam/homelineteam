@@ -1,1060 +1,487 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUser } from '../contexts/UserContext';
 import apiService from '../services/api';
 import {
-    ArrowLeft,
-    Package,
-    RefreshCw,
-    AlertCircle,
-    CheckCircle,
-    Upload,
-    X,
-    Plus,
-    Minus
+    ArrowLeft, Package, RefreshCw, AlertCircle, CheckCircle,
+    X, Plus, Minus, RotateCcw, Info
 } from 'lucide-react';
 
+const RETURN_REASONS = [
+    { value: 'defective', label: 'Defective Product' },
+    { value: 'wrong_item', label: 'Wrong Item Received' },
+    { value: 'not_as_described', label: 'Not as Described' },
+    { value: 'damaged_shipping', label: 'Damaged During Shipping' },
+    { value: 'changed_mind', label: 'Changed Mind' },
+    { value: 'wrong_size', label: 'Wrong Size' },
+    { value: 'quality_issue', label: 'Quality Issue' },
+    { value: 'other', label: 'Other' },
+];
+
+const ITEM_CONDITIONS = [
+    { value: 'new', label: 'New (Unused)' },
+    { value: 'used', label: 'Used (Good Condition)' },
+    { value: 'damaged', label: 'Damaged' },
+    { value: 'defective', label: 'Defective' },
+];
+
+const inputCls = 'w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800 text-sm';
+const labelCls = 'block text-sm font-semibold text-gray-700 mb-1.5';
+
 const ReturnRequestForm = ({ order, onClose, onSuccess }) => {
-    const { user } = useUser();
     const router = useRouter();
 
-    const [formData, setFormData] = useState({
-        type: 'return',
-        items: [],
-        exchangeItems: [],
-        customerNotes: '',
-        images: [],
-        bankAccount: {
-            accountHolderName: '',
-            accountNumber: '',
-            bankName: '',
-            ifscCode: '',
-            branchName: '',
-            accountType: 'savings'
-        },
-        shippingAddress: {
-            fullName: '',
-            phone: '',
-            address: '',
-            city: '',
-            state: '',
-            zipCode: '',
-            country: 'India',
-            landmark: '',
-            addressType: 'home'
-        }
+    const [type, setType] = useState('return');
+    const [selectedItems, setSelectedItems] = useState({});
+    const [customerNotes, setCustomerNotes] = useState('');
+    const [exchangeNotes, setExchangeNotes] = useState('');
+    const [bankAccount, setBankAccount] = useState({
+        accountHolderName: '', accountNumber: '', bankName: '',
+        ifscCode: '', branchName: '', accountType: 'savings'
+    });
+    const [shippingAddress, setShippingAddress] = useState({
+        fullName: '', phone: '', address: '', city: '', state: '',
+        zipCode: '', country: 'India', landmark: '', addressType: 'home'
     });
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
-    const [selectedItems, setSelectedItems] = useState({});
-    const [exchangeProducts, setExchangeProducts] = useState([]);
-    const [showExchangeProducts, setShowExchangeProducts] = useState(false);
 
-    const returnReasons = [
-        { value: 'defective', label: 'Defective Product' },
-        { value: 'wrong_item', label: 'Wrong Item Received' },
-        { value: 'not_as_described', label: 'Not as Described' },
-        { value: 'damaged_shipping', label: 'Damaged During Shipping' },
-        { value: 'changed_mind', label: 'Changed Mind' },
-        { value: 'wrong_size', label: 'Wrong Size' },
-        { value: 'quality_issue', label: 'Quality Issue' },
-        { value: 'other', label: 'Other' }
-    ];
-
-    const itemConditions = [
-        { value: 'new', label: 'New (Unused)' },
-        { value: 'used', label: 'Used (Good Condition)' },
-        { value: 'damaged', label: 'Damaged' },
-        { value: 'defective', label: 'Defective' }
-    ];
-
+    // Auto-select all items on mount
     useEffect(() => {
-        if (order) {
-            // Initialize with order items - auto-select all items by default
-            const initialItems = order.items.map(item => ({
-                productId: item.productId.toString(), // Convert ObjectId to string
-                name: item.name,
-                price: item.price,
-                quantity: item.quantity, // Auto-select full quantity
-                maxQuantity: item.quantity,
-                selectedOptions: item.selectedOptions,
-                image: item.image,
-                reason: 'changed_mind', // Default reason
-                description: '',
-                condition: 'new'
-            }));
-            setFormData(prev => ({ ...prev, items: initialItems }));
+        if (!order) return;
+        const init = {};
+        order.items.forEach(item => {
+            const id = (item.productId?._id || item.productId || '').toString();
+            init[id] = { quantity: item.quantity, reason: 'changed_mind', condition: 'new' };
+        });
+        setSelectedItems(init);
 
-            // Auto-populate selectedItems with all items
-            const autoSelectedItems = {};
-            order.items.forEach(item => {
-                autoSelectedItems[item.productId.toString()] = {
-                    quantity: item.quantity,
-                    reason: 'changed_mind',
-                    description: 'Returning as per customer request',
-                    condition: 'new'
-                };
+        if (order.shippingAddress) {
+            setShippingAddress({
+                fullName: order.shippingAddress.fullName || order.customer?.name || '',
+                phone: order.shippingAddress.phone || order.customer?.phone || '',
+                address: order.shippingAddress.address || order.customer?.address || '',
+                city: order.shippingAddress.city || order.customer?.city || '',
+                state: order.shippingAddress.state || order.customer?.state || '',
+                zipCode: order.shippingAddress.zipCode || order.customer?.pincode || '',
+                country: 'India',
+                landmark: order.shippingAddress.landmark || '',
+                addressType: 'home'
             });
-            setSelectedItems(autoSelectedItems);
-
-            // Pre-fill shipping address with order shipping address if available
-            if (order.shippingAddress) {
-                setFormData(prev => ({
-                    ...prev,
-                    shippingAddress: {
-                        fullName: order.shippingAddress.fullName || '',
-                        phone: order.shippingAddress.phone || '',
-                        address: order.shippingAddress.address || '',
-                        city: order.shippingAddress.city || '',
-                        state: order.shippingAddress.state || '',
-                        zipCode: order.shippingAddress.zipCode || '',
-                        country: order.shippingAddress.country || 'India',
-                        landmark: order.shippingAddress.landmark || '',
-                        addressType: order.shippingAddress.addressType || 'home'
-                    }
-                }));
-            }
         }
     }, [order]);
 
-    const handleItemSelection = (itemId, quantity, reason, description, condition) => {
+    const getItemId = (item) => (item.productId?._id || item.productId || '').toString();
+
+    const updateItem = (id, patch) => {
         setSelectedItems(prev => ({
             ...prev,
-            [itemId]: {
-                quantity,
-                reason,
-                description,
-                condition
-            }
+            [id]: { ...prev[id], ...patch }
         }));
     };
 
-    const handleTypeChange = (type) => {
-        setFormData(prev => ({ ...prev, type }));
-        if (type === 'exchange') {
-            setShowExchangeProducts(true);
-        } else {
-            setShowExchangeProducts(false);
-            setFormData(prev => ({ ...prev, exchangeItems: [] }));
-        }
+    const removeItem = (id) => {
+        setSelectedItems(prev => {
+            const next = { ...prev };
+            delete next[id];
+            return next;
+        });
     };
 
-    const handleImageUpload = (e) => {
-        const files = Array.from(e.target.files);
-        const newImages = files.map(file => ({
-            file,
-            preview: URL.createObjectURL(file),
-            caption: ''
-        }));
-
-        setFormData(prev => ({
+    const addItem = (item) => {
+        const id = getItemId(item);
+        if (selectedItems[id]) return; // already in
+        setSelectedItems(prev => ({
             ...prev,
-            images: [...prev.images, ...newImages]
+            [id]: { quantity: 1, reason: 'changed_mind', condition: 'new' }
         }));
     };
 
-    const removeImage = (index) => {
-        setFormData(prev => ({
-            ...prev,
-            images: prev.images.filter((_, i) => i !== index)
-        }));
-    };
-
-    const addExchangeItem = (product) => {
-        setFormData(prev => ({
-            ...prev,
-            exchangeItems: [...prev.exchangeItems, {
-                productId: product._id,
-                name: product.name,
-                price: product.price,
-                quantity: 1,
-                selectedOptions: {},
-                image: product.images?.[0]?.url || ''
-            }]
-        }));
-    };
-
-    const removeExchangeItem = (index) => {
-        setFormData(prev => ({
-            ...prev,
-            exchangeItems: prev.exchangeItems.filter((_, i) => i !== index)
-        }));
-    };
+    const selectedCount = Object.values(selectedItems).filter(i => i.quantity > 0).length;
+    const totalRefund = Object.entries(selectedItems).reduce((sum, [id, sel]) => {
+        const item = order?.items.find(i => getItemId(i) === id);
+        return sum + (item ? item.price * sel.quantity : 0);
+    }, 0);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true);
         setError('');
         setSuccess('');
 
+        // Validate items
+        const activeItems = Object.entries(selectedItems).filter(([_, d]) => d.quantity > 0);
+        if (activeItems.length === 0) {
+            setError('Please select at least one item to return.');
+            return;
+        }
+
+        // Validate all have reasons
+        const missingReason = activeItems.filter(([_, d]) => !d.reason);
+        if (missingReason.length > 0) {
+            setError('Please select a return reason for every item.');
+            return;
+        }
+
+        // Validate bank account for returns
+        if (type === 'return') {
+            const { accountHolderName, accountNumber, bankName, ifscCode } = bankAccount;
+            if (!accountHolderName || !accountNumber || !bankName || !ifscCode) {
+                setError('Please fill in all required bank account details.');
+                return;
+            }
+        }
+
+        // Validate shipping address for returns
+        if (type === 'return') {
+            const { fullName, phone, address, city, state, zipCode } = shippingAddress;
+            if (!fullName || !phone || !address || !city || !state || !zipCode) {
+                setError('Please fill in all required shipping address fields.');
+                return;
+            }
+        }
+
+        setLoading(true);
         try {
-            // Filter selected items
-            const selectedReturnItems = Object.entries(selectedItems)
-                .filter(([_, data]) => data.quantity > 0)
-                .map(([itemId, data]) => {
-                    const orderItem = order.items.find(item => item.productId.toString() === itemId);
-                    return {
-                        productId: itemId,
-                        name: orderItem.name,
-                        price: orderItem.price,
-                        quantity: data.quantity,
-                        selectedOptions: orderItem.selectedOptions,
-                        image: orderItem.image,
-                        reason: data.reason,
-                        description: data.description,
-                        condition: data.condition
-                    };
-                });
+            const items = activeItems.map(([id, sel]) => ({
+                productId: id,
+                quantity: sel.quantity,
+                reason: sel.reason,
+                condition: sel.condition,
+            }));
 
-            if (selectedReturnItems.length === 0) {
-                setError('Please select at least one item to return');
-                setLoading(false);
-                return;
-            }
+            const notesText = [
+                customerNotes,
+                type === 'exchange' && exchangeNotes ? `Exchange request: ${exchangeNotes}` : ''
+            ].filter(Boolean).join('\n\n');
 
-            // Validate that all selected items have descriptions
-            const itemsWithoutDescription = selectedReturnItems.filter(item => !item.description || item.description.trim() === '');
-            if (itemsWithoutDescription.length > 0) {
-                setError('Please provide a description for all items you want to return');
-                setLoading(false);
-                return;
-            }
-
-            // Validate bank account information for returns
-            if (formData.type === 'return') {
-                const { accountHolderName, accountNumber, bankName, ifscCode } = formData.bankAccount;
-                if (!accountHolderName || !accountNumber || !bankName || !ifscCode) {
-                    setError('Please provide all required bank account information for refund processing');
-                    setLoading(false);
-                    return;
-                }
-            }
-
-            // Validate shipping address information for returns
-            if (formData.type === 'return') {
-                const { fullName, phone, address, city, state, zipCode } = formData.shippingAddress;
-                if (!fullName || !phone || !address || !city || !state || !zipCode) {
-                    setError('Please provide all required shipping address information for return processing');
-                    setLoading(false);
-                    return;
-                }
-            }
-
-            const returnData = {
+            const payload = {
                 orderId: order._id,
-                type: formData.type,
-                items: selectedReturnItems,
-                exchangeItems: formData.exchangeItems,
-                customerNotes: formData.customerNotes,
-                images: formData.images.map(img => ({
-                    url: img.preview,
-                    caption: img.caption
-                })),
-                bankAccount: formData.bankAccount,
-                shippingAddress: formData.shippingAddress
+                type,
+                items,
+                exchangeItems: [],
+                customerNotes: notesText,
+                images: [],
+                bankAccount: type === 'return' ? bankAccount : {},
+                shippingAddress: type === 'return' ? shippingAddress : {}
             };
 
-            const response = await apiService.createReturnRequest(returnData);
+            const response = await apiService.createReturnRequest(payload);
 
             if (response.success) {
-                setSuccess('Return request submitted successfully!');
-                setTimeout(() => {
-                    onSuccess?.(response.data);
-                    onClose();
-                }, 2000);
+                setSuccess('Request submitted successfully! Redirecting…');
+                setTimeout(() => onSuccess?.(response.data), 1500);
             } else {
-                // Handle API response with success: false
-                const errorMessage = response.message || response.error || 'Failed to submit return request';
-                setError(errorMessage);
+                setError(response.message || 'Failed to submit request. Please try again.');
             }
         } catch (err) {
-            // Extract error message from different possible error structures
-            let errorMessage = 'An error occurred while submitting the request';
-
-            if (err.response?.data?.message) {
-                errorMessage = err.response.data.message;
-            } else if (err.response?.data?.error) {
-                errorMessage = err.response.data.error;
-            } else if (err.message) {
-                errorMessage = err.message;
-            } else if (typeof err === 'string') {
-                errorMessage = err;
-            }
-
-            setError(errorMessage);
+            const msg = err.response?.data?.message || err.message || 'An error occurred.';
+            setError(msg);
         } finally {
             setLoading(false);
         }
     };
 
-    if (!order) {
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="w-24 h-24 bg-gradient-to-r from-red-500 to-red-600 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                        <AlertCircle className="w-12 h-12 text-white" />
-                    </div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-3">Order Not Found</h2>
-                    <p className="text-gray-600 text-lg">The order you're trying to return could not be found.</p>
-                </div>
-            </div>
-        );
-    }
+    if (!order) return null;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
-            {/* Header Section */}
-            <div className="inset-0 bg-primary text-white">
-                <div className="container-custom py-12">
-                    <div className="flex items-center gap-4 mb-6">
-                        <button
-                            onClick={onClose}
-                            className="group flex items-center gap-2 text-white/80 hover:text-white transition-colors duration-200"
-                        >
-                            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform duration-200" />
-                            Back to Orders
-                        </button>
-                    </div>
+        <div className="min-h-screen bg-gray-50">
+            {/* Header */}
+            <div className="bg-primary text-white">
+                <div className="container-custom py-8">
+                    <button onClick={onClose} className="flex items-center gap-2 text-white/80 hover:text-white mb-4 text-sm">
+                        <ArrowLeft className="w-4 h-4" /> Back to Orders
+                    </button>
                     <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                            <RefreshCw className="w-8 h-8 text-white" />
+                        <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                            <RotateCcw className="w-6 h-6 text-white" />
                         </div>
                         <div>
-                            <h1 className="text-4xl font-bold mb-2">Request Return/Exchange</h1>
-                            <p className="text-white/80 text-lg">Order #{order._id.slice(-8).toUpperCase()}</p>
+                            <h1 className="text-2xl font-bold">Request Return / Exchange</h1>
+                            <p className="text-white/70 text-sm mt-0.5">
+                                Order #{order.orderNumber || order._id?.slice(-8).toUpperCase()}
+                            </p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div className="container-custom py-8">
+            <form onSubmit={handleSubmit} className="container-custom py-8 max-w-3xl space-y-6">
 
-                <form onSubmit={handleSubmit} className="space-y-8">
-                    {/* Return Type Selection */}
-                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg shadow-gray-200/50 border border-gray-100 p-8">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="w-10 h-10 bg-gradient-to-r from-primary-600 to-primary-700 rounded-xl flex items-center justify-center">
-                                <RefreshCw className="w-5 h-5 text-white" />
-                            </div>
-                            <h2 className="text-xl font-bold text-gray-900">Return Type</h2>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <label className={`relative cursor-pointer group ${formData.type === 'return' ? 'ring-2 rounded-2xl ring-primary-500' : ''}`}>
-                                <input
-                                    type="radio"
-                                    name="type"
-                                    value="return"
-                                    checked={formData.type === 'return'}
-                                    onChange={(e) => handleTypeChange(e.target.value)}
-                                    className="sr-only"
-                                />
-                                <div className={`p-6 border-2 rounded-2xl transition-all duration-200 group-hover:shadow-lg ${formData.type === 'return'
-                                    ? 'border-primary-500 bg-gradient-to-r from-primary-50 to-blue-50'
-                                    : 'border-gray-200 hover:border-primary-300 hover:bg-gray-50'
-                                    }`}>
-                                    <div className="flex items-center gap-4">
-                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${formData.type === 'return'
-                                            ? 'bg-gradient-to-r from-primary-600 to-primary-700'
-                                            : 'bg-gray-100 group-hover:bg-primary-100'
-                                            }`}>
-                                            <RefreshCw className={`w-6 h-6 ${formData.type === 'return' ? 'text-white' : 'text-gray-600 group-hover:text-primary-600'}`} />
-                                        </div>
-                                        <div>
-                                            <h3 className="text-lg font-bold text-gray-900">Return for Refund</h3>
-                                            <p className="text-gray-600">Get your money back</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </label>
-
-                            <label className={`relative cursor-pointer group ${formData.type === 'exchange' ? 'ring-2 rounded-2xl ring-primary-500' : ''}`}>
-                                <input
-                                    type="radio"
-                                    name="type"
-                                    value="exchange"
-                                    checked={formData.type === 'exchange'}
-                                    onChange={(e) => handleTypeChange(e.target.value)}
-                                    className="sr-only"
-                                />
-                                <div className={`p-6 border-2 rounded-2xl transition-all duration-200 group-hover:shadow-lg ${formData.type === 'exchange'
-                                    ? 'border-primary-500 bg-gradient-to-r from-primary-50 to-blue-50'
-                                    : 'border-gray-200 hover:border-primary-300 hover:bg-gray-50'
-                                    }`}>
-                                    <div className="flex items-center gap-4">
-                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${formData.type === 'exchange'
-                                            ? 'bg-gradient-to-r from-primary-600 to-primary-700'
-                                            : 'bg-gray-100 group-hover:bg-primary-100'
-                                            }`}>
-                                            <Package className={`w-6 h-6 ${formData.type === 'exchange' ? 'text-white' : 'text-gray-600 group-hover:text-primary-600'}`} />
-                                        </div>
-                                        <div>
-                                            <h3 className="text-lg font-bold text-gray-900">Exchange</h3>
-                                            <p className="text-gray-600">Replace with different items</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </label>
-                        </div>
+                {/* Error / Success */}
+                {error && (
+                    <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl p-4">
+                        <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 shrink-0" />
+                        <p className="text-red-700 text-sm font-medium">{error}</p>
                     </div>
+                )}
+                {success && (
+                    <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl p-4">
+                        <CheckCircle className="w-5 h-5 text-green-500 shrink-0" />
+                        <p className="text-green-700 text-sm font-medium">{success}</p>
+                    </div>
+                )}
 
-                    {/* Items Selection */}
-                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg shadow-gray-200/50 border border-gray-100 p-8">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="w-10 h-10 bg-gradient-to-r from-primary-600 to-primary-700 rounded-xl flex items-center justify-center">
-                                <Package className="w-5 h-5 text-white" />
-                            </div>
-                            <h2 className="text-xl font-bold text-gray-900">Items to Return</h2>
-                        </div>
-                        <div className="mb-6 p-4 bg-gradient-to-r from-blue-50/50 to-indigo-50/50 rounded-xl border border-blue-100">
-                            <div className="flex items-start gap-3">
-                                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                                    <AlertCircle className="w-4 h-4 text-white" />
+                {/* Step 1 — Type */}
+                <div className="bg-white rounded-2xl border border-gray-200 p-6">
+                    <h2 className="text-base font-bold text-gray-900 mb-4">Step 1 — What would you like to do?</h2>
+                    <div className="grid grid-cols-2 gap-4">
+                        {[
+                            { val: 'return',   icon: RotateCcw, title: 'Return for Refund',      sub: 'Get your money back' },
+                            { val: 'exchange', icon: RefreshCw, title: 'Exchange',                sub: 'Replace with other items' },
+                        ].map(({ val, icon: Icon, title, sub }) => (
+                            <label key={val} className="cursor-pointer">
+                                <input type="radio" name="type" value={val} checked={type === val} onChange={() => setType(val)} className="sr-only" />
+                                <div className={`p-4 rounded-xl border-2 transition-all ${type === val ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                                    <Icon className={`w-6 h-6 mb-2 ${type === val ? 'text-blue-600' : 'text-gray-500'}`} />
+                                    <p className={`font-bold text-sm ${type === val ? 'text-blue-900' : 'text-gray-800'}`}>{title}</p>
+                                    <p className="text-xs text-gray-500 mt-0.5">{sub}</p>
                                 </div>
-                                <div>
-                                    <p className="font-semibold text-blue-900 mb-1">Pre-selected Items</p>
-                                    <p className="text-sm text-blue-800">
-                                        All items from this order are pre-selected for return. You can adjust quantities, remove items, or change return reasons below.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="space-y-6">
-                            {order.items.map((item, index) => {
-                                const isSelected = selectedItems[item.productId.toString()]?.quantity > 0;
-                                return (
-                                    <div key={item.productId.toString()} className={`border-2 rounded-2xl p-6 transition-all duration-200 ${isSelected ? 'border-green-300 bg-gradient-to-r from-green-50/50 to-emerald-50/50 shadow-lg shadow-green-200/25' : 'border-gray-200 hover:border-gray-300 hover:shadow-md'}`}>
-                                        <div className="flex items-start gap-6">
-                                            <div className="relative">
-                                                <img
-                                                    src={item.image || '/placeholder-product.jpg'}
-                                                    alt={item.name}
-                                                    className="w-20 h-20 object-cover rounded-xl shadow-sm"
-                                                />
-                                                {isSelected && (
-                                                    <div className="absolute -top-2 -right-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
-                                                        ✓
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div className="flex-1">
-                                                <div className="flex items-start justify-between">
-                                                    <div>
-                                                        <h3 className="text-lg font-bold text-gray-900 mb-2">{item.name}</h3>
-                                                        <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-3">
-                                                            <span className="font-semibold text-primary-600">₹{item.price} each</span>
-                                                            <span>Available: {item.quantity} units</span>
-                                                        </div>
-                                                    </div>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            const newSelectedItems = { ...selectedItems };
-                                                            delete newSelectedItems[item.productId.toString()];
-                                                            setSelectedItems(newSelectedItems);
-                                                        }}
-                                                        className="text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded-lg transition-colors duration-200"
-                                                        title="Remove this item from return"
-                                                    >
-                                                        <X className="w-5 h-5" />
+                            </label>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Step 2 — Items */}
+                <div className="bg-white rounded-2xl border border-gray-200 p-6">
+                    <h2 className="text-base font-bold text-gray-900 mb-1">Step 2 — Select Items</h2>
+                    <p className="text-sm text-gray-500 mb-4">All items are pre-selected. Remove any you don't want to return.</p>
+
+                    <div className="space-y-4">
+                        {order.items.map((item) => {
+                            const id = getItemId(item);
+                            const sel = selectedItems[id];
+                            const isSelected = !!sel && sel.quantity > 0;
+
+                            return (
+                                <div key={id} className={`rounded-xl border-2 p-4 transition-all ${isSelected ? 'border-blue-200 bg-blue-50/40' : 'border-gray-100 bg-gray-50 opacity-60'}`}>
+                                    <div className="flex items-start gap-4">
+                                        {item.image && (
+                                            <img src={item.image} alt={item.name} className="w-14 h-14 rounded-lg object-cover shrink-0" />
+                                        )}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-start justify-between gap-2">
+                                                <p className="font-semibold text-gray-900 text-sm leading-snug">{item.name}</p>
+                                                {isSelected ? (
+                                                    <button type="button" onClick={() => removeItem(id)} className="p-1 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg shrink-0">
+                                                        <X className="w-4 h-4" />
                                                     </button>
-                                                </div>
-
-                                                {/* Quantity Selection */}
-                                                <div className="mt-4 flex items-center gap-4">
-                                                    <label className="text-sm font-semibold text-gray-700">Quantity:</label>
-                                                    <div className="flex items-center gap-3">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => {
-                                                                const currentQty = selectedItems[item.productId.toString()]?.quantity || 0;
-                                                                if (currentQty > 0) {
-                                                                    handleItemSelection(
-                                                                        item.productId.toString(),
-                                                                        currentQty - 1,
-                                                                        selectedItems[item.productId.toString()]?.reason || '',
-                                                                        selectedItems[item.productId.toString()]?.description || '',
-                                                                        selectedItems[item.productId.toString()]?.condition || 'new'
-                                                                    );
-                                                                }
-                                                            }}
-                                                            className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center transition-colors duration-200"
-                                                        >
-                                                            <Minus className="w-4 h-4 text-gray-600" />
-                                                        </button>
-                                                        <span className="w-12 text-center text-lg font-bold text-gray-900">
-                                                            {selectedItems[item.productId.toString()]?.quantity || 0}
-                                                        </span>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => {
-                                                                const currentQty = selectedItems[item.productId.toString()]?.quantity || 0;
-                                                                if (currentQty < item.quantity) {
-                                                                    handleItemSelection(
-                                                                        item.productId.toString(),
-                                                                        currentQty + 1,
-                                                                        selectedItems[item.productId.toString()]?.reason || '',
-                                                                        selectedItems[item.productId.toString()]?.description || '',
-                                                                        selectedItems[item.productId.toString()]?.condition || 'new'
-                                                                    );
-                                                                }
-                                                            }}
-                                                            className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center transition-colors duration-200"
-                                                        >
-                                                            <Plus className="w-4 h-4 text-gray-600" />
-                                                        </button>
-                                                    </div>
-                                                </div>
-
-                                                {/* Return Details (only show if quantity > 0) */}
-                                                {selectedItems[item.productId.toString()]?.quantity > 0 && (
-                                                    <div className="mt-6 space-y-4">
-                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                            <div>
-                                                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                                                    Reason for Return
-                                                                </label>
-                                                                <select
-                                                                    value={selectedItems[item.productId.toString()]?.reason || ''}
-                                                                    onChange={(e) => {
-                                                                        const current = selectedItems[item.productId.toString()] || {};
-                                                                        handleItemSelection(
-                                                                            item.productId.toString(),
-                                                                            current.quantity,
-                                                                            e.target.value,
-                                                                            current.description,
-                                                                            current.condition
-                                                                        );
-                                                                    }}
-                                                                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-gray-700"
-                                                                >
-                                                                    <option value="">Select reason</option>
-                                                                    {returnReasons.map(reason => (
-                                                                        <option key={reason.value} value={reason.value}>
-                                                                            {reason.label}
-                                                                        </option>
-                                                                    ))}
-                                                                </select>
-                                                            </div>
-
-                                                            <div>
-                                                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                                                    Item Condition
-                                                                </label>
-                                                                <select
-                                                                    value={selectedItems[item.productId.toString()]?.condition || 'new'}
-                                                                    onChange={(e) => {
-                                                                        const current = selectedItems[item.productId.toString()] || {};
-                                                                        handleItemSelection(
-                                                                            item.productId.toString(),
-                                                                            current.quantity,
-                                                                            current.reason,
-                                                                            current.description,
-                                                                            e.target.value
-                                                                        );
-                                                                    }}
-                                                                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-gray-700"
-                                                                >
-                                                                    {itemConditions.map(condition => (
-                                                                        <option key={condition.value} value={condition.value}>
-                                                                            {condition.label}
-                                                                        </option>
-                                                                    ))}
-                                                                </select>
-                                                            </div>
-                                                        </div>
-
-                                                        <div>
-                                                            <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                                                Additional Details <span className="text-red-500">*</span>
-                                                            </label>
-                                                            <textarea
-                                                                value={selectedItems[item.productId.toString()]?.description || ''}
-                                                                onChange={(e) => {
-                                                                    const current = selectedItems[item.productId.toString()] || {};
-                                                                    handleItemSelection(
-                                                                        item.productId.toString(),
-                                                                        current.quantity,
-                                                                        current.reason,
-                                                                        e.target.value,
-                                                                        current.condition
-                                                                    );
-                                                                }}
-                                                                placeholder="Please provide more details about why you're returning this item..."
-                                                                rows={3}
-                                                                required
-                                                                className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-gray-700"
-                                                            />
-                                                            {!selectedItems[item.productId.toString()]?.description && (
-                                                                <p className="text-xs text-red-500 mt-1">Description is required</p>
-                                                            )}
-                                                        </div>
-                                                    </div>
+                                                ) : (
+                                                    <button type="button" onClick={() => addItem(item)} className="text-xs px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shrink-0">
+                                                        Add
+                                                    </button>
                                                 )}
                                             </div>
+                                            <p className="text-xs text-gray-500 mt-0.5">₹{item.price} × {item.quantity} available</p>
+
+                                            {isSelected && (
+                                                <div className="mt-3 space-y-3">
+                                                    {/* Quantity */}
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="text-xs font-semibold text-gray-600 w-16 shrink-0">Quantity</span>
+                                                        <div className="flex items-center gap-2">
+                                                            <button type="button" onClick={() => {
+                                                                if (sel.quantity > 1) updateItem(id, { quantity: sel.quantity - 1 });
+                                                                else removeItem(id);
+                                                            }} className="w-7 h-7 bg-white border border-gray-300 rounded-lg flex items-center justify-center hover:bg-gray-50">
+                                                                <Minus className="w-3 h-3 text-gray-600" />
+                                                            </button>
+                                                            <span className="w-8 text-center text-sm font-bold text-gray-900">{sel.quantity}</span>
+                                                            <button type="button" onClick={() => {
+                                                                if (sel.quantity < item.quantity) updateItem(id, { quantity: sel.quantity + 1 });
+                                                            }} className="w-7 h-7 bg-white border border-gray-300 rounded-lg flex items-center justify-center hover:bg-gray-50">
+                                                                <Plus className="w-3 h-3 text-gray-600" />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Reason + Condition */}
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        <div>
+                                                            <label className="text-xs font-semibold text-gray-600 block mb-1">Reason *</label>
+                                                            <select
+                                                                value={sel.reason}
+                                                                onChange={e => updateItem(id, { reason: e.target.value })}
+                                                                className="w-full text-xs border border-gray-300 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-800"
+                                                                required
+                                                            >
+                                                                <option value="">Select reason…</option>
+                                                                {RETURN_REASONS.map(r => (
+                                                                    <option key={r.value} value={r.value}>{r.label}</option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+                                                        <div>
+                                                            <label className="text-xs font-semibold text-gray-600 block mb-1">Condition</label>
+                                                            <select
+                                                                value={sel.condition}
+                                                                onChange={e => updateItem(id, { condition: e.target.value })}
+                                                                className="w-full text-xs border border-gray-300 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-800"
+                                                            >
+                                                                {ITEM_CONDITIONS.map(c => (
+                                                                    <option key={c.value} value={c.value}>{c.label}</option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
-                                );
-                            })}
-                        </div>
-
-                        {/* Summary */}
-                        <div className="mt-8 p-6 bg-gradient-to-r from-gray-50/50 to-blue-50/50 rounded-xl border border-gray-100">
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className="w-8 h-8 bg-gradient-to-r from-primary-600 to-primary-700 rounded-lg flex items-center justify-center">
-                                    <CheckCircle className="w-4 h-4 text-white" />
                                 </div>
-                                <h3 className="text-lg font-bold text-gray-900">Return Summary</h3>
-                            </div>
-                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-                                <div className="flex items-center gap-4">
-                                    <span className="text-gray-700 font-semibold">
-                                        {Object.values(selectedItems).filter(item => item.quantity > 0).length} item(s) selected for return
-                                    </span>
-                                </div>
-                                <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200 shadow-sm">
-                                    <div className="text-right">
-                                        <p className="text-sm text-gray-600">Total Refund</p>
-                                        <p className="text-xl font-bold text-primary-600">
-                                            ₹{Object.entries(selectedItems).reduce((total, [itemId, item]) => {
-                                                const orderItem = order.items.find(oi => oi.productId.toString() === itemId);
-                                                return total + (orderItem ? orderItem.price * item.quantity : 0);
-                                            }, 0)}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                            );
+                        })}
                     </div>
 
-                    {/* Exchange Items (only for exchange type) */}
-                    {formData.type === 'exchange' && (
-                        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg shadow-gray-200/50 border border-gray-100 p-8">
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="w-10 h-10 bg-gradient-to-r from-primary-600 to-primary-700 rounded-xl flex items-center justify-center">
-                                    <Package className="w-5 h-5 text-white" />
-                                </div>
-                                <h2 className="text-xl font-bold text-gray-900">Exchange Items</h2>
-                            </div>
-                            <p className="text-gray-600 mb-6 text-lg">Select the items you'd like to exchange for:</p>
-
-                            {/* Exchange items will be added here */}
-                            <div className="text-center py-12 text-gray-500">
-                                <div className="w-24 h-24 bg-gradient-to-r from-gray-400 to-gray-500 rounded-3xl flex items-center justify-center mx-auto mb-4">
-                                    <Package className="w-12 h-12 text-white" />
-                                </div>
-                                <p className="text-lg">Exchange product selection will be implemented here</p>
-                            </div>
+                    {/* Summary bar */}
+                    {selectedCount > 0 && (
+                        <div className="mt-4 flex items-center justify-between bg-blue-50 border border-blue-100 rounded-xl px-4 py-3">
+                            <p className="text-sm font-semibold text-blue-800">{selectedCount} item{selectedCount !== 1 ? 's' : ''} selected</p>
+                            {type === 'return' && (
+                                <p className="text-sm font-bold text-blue-700">Estimated refund: ₹{totalRefund.toLocaleString()}</p>
+                            )}
                         </div>
                     )}
+                </div>
 
-                    {/* Additional Notes */}
-                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg shadow-gray-200/50 border border-gray-100 p-8">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="w-10 h-10 bg-gradient-to-r from-primary-600 to-primary-700 rounded-xl flex items-center justify-center">
-                                <AlertCircle className="w-5 h-5 text-white" />
-                            </div>
-                            <h2 className="text-xl font-bold text-gray-900">Additional Notes</h2>
+                {/* Step 3 — Exchange note (only for exchange) */}
+                {type === 'exchange' && (
+                    <div className="bg-white rounded-2xl border border-gray-200 p-6">
+                        <h2 className="text-base font-bold text-gray-900 mb-1">Step 3 — Exchange Details</h2>
+                        <div className="flex items-start gap-3 bg-amber-50 border border-amber-100 rounded-xl p-3 mb-4">
+                            <Info className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
+                            <p className="text-xs text-amber-800">Our team will contact you to arrange the exchange. Please describe what you'd like to exchange for below.</p>
                         </div>
+                        <label className={labelCls}>What would you like instead? *</label>
                         <textarea
-                            value={formData.customerNotes}
-                            onChange={(e) => setFormData(prev => ({ ...prev, customerNotes: e.target.value }))}
-                            placeholder="Any additional information about your return request..."
+                            value={exchangeNotes}
+                            onChange={e => setExchangeNotes(e.target.value)}
+                            placeholder="E.g. Same item in larger size, or a different colour — anything you'd prefer…"
                             rows={4}
-                            className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-gray-700"
+                            required={type === 'exchange'}
+                            className={inputCls + ' resize-none'}
                         />
                     </div>
+                )}
 
-                    {/* Bank Account Information */}
-                    {formData.type === 'return' && (
-                        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg shadow-gray-200/50 border border-gray-100 p-8">
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="w-10 h-10 bg-gradient-to-r from-green-600 to-green-700 rounded-xl flex items-center justify-center">
-                                    <Package className="w-5 h-5 text-white" />
+                {/* Bank account — only for return */}
+                {type === 'return' && (
+                    <div className="bg-white rounded-2xl border border-gray-200 p-6">
+                        <h2 className="text-base font-bold text-gray-900 mb-1">Bank Account for Refund</h2>
+                        <p className="text-sm text-gray-500 mb-4">We'll transfer the refund to this account.</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {[
+                                { key: 'accountHolderName', label: 'Account Holder Name *', placeholder: 'Full name as on bank account', type: 'text' },
+                                { key: 'bankName',           label: 'Bank Name *',            placeholder: 'e.g. HDFC Bank',             type: 'text' },
+                                { key: 'accountNumber',      label: 'Account Number *',        placeholder: 'Enter account number',        type: 'text' },
+                                { key: 'ifscCode',           label: 'IFSC Code *',             placeholder: 'e.g. HDFC0001234',            type: 'text' },
+                                { key: 'branchName',         label: 'Branch Name',             placeholder: 'Branch (optional)',           type: 'text' },
+                            ].map(({ key, label, placeholder, type: itype }) => (
+                                <div key={key}>
+                                    <label className={labelCls}>{label}</label>
+                                    <input
+                                        type={itype}
+                                        value={bankAccount[key]}
+                                        onChange={e => setBankAccount(p => ({ ...p, [key]: key === 'ifscCode' ? e.target.value.toUpperCase() : e.target.value }))}
+                                        placeholder={placeholder}
+                                        className={inputCls + (key === 'accountNumber' || key === 'ifscCode' ? ' font-mono' : '')}
+                                        required={label.endsWith('*')}
+                                    />
                                 </div>
-                                <h2 className="text-xl font-bold text-gray-900">Bank Account Information</h2>
+                            ))}
+                            <div>
+                                <label className={labelCls}>Account Type *</label>
+                                <select value={bankAccount.accountType} onChange={e => setBankAccount(p => ({ ...p, accountType: e.target.value }))} className={inputCls} required>
+                                    <option value="savings">Savings</option>
+                                    <option value="current">Current</option>
+                                </select>
                             </div>
-                            <p className="text-gray-600 mb-6 text-lg">Provide your bank account details for refund processing</p>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        Account Holder Name *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={formData.bankAccount.accountHolderName}
-                                        onChange={(e) => setFormData(prev => ({
-                                            ...prev,
-                                            bankAccount: { ...prev.bankAccount, accountHolderName: e.target.value }
-                                        }))}
-                                        placeholder="Enter account holder name"
-                                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-gray-700"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        Bank Name *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={formData.bankAccount.bankName}
-                                        onChange={(e) => setFormData(prev => ({
-                                            ...prev,
-                                            bankAccount: { ...prev.bankAccount, bankName: e.target.value }
-                                        }))}
-                                        placeholder="Enter bank name"
-                                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-gray-700"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        Account Number *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={formData.bankAccount.accountNumber}
-                                        onChange={(e) => setFormData(prev => ({
-                                            ...prev,
-                                            bankAccount: { ...prev.bankAccount, accountNumber: e.target.value }
-                                        }))}
-                                        placeholder="Enter account number"
-                                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-gray-700 font-mono"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        IFSC Code *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={formData.bankAccount.ifscCode}
-                                        onChange={(e) => setFormData(prev => ({
-                                            ...prev,
-                                            bankAccount: { ...prev.bankAccount, ifscCode: e.target.value.toUpperCase() }
-                                        }))}
-                                        placeholder="Enter IFSC code"
-                                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-gray-700 font-mono"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        Branch Name
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={formData.bankAccount.branchName}
-                                        onChange={(e) => setFormData(prev => ({
-                                            ...prev,
-                                            bankAccount: { ...prev.bankAccount, branchName: e.target.value }
-                                        }))}
-                                        placeholder="Enter branch name"
-                                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-gray-700"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        Account Type *
-                                    </label>
-                                    <select
-                                        value={formData.bankAccount.accountType}
-                                        onChange={(e) => setFormData(prev => ({
-                                            ...prev,
-                                            bankAccount: { ...prev.bankAccount, accountType: e.target.value }
-                                        }))}
-                                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-gray-700"
-                                        required
-                                    >
-                                        <option value="savings">Savings Account</option>
-                                        <option value="current">Current Account</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Shipping Address Information */}
-                    {formData.type === 'return' && (
-                        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg shadow-gray-200/50 border border-gray-100 p-8">
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-purple-700 rounded-xl flex items-center justify-center">
-                                    <Package className="w-5 h-5 text-white" />
-                                </div>
-                                <h2 className="text-xl font-bold text-gray-900">Return Shipping Address</h2>
-                            </div>
-                            <p className="text-gray-600 mb-6 text-lg">Provide your address where we should send the return pickup</p>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        Full Name *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={formData.shippingAddress.fullName}
-                                        onChange={(e) => setFormData(prev => ({
-                                            ...prev,
-                                            shippingAddress: { ...prev.shippingAddress, fullName: e.target.value }
-                                        }))}
-                                        placeholder="Enter your full name"
-                                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-gray-700"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        Phone Number *
-                                    </label>
-                                    <input
-                                        type="tel"
-                                        value={formData.shippingAddress.phone}
-                                        onChange={(e) => setFormData(prev => ({
-                                            ...prev,
-                                            shippingAddress: { ...prev.shippingAddress, phone: e.target.value }
-                                        }))}
-                                        placeholder="Enter your phone number"
-                                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-gray-700"
-                                        required
-                                    />
-                                </div>
-
-                                <div className="md:col-span-2">
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        Address *
-                                    </label>
-                                    <textarea
-                                        value={formData.shippingAddress.address}
-                                        onChange={(e) => setFormData(prev => ({
-                                            ...prev,
-                                            shippingAddress: { ...prev.shippingAddress, address: e.target.value }
-                                        }))}
-                                        placeholder="Enter your complete address"
-                                        rows={3}
-                                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-gray-700"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        City *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={formData.shippingAddress.city}
-                                        onChange={(e) => setFormData(prev => ({
-                                            ...prev,
-                                            shippingAddress: { ...prev.shippingAddress, city: e.target.value }
-                                        }))}
-                                        placeholder="Enter your city"
-                                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-gray-700"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        State *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={formData.shippingAddress.state}
-                                        onChange={(e) => setFormData(prev => ({
-                                            ...prev,
-                                            shippingAddress: { ...prev.shippingAddress, state: e.target.value }
-                                        }))}
-                                        placeholder="Enter your state"
-                                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-gray-700"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        ZIP Code *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={formData.shippingAddress.zipCode}
-                                        onChange={(e) => setFormData(prev => ({
-                                            ...prev,
-                                            shippingAddress: { ...prev.shippingAddress, zipCode: e.target.value }
-                                        }))}
-                                        placeholder="Enter your ZIP code"
-                                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-gray-700"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        Country *
-                                    </label>
-                                    <select
-                                        value={formData.shippingAddress.country}
-                                        onChange={(e) => setFormData(prev => ({
-                                            ...prev,
-                                            shippingAddress: { ...prev.shippingAddress, country: e.target.value }
-                                        }))}
-                                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-gray-700"
-                                        required
-                                    >
-                                        <option value="India">India</option>
-                                        <option value="United States">United States</option>
-                                        <option value="United Kingdom">United Kingdom</option>
-                                        <option value="Canada">Canada</option>
-                                        <option value="Australia">Australia</option>
-                                        <option value="Other">Other</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        Landmark
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={formData.shippingAddress.landmark}
-                                        onChange={(e) => setFormData(prev => ({
-                                            ...prev,
-                                            shippingAddress: { ...prev.shippingAddress, landmark: e.target.value }
-                                        }))}
-                                        placeholder="Enter nearby landmark (optional)"
-                                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-gray-700"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        Address Type *
-                                    </label>
-                                    <select
-                                        value={formData.shippingAddress.addressType}
-                                        onChange={(e) => setFormData(prev => ({
-                                            ...prev,
-                                            shippingAddress: { ...prev.shippingAddress, addressType: e.target.value }
-                                        }))}
-                                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-gray-700"
-                                        required
-                                    >
-                                        <option value="home">Home</option>
-                                        <option value="office">Office</option>
-                                        <option value="other">Other</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Image Upload */}
-                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg shadow-gray-200/50 border border-gray-100 p-8">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="w-10 h-10 bg-gradient-to-r from-primary-600 to-primary-700 rounded-xl flex items-center justify-center">
-                                <Upload className="w-5 h-5 text-white" />
-                            </div>
-                            <h2 className="text-xl font-bold text-gray-900">Upload Images (Optional)</h2>
-                        </div>
-                        <p className="text-gray-600 mb-6 text-lg">Upload photos to help us understand the issue better</p>
-
-                        <div className="space-y-6">
-                            <input
-                                type="file"
-                                multiple
-                                accept="image/*"
-                                onChange={handleImageUpload}
-                                className="block w-full text-sm text-gray-500 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 file:transition-colors file:duration-200"
-                            />
-
-                            {formData.images.length > 0 && (
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                    {formData.images.map((image, index) => (
-                                        <div key={index} className="relative group">
-                                            <img
-                                                src={image.preview}
-                                                alt={`Upload ${index + 1}`}
-                                                className="w-full h-24 object-cover rounded-xl shadow-sm group-hover:shadow-md transition-shadow duration-200"
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => removeImage(index)}
-                                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors duration-200 shadow-lg"
-                                            >
-                                                <X className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
                         </div>
                     </div>
+                )}
 
-                    {/* Error and Success Messages */}
-                    {error && (
-                        <div className="bg-red-50 border border-red-200 rounded-2xl p-6">
-                            <div className="flex items-center gap-3">
-                                <AlertCircle className="w-6 h-6 text-red-500 flex-shrink-0" />
-                                <p className="text-red-700 font-medium">{error}</p>
+                {/* Shipping address — only for return */}
+                {type === 'return' && (
+                    <div className="bg-white rounded-2xl border border-gray-200 p-6">
+                        <h2 className="text-base font-bold text-gray-900 mb-1">Pickup Address</h2>
+                        <p className="text-sm text-gray-500 mb-4">Where should we collect the items from?</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {[
+                                { key: 'fullName', label: 'Full Name *',      placeholder: 'Your full name',   type: 'text',     span: false },
+                                { key: 'phone',    label: 'Phone *',           placeholder: '10-digit mobile',  type: 'tel',      span: false },
+                                { key: 'address',  label: 'Address *',         placeholder: 'House / street…',  type: 'textarea', span: true  },
+                                { key: 'city',     label: 'City *',            placeholder: 'City',             type: 'text',     span: false },
+                                { key: 'state',    label: 'State *',           placeholder: 'State',            type: 'text',     span: false },
+                                { key: 'zipCode',  label: 'PIN Code *',        placeholder: '6-digit PIN',      type: 'text',     span: false },
+                                { key: 'landmark', label: 'Landmark',          placeholder: 'Nearby landmark',  type: 'text',     span: false },
+                            ].map(({ key, label, placeholder, type: itype, span }) => (
+                                <div key={key} className={span ? 'md:col-span-2' : ''}>
+                                    <label className={labelCls}>{label}</label>
+                                    {itype === 'textarea' ? (
+                                        <textarea
+                                            value={shippingAddress[key]}
+                                            onChange={e => setShippingAddress(p => ({ ...p, [key]: e.target.value }))}
+                                            placeholder={placeholder}
+                                            rows={2}
+                                            className={inputCls + ' resize-none'}
+                                            required={label.endsWith('*')}
+                                        />
+                                    ) : (
+                                        <input
+                                            type={itype}
+                                            value={shippingAddress[key]}
+                                            onChange={e => setShippingAddress(p => ({ ...p, [key]: e.target.value }))}
+                                            placeholder={placeholder}
+                                            className={inputCls}
+                                            required={label.endsWith('*')}
+                                        />
+                                    )}
+                                </div>
+                            ))}
+                            <div>
+                                <label className={labelCls}>Address Type</label>
+                                <select value={shippingAddress.addressType} onChange={e => setShippingAddress(p => ({ ...p, addressType: e.target.value }))} className={inputCls}>
+                                    <option value="home">Home</option>
+                                    <option value="office">Office</option>
+                                    <option value="other">Other</option>
+                                </select>
                             </div>
                         </div>
-                    )}
-
-                    {success && (
-                        <div className="bg-green-50 border border-green-200 rounded-2xl p-6">
-                            <div className="flex items-center gap-3">
-                                <CheckCircle className="w-6 h-6 text-green-500 flex-shrink-0" />
-                                <p className="text-green-700 font-medium">{success}</p>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Submit Button */}
-                    <div className="flex flex-col sm:flex-row justify-end gap-4">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="px-8 py-3 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 transition-colors font-semibold"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={loading || !Object.values(selectedItems).some(item => item.quantity > 0) || Object.values(selectedItems).some(item => item.quantity > 0 && (!item.description || item.description.trim() === ''))}
-                            className="btn-primary group relative px-8 py-3 rounded-xl shadow-lg shadow-primary-500/25 hover:shadow-xl hover:shadow-primary-500/30 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center gap-2"
-                            title={
-                                !Object.values(selectedItems).some(item => item.quantity > 0)
-                                    ? "Please select at least one item to return"
-                                    : Object.values(selectedItems).some(item => item.quantity > 0 && (!item.description || item.description.trim() === ''))
-                                        ? "Please provide descriptions for all selected items"
-                                        : ""
-                            }
-                        >
-                            {loading ? (
-                                <>
-                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                                    Submitting...
-                                </>
-                            ) : (
-                                <>
-                                    <RefreshCw className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                                    Submit Request
-                                </>
-                            )}
-                        </button>
                     </div>
-                </form>
-            </div>
+                )}
+
+                {/* Additional Notes */}
+                <div className="bg-white rounded-2xl border border-gray-200 p-6">
+                    <h2 className="text-base font-bold text-gray-900 mb-1">Additional Notes</h2>
+                    <p className="text-sm text-gray-500 mb-3">Anything else we should know about your request?</p>
+                    <textarea
+                        value={customerNotes}
+                        onChange={e => setCustomerNotes(e.target.value)}
+                        placeholder="Optional — add any extra details here…"
+                        rows={3}
+                        className={inputCls + ' resize-none'}
+                    />
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center justify-between gap-4 pb-8">
+                    <button type="button" onClick={onClose} className="px-6 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors">
+                        Cancel
+                    </button>
+                    <button
+                        type="submit"
+                        disabled={loading || selectedCount === 0}
+                        className="btn-primary px-8 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    >
+                        {loading ? (
+                            <><div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />Submitting…</>
+                        ) : (
+                            <><RotateCcw className="w-4 h-4" />Submit {type === 'exchange' ? 'Exchange' : 'Return'} Request</>
+                        )}
+                    </button>
+                </div>
+            </form>
         </div>
     );
 };

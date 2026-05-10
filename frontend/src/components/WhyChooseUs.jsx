@@ -1,5 +1,3 @@
-'use client';
-
 import { Shield, Truck, Clock, Star, Award, Users, Heart, Zap } from 'lucide-react';
 
 const WhyChooseUs = () => {
@@ -59,7 +57,7 @@ const WhyChooseUs = () => {
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4 sm:mb-6">
             The{' '}
             <span className="bg-gradient-to-r from-primary-400 via-pink-400 to-primary-500 bg-clip-text text-transparent">
-              HomeLine
+              HomeLineTeam
             </span>
             {' '}Difference
           </h2>

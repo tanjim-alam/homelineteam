@@ -468,6 +468,51 @@ exports.addCustomField = async (req, res, next) => {
   }
 };
 
+// Update custom field in existing category (match by slug)
+exports.updateCustomField = async (req, res, next) => {
+  try {
+    const { categoryId, fieldId } = req.params; // fieldId = slug
+    const { name, slug, type, options, required, visibleOnProduct } = req.body;
+
+    const updateQuery = {};
+    if (name !== undefined)             updateQuery['customFields.$.name']             = name;
+    if (slug !== undefined)             updateQuery['customFields.$.slug']             = slug;
+    if (type !== undefined)             updateQuery['customFields.$.type']             = type;
+    if (options !== undefined)          updateQuery['customFields.$.options']          = options;
+    if (required !== undefined)         updateQuery['customFields.$.required']         = required;
+    if (visibleOnProduct !== undefined) updateQuery['customFields.$.visibleOnProduct'] = visibleOnProduct;
+
+    const category = await Category.findOneAndUpdate(
+      { _id: categoryId, 'customFields.slug': fieldId },
+      { $set: updateQuery },
+      { new: true }
+    );
+
+    if (!category) return res.status(404).json({ message: 'Category or custom field not found' });
+    res.json(category);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Delete custom field from existing category (match by slug)
+exports.deleteCustomField = async (req, res, next) => {
+  try {
+    const { categoryId, fieldId } = req.params; // fieldId = slug
+
+    const category = await Category.findOneAndUpdate(
+      { _id: categoryId },
+      { $pull: { customFields: { slug: fieldId } } },
+      { new: true }
+    );
+
+    if (!category) return res.status(404).json({ message: 'Category not found' });
+    res.json(category);
+  } catch (err) {
+    next(err);
+  }
+};
+
 // Add new variant field to existing category
 exports.addVariantField = async (req, res, next) => {
   try {

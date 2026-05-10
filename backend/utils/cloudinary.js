@@ -26,6 +26,6 @@ async function uploadBuffer(buffer, folder) {
 	});
 }
 
-module.exports = { configureCloudinary, uploadBuffer };
+module.exports = { configureCloudinary, uploadBuffer, cloudinary };
 
 
