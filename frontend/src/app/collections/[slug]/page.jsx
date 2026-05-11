@@ -1,116 +1,124 @@
-import { generateCategoryMetadata, generateCategoryStructuredData } from '@/utils/metadata';
-import api from '@/services/api';
+import { generateCategoryStructuredData } from '@/utils/metadata';
 import CategoryPageClient from './CategoryPageClient-new';
+
+const BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.homelineteam.com';
+
+async function fetchCategoryBySlug(slug) {
+  /* Try hierarchical first (covers main categories) */
+  try {
+    const res = await fetch(`${BASE}/categories/hierarchical`, { next: { revalidate: 3600 } });
+    if (res.ok) {
+      const list = await res.json();
+      const arr = Array.isArray(list) ? list : list?.categories || list?.data || [];
+      const found = arr.find(mc => mc.slug === slug);
+      if (found) return found;
+      /* Check subcategories */
+      for (const mc of arr) {
+        const sub = (mc.subcategories || []).find(s => s.slug === slug);
+        if (sub) return sub;
+      }
+    }
+  } catch { /* fall through */ }
+  /* Fallback: direct category endpoint */
+  try {
+    const res = await fetch(`${BASE}/categories/${slug}`, { next: { revalidate: 3600 } });
+    if (res.ok) return await res.json();
+  } catch { /* ignore */ }
+  return null;
+}
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  try {
-    const category = await api.getCategoryBySlug(slug);
-    return generateCategoryMetadata(category);
-  } catch {
-    return { title: 'Category', description: 'Explore our collection' };
-  }
+  const category = await fetchCategoryBySlug(slug);
+  if (!category?.name) return { title: 'Collection | HomelineTeam', description: 'Explore our collection' };
+  const cleanName = category.name.replace(/\p{Emoji}/gu, '').trim();
+  return {
+    title: category.metaData?.title || `${cleanName} | HomelineTeam`,
+    description: category.metaData?.description || category.description || `Explore our ${cleanName} collection at HomelineTeam.`,
+    openGraph: {
+      title: cleanName,
+      description: category.description || `${cleanName} collection`,
+      images: category.image ? [{ url: category.image }] : [],
+    },
+    alternates: { canonical: `https://homelineteam.com/collections/${slug}` },
+  };
 }
 
 export default async function CategoryPage({ params }) {
   const { slug } = await params;
 
-  let category = null;
-  let products = [];
+  let category      = null;
+  let products      = [];
   let filterOptions = null;
   let isMainCategory = false;
   let subcategories = [];
 
-  try {
-    // First, try to fetch from hierarchical categories (for main categories)
+  /* ── helper: raw fetch ─────────────────────────────────────────────── */
+  const get = async (path, ttl = 60) => {
     try {
-      const hierarchicalData = await api.getHierarchicalCategories();
-      if (Array.isArray(hierarchicalData)) {
-        const found = hierarchicalData.find(mc => mc.slug === slug);
-        if (found && found.subcategories && found.subcategories.length > 0) {
-          // This is a main category with subcategories
-          isMainCategory = true;
-          category = found;
-          subcategories = found.subcategories;
+      const res = await fetch(`${BASE}${path}`, { next: { revalidate: ttl } });
+      return res.ok ? res.json() : null;
+    } catch { return null; }
+  };
 
-          // Enrich subcategories with product counts
-          subcategories = await Promise.all(
-            subcategories.map(async (sub) => {
-              try {
-                const subProducts = await api.getCategoryProducts(sub.slug, { sort: 'newest' });
-                const arr = Array.isArray(subProducts)
-                  ? subProducts
-                  : subProducts?.products || subProducts?.data || [];
-                return { ...sub, productCount: arr.length };
-              } catch {
-                return { ...sub, productCount: 0 };
-              }
-            })
-          );
-        }
+  try {
+    /* 1️⃣ Try hierarchical to detect main category */
+    const hier = await get('/categories/hierarchical', 3600);
+    const hierArr = Array.isArray(hier) ? hier : hier?.categories || hier?.data || [];
+    const mainCat = hierArr.find(mc => mc.slug === slug);
+
+    if (mainCat && mainCat.subcategories?.length > 0) {
+      isMainCategory = true;
+      category       = mainCat;
+      subcategories  = mainCat.subcategories;
+
+    } else {
+      /* 2️⃣ Not a main category — fetch as subcategory */
+      /* Find it in the hierarchy to get its _id */
+      let catId = null;
+      for (const mc of hierArr) {
+        const sub = (mc.subcategories || []).find(s => s.slug === slug);
+        if (sub) { category = sub; catId = sub._id; break; }
       }
-    } catch (hierarchyErr) {
-      // Fallback if hierarchical fetch fails
-      console.log('Could not fetch hierarchical categories, trying regular category...');
-    }
 
-    // If not found as main category, fetch as regular category
-    if (!isMainCategory) {
-      category = await api.getCategoryBySlug(slug);
+      /* Fallback: direct category endpoint */
+      if (!category) {
+        const direct = await get(`/categories/${slug}`, 300);
+        if (direct) { category = direct; catId = direct._id; }
+      }
 
-      // Check if this category has children/subcategories
       if (category?.subcategories?.length > 0 || category?.children?.length > 0) {
+        /* Turned out to be a main-like category */
         isMainCategory = true;
-        subcategories = category.subcategories || category.children || [];
-
-        // Enrich subcategories with product counts
-        subcategories = await Promise.all(
-          subcategories.map(async (sub) => {
-            try {
-              const subProducts = await api.getCategoryProducts(sub.slug, { sort: 'newest' });
-              const arr = Array.isArray(subProducts)
-                ? subProducts
-                : subProducts?.products || subProducts?.data || [];
-              return { ...sub, productCount: arr.length };
-            } catch {
-              return { ...sub, productCount: 0 };
-            }
-          })
-        );
+        subcategories  = category.subcategories || category.children || [];
       } else {
-        // It's a regular subcategory - fetch products and filters
-        [filterOptions] = await Promise.all([
-          api.getCategoryFilterOptions(slug),
+        /* 3️⃣ Leaf category — fetch products + filters in parallel */
+        const [productsData, filterData] = await Promise.all([
+          catId ? get(`/products?subcategoryId=${catId}&sort=newest`, 60) : get(`/products?categorySlug=${slug}&sort=newest`, 60),
+          get(`/categories/${slug}/filter-options`, 300),
         ]);
 
-        const productsData = await api.getCategoryProducts(slug, { sort: 'newest' });
-        if (Array.isArray(productsData)) products = productsData;
-        else if (productsData?.products) products = productsData.products;
-        else if (productsData?.data) products = productsData.data;
+        const arr = Array.isArray(productsData) ? productsData
+          : productsData?.products || productsData?.data || [];
+        products = arr;
+
+        filterOptions = filterData || null;
       }
     }
-  } catch (error) {
-    console.error('Error fetching category:', error);
-    category = { name: 'Category', description: 'Explore our amazing collection' };
-    filterOptions = {
-      priceRange: { min: 0, max: 10000 },
-      brands: [],
-      ratings: [5, 4, 3, 2, 1],
-      availability: ['In Stock', 'Out of Stock', 'Pre-order'],
-      importantFilters: [],
-    };
+  } catch (err) {
+    console.error('CategoryPage fetch error:', err);
   }
 
   const structuredData = generateCategoryStructuredData(category);
-  const canonicalUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/collections/${slug}`;
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
-      />
-      <link rel="canonical" href={canonicalUrl} />
+      {structuredData && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        />
+      )}
       <CategoryPageClient
         slug={slug}
         initialCategory={category}

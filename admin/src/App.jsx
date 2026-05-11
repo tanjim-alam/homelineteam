@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { fetchMe } from './store/slices/authSlice'
@@ -6,6 +6,7 @@ import { ToastProvider } from './context/ToastContext'
 import Layout from './components/Layout'
 import AuthLoading from './components/AuthLoading'
 import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
 import DashboardPage from './pages/DashboardPage'
 import CategoriesPage from './pages/CategoriesPage'
 import ProductsPage from './pages/ProductsPage'
@@ -33,6 +34,7 @@ function ProtectedRoute({ children }) {
 function App() {
   const dispatch = useDispatch()
   const { user, loading } = useSelector((s) => s.auth)
+  const [authView, setAuthView] = useState('login') // 'login' | 'register'
 
   useEffect(() => {
     dispatch(fetchMe())
@@ -43,9 +45,12 @@ function App() {
     return <AuthLoading />
   }
 
-  // Show login page if not authenticated
+  // Show login/register if not authenticated
   if (!user) {
-    return <LoginPage />
+    if (authView === 'register') {
+      return <RegisterPage onGoLogin={() => setAuthView('login')} />
+    }
+    return <LoginPage onGoRegister={() => setAuthView('register')} />
   }
 
   return (

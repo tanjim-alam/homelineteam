@@ -1,40 +1,35 @@
-import React from 'react';
-import { Loader2 } from 'lucide-react';
+import { Home } from 'lucide-react'
 
-const AuthLoading = () => {
-    return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
-            <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-12 text-center">
-                <div className="flex flex-col items-center space-y-6">
-                    {/* Loading Spinner */}
-                    <div className="relative">
-                        <div className="w-16 h-16 border-4 border-blue-200 rounded-full"></div>
-                        <div className="absolute top-0 left-0 w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                    </div>
+export default function AuthLoading() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <div className="w-full max-w-md">
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
 
-                    {/* Loading Text */}
-                    <div className="space-y-2">
-                        <h2 className="text-2xl font-bold text-gray-900">Verifying Authentication</h2>
-                        <p className="text-gray-600">Please wait while we verify your credentials...</p>
-                    </div>
-
-                    {/* Loading Dots Animation */}
-                    <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                        <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                    </div>
-                </div>
+          {/* Dark navy header — matches login/register */}
+          <div className="px-8 py-7 flex items-center gap-4" style={{ backgroundColor: '#1a2035' }}>
+            <div className="w-11 h-11 bg-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
+              <Home className="w-6 h-6 text-white" />
             </div>
+            <div>
+              <p className="text-white font-bold text-base leading-tight">HomelineTeam</p>
+              <p className="text-slate-400 text-sm">Admin Panel</p>
+            </div>
+          </div>
+
+          {/* Body */}
+          <div className="px-8 py-10 flex flex-col items-center text-center">
+            {/* Spinner */}
+            <div className="relative w-12 h-12 mb-6">
+              <div className="absolute inset-0 rounded-full border-4 border-gray-200" />
+              <div className="absolute inset-0 rounded-full border-4 border-blue-600 border-t-transparent animate-spin" />
+            </div>
+
+            <p className="text-base font-semibold text-gray-800">Verifying your session</p>
+            <p className="text-sm text-gray-400 mt-1">Please wait a moment…</p>
+          </div>
         </div>
-    );
-};
-
-export default AuthLoading;
-
-
-
-
-
-
-
+      </div>
+    </div>
+  )
+}

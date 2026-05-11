@@ -53,7 +53,8 @@ const productSchema = new mongoose.Schema(
 		// Variants system for different combinations
 		variants: [variantSchema],
 		// Whether this product uses variants
-		hasVariants: { type: Boolean, default: false }
+		hasVariants: { type: Boolean, default: false },
+		isFeatured: { type: Boolean, default: false, index: true }
 	},
 	{ timestamps: true }
 );

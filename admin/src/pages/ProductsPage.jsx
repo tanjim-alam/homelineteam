@@ -57,7 +57,7 @@ export default function ProductsPage() {
 
   const [form, setForm] = useState({
     subcategoryId: '', name: '', slug: '', basePrice: '', mrp: '', discount: '',
-    description: '', mainImages: [], imagePreviews: [], hasVariants: false,
+    description: '', mainImages: [], imagePreviews: [], hasVariants: false, isFeatured: false,
     variants: [], variantOptions: {}, dynamicFields: {},
     customSize: { enabled: false, sizeUnit: 'mm', widthBasePrice: '', heightBasePrice: '', minWidth: '', maxWidth: '', minHeight: '', maxHeight: '' },
     metaData: { title: '', description: '', keywords: '', ogImage: null }
@@ -225,7 +225,7 @@ export default function ProductsPage() {
 
   /* ── form reset / edit ──────────────────────────────────────────── */
   const resetForm = () => {
-    setForm({ subcategoryId: '', name: '', slug: '', basePrice: '', mrp: '', discount: '', description: '', mainImages: [], imagePreviews: [], hasVariants: false, variants: [], variantOptions: {}, dynamicFields: {}, customSize: { enabled: false, sizeUnit: 'mm', widthBasePrice: '', heightBasePrice: '', minWidth: '', maxWidth: '', minHeight: '', maxHeight: '' }, metaData: { title: '', description: '', keywords: '', ogImage: null } });
+    setForm({ subcategoryId: '', name: '', slug: '', basePrice: '', mrp: '', discount: '', description: '', mainImages: [], imagePreviews: [], hasVariants: false, isFeatured: false, variants: [], variantOptions: {}, dynamicFields: {}, customSize: { enabled: false, sizeUnit: 'mm', widthBasePrice: '', heightBasePrice: '', minWidth: '', maxWidth: '', minHeight: '', maxHeight: '' }, metaData: { title: '', description: '', keywords: '', ogImage: null } });
     setEditingProduct(null); setSelectedCategory(null); setExistingImages([]);
     setVariantForm({ fields: {}, price: '', mrp: '', discount: '', stock: 0, images: [] });
     setVariantOptionsForm({ fieldSlug: '', options: [''] });
@@ -240,7 +240,7 @@ export default function ProductsPage() {
       name: product.name, slug: product.slug,
       basePrice: product.basePrice || product.price || '', mrp: product.mrp || '', discount: product.discount || '',
       description: product.description || '', mainImages: [], imagePreviews: [],
-      hasVariants: product.hasVariants || false, variants: product.variants || [],
+      hasVariants: product.hasVariants || false, isFeatured: product.isFeatured || false, variants: product.variants || [],
       variantOptions: product.variantOptions || {}, dynamicFields: product.dynamicFields || {},
       customSize: { enabled: product.customSize?.enabled || false, sizeUnit: product.customSize?.sizeUnit || 'mm', widthBasePrice: product.customSize?.widthBasePrice ?? '', heightBasePrice: product.customSize?.heightBasePrice ?? '', minWidth: product.customSize?.minWidth ?? '', maxWidth: product.customSize?.maxWidth ?? '', minHeight: product.customSize?.minHeight ?? '', maxHeight: product.customSize?.maxHeight ?? '' },
       metaData: { title: product.metaData?.title || '', description: product.metaData?.description || '', keywords: Array.isArray(product.metaData?.keywords) ? product.metaData.keywords.join(', ') : (product.metaData?.keywords || ''), ogImage: product.metaData?.ogImage || null }
@@ -266,6 +266,7 @@ export default function ProductsPage() {
       fd.append('basePrice', form.basePrice); fd.append('mrp', form.mrp); fd.append('discount', form.discount);
       fd.append('description', form.description);
       fd.append('hasVariants', form.hasVariants);
+      fd.append('isFeatured', form.isFeatured);
       fd.append('variants', JSON.stringify(form.variants));
       fd.append('variantOptions', JSON.stringify(form.variantOptions));
       fd.append('dynamicFields', JSON.stringify(form.dynamicFields));
@@ -400,6 +401,12 @@ export default function ProductsPage() {
                   hint="Auto-generated from name"
                   onChange={e => setForm(f => ({ ...f, slug: e.target.value }))} />
               </div>
+              <label className="flex items-center gap-3 cursor-pointer w-fit">
+                <input type="checkbox" checked={form.isFeatured}
+                  onChange={e => setForm(f => ({ ...f, isFeatured: e.target.checked }))}
+                  className="w-5 h-5 rounded accent-yellow-500" />
+                <span className="text-sm font-semibold text-gray-700">Feature this product on homepage</span>
+              </label>
             </div>
 
             {/* ── Section 2: Pricing ── */}
@@ -841,9 +848,16 @@ export default function ProductsPage() {
                           onClick={e => e.stopPropagation()} />
                       </div>
 
-                      {/* Discount badge — top right */}
+                      {/* Featured badge — top right */}
+                      {product.isFeatured && (
+                        <div className="absolute top-3 right-3 z-10 bg-yellow-400 text-gray-900 text-[10px] font-bold px-2.5 py-1 rounded-xl shadow-md">
+                          ★ Featured
+                        </div>
+                      )}
+
+                      {/* Discount badge — top right (below featured if both) */}
                       {discountPct > 0 && (
-                        <div className="absolute top-3 right-3 z-10 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-xl shadow-md">
+                        <div className={`absolute z-10 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-xl shadow-md ${product.isFeatured ? 'top-11 right-3' : 'top-3 right-3'}`}>
                           -{discountPct}%
                         </div>
                       )}

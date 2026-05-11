@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useHeroData } from '../hooks/useHeroData'
 
@@ -9,6 +10,22 @@ const LOCAL_FALLBACK = [
   { imageUrl: '/hero-bg-2.jpg', altText: 'Home Interior Design' },
   { imageUrl: '/hero-bg-3.jpg', altText: 'Premium Furniture Collection' },
 ]
+
+function SlideImage({ slide, priority }) {
+  const img = (
+    <Image
+      src={slide.imageUrl}
+      alt={slide.altText || 'Banner'}
+      fill
+      className="object-cover object-center"
+      priority={priority}
+      sizes="100vw"
+    />
+  )
+  return slide.link
+    ? <Link href={slide.link} className="absolute inset-0">{img}</Link>
+    : img
+}
 
 export default function Hero() {
   const [current, setCurrent] = useState(0)
@@ -74,14 +91,7 @@ export default function Hero() {
               i === current ? 'opacity-100 z-10' : 'opacity-0 z-0'
             }`}
           >
-            <Image
-              src={slide.imageUrl}
-              alt={slide.altText || `Banner ${i + 1}`}
-              fill
-              className="object-cover object-center"
-              priority={i === 0}
-              sizes="100vw"
-            />
+            <SlideImage slide={slide} priority={i === 0} />
           </div>
         ))}
       </div>
@@ -95,14 +105,7 @@ export default function Hero() {
               i === current ? 'opacity-100 z-10' : 'opacity-0 z-0'
             }`}
           >
-            <Image
-              src={slide.imageUrl}
-              alt={slide.altText || `Banner ${i + 1}`}
-              fill
-              className="object-cover object-center"
-              priority={i === 0}
-              sizes="100vw"
-            />
+            <SlideImage slide={slide} priority={i === 0} />
           </div>
         ))}
       </div>

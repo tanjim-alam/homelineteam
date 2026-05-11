@@ -816,7 +816,7 @@ export default function CategoryPageClient({
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
 
           {/* Sidebar Filters */}
-          <div className={`lg:block ${showFilters ? 'block' : 'hidden'} lg:w-80 w-full`}>
+          <div className={`lg:block ${showFilters ? 'block' : 'hidden'} lg:w-80 w-full p-4`}>
             <div className="bg-gradient-to-b from-blue-50 to-purple-50 rounded-2xl p-4 border border-blue-100 shadow-lg lg:sticky lg:top-8 lg:h-fit">
               <div className="text-center mb-4">
                 <h3 className="text-xl font-bold text-gray-900 mb-1">Filters</h3>

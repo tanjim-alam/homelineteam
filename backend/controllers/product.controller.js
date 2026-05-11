@@ -156,6 +156,8 @@ exports.createProduct = async (req, res, next) => {
         }
 
 
+        const isFeatured = req.body.isFeatured === 'true' || req.body.isFeatured === true;
+
         const product = await Product.create({
             categoryId,
             name,
@@ -170,6 +172,7 @@ exports.createProduct = async (req, res, next) => {
             customSize,
             metaData,
             hasVariants: hasVariants || false,
+            isFeatured,
             variants: processedVariants
         });
 
@@ -298,6 +301,7 @@ exports.updateProduct = async (req, res, next) => {
         if (variants) updates.variants = typeof variants === 'string' ? JSON.parse(variants) : variants;
         if (variantOptions) updates.variantOptions = typeof variantOptions === 'string' ? JSON.parse(variantOptions) : variantOptions;
         if (hasVariants !== undefined) updates.hasVariants = hasVariants;
+        if (req.body.isFeatured !== undefined) updates.isFeatured = req.body.isFeatured === 'true' || req.body.isFeatured === true;
 
         if (req.body.customSize !== undefined) {
             const customSizeRaw = typeof req.body.customSize === 'string' ? JSON.parse(req.body.customSize) : req.body.customSize;
@@ -399,6 +403,9 @@ exports.getProducts = async (req, res, next) => {
         } = req.query;
 
         const filter = {};
+
+        // Featured filter
+        if (featured === 'true') filter.isFeatured = true;
 
         // Basic category filtering
         if (categoryId) filter.categoryId = categoryId;
@@ -737,6 +744,37 @@ exports.searchProducts = async (req, res, next) => {
             .limit(50); // Limit results for performance
 
         res.json(products);
+    } catch (err) {
+        next(err);
+    }
+};
+
+// Lightweight autocomplete suggestions
+exports.searchSuggestions = async (req, res, next) => {
+    try {
+        const { q } = req.query;
+        if (!q || q.trim().length < 2) {
+            return res.json({ success: true, data: [] });
+        }
+
+        const products = await Product.find({
+            name: { $regex: q.trim(), $options: 'i' },
+        })
+            .select('name slug basePrice mainImages categoryId')
+            .populate('categoryId', 'name')
+            .limit(8)
+            .lean();
+
+        const data = products.map(p => ({
+            _id:          p._id,
+            name:         p.name,
+            slug:         p.slug,
+            basePrice:    p.basePrice,
+            imageUrl:     p.mainImages?.[0] || '',
+            categoryName: p.categoryId?.name || '',
+        }));
+
+        res.json({ success: true, data });
     } catch (err) {
         next(err);
     }

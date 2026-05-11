@@ -3,42 +3,20 @@ const mongoose = require('mongoose');
 const heroSectionSchema = new mongoose.Schema({
   // Mobile Background Images (for mobile hero section and desktop right side)
   mobileBackgroundImages: [{
-    imageUrl: {
-      type: String,
-      required: true
-    },
-    altText: {
-      type: String,
-      required: true
-    },
-    isActive: {
-      type: Boolean,
-      default: true
-    },
-    order: {
-      type: Number,
-      default: 0
-    }
+    imageUrl: { type: String, required: true },
+    altText:  { type: String, default: '' },
+    link:     { type: String, default: '' },
+    isActive: { type: Boolean, default: true },
+    order:    { type: Number, default: 0 }
   }],
-  
+
   // Desktop Background Images (for main desktop hero background)
   desktopBackgroundImages: [{
-    imageUrl: {
-      type: String,
-      required: true
-    },
-    altText: {
-      type: String,
-      required: true
-    },
-    isActive: {
-      type: Boolean,
-      default: true
-    },
-    order: {
-      type: Number,
-      default: 0
-    }
+    imageUrl: { type: String, required: true },
+    altText:  { type: String, default: '' },
+    link:     { type: String, default: '' },
+    isActive: { type: Boolean, default: true },
+    order:    { type: Number, default: 0 }
   }],
   
   // Category Images

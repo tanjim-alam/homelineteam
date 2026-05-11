@@ -19,7 +19,13 @@ const EMPTY_HERO = {
 /* ─── BannerCard ───────────────────────────────────────────────── */
 function BannerCard({ image, index, total, onSaveField, onToggle, onDelete, onMoveUp, onMoveDown }) {
   const [altText, setAltText] = useState(image.altText || '')
-  useEffect(() => setAltText(image.altText || ''), [image.altText])
+  const [link,    setLink]    = useState(image.link    || '')
+  useEffect(() => {
+    setAltText(image.altText || '')
+    setLink(image.link || '')
+  }, [image.altText, image.link])
+
+  const inCls = 'w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 bg-gray-50 transition-all'
 
   return (
     <div className={`bg-white rounded-2xl border overflow-hidden transition-all ${image.isActive ? 'border-gray-200 shadow-sm' : 'border-gray-100 opacity-55'}`}>
@@ -29,6 +35,15 @@ function BannerCard({ image, index, total, onSaveField, onToggle, onDelete, onMo
       </div>
 
       <div className="p-4 space-y-3">
+        {/* Link URL */}
+        <input
+          type="text"
+          value={link}
+          onChange={e => setLink(e.target.value)}
+          onBlur={() => onSaveField(index, 'link', link)}
+          placeholder="Click link (e.g. /collections or /window-solution)"
+          className={inCls}
+        />
         {/* Alt text */}
         <input
           type="text"
@@ -36,7 +51,7 @@ function BannerCard({ image, index, total, onSaveField, onToggle, onDelete, onMo
           onChange={e => setAltText(e.target.value)}
           onBlur={() => onSaveField(index, 'altText', altText)}
           placeholder="Image description (for SEO)"
-          className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 bg-gray-50 transition-all"
+          className={inCls}
         />
 
         {/* Controls row */}
