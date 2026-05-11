@@ -15,16 +15,16 @@ export const metadata = {
   metadataBase: new URL(SITE_URL),
 
   title: {
-    default: 'HomelineTeam – Premium Home Furnishings & Interior Design',
+    default: 'Homeline – Premium Home Furnishings & Interior Design',
     template: '%s | HomelineTeam',
   },
 
   description:
-    'Shop premium curtains, blinds, wallpapers, cushions, rugs & more at HomelineTeam. Expert interior design services across India. Transform your space today.',
+    'Shop premium curtains, blinds, wallpapers, cushions, rugs & more at Homeline. Expert interior design services across India. Transform your space today.',
 
   keywords: [
     'home furnishings', 'curtains', 'blinds', 'wallpaper', 'cushions', 'rugs',
-    'interior design', 'home decor', 'window treatments', 'HomelineTeam',
+    'interior design', 'home decor', 'window treatments', 'Homeline', 'HomelineTeam',
     'premium curtains India', 'buy curtains online', 'home textiles',
   ],
 
