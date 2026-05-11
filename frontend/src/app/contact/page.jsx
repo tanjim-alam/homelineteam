@@ -1,18 +1,26 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Mail, Phone, MapPin, Clock, Send, CheckCircle, MessageSquare } from 'lucide-react';
-import Metadata from '@/components/Metadata';
-import { generateContactMetadata } from '@/utils/metadata';
-import api from '@/services/api';
+import { useState } from "react";
+import {
+  Mail,
+  Phone,
+  MapPin,
+  Clock,
+  Send,
+  CheckCircle,
+  MessageSquare,
+} from "lucide-react";
+import Metadata from "@/components/Metadata";
+import { generateContactMetadata } from "@/utils/metadata";
+import api from "@/services/api";
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    subject: '',
-    message: ''
+    name: "",
+    email: "",
+    phone: "",
+    subject: "",
+    message: "",
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -26,25 +34,33 @@ export default function ContactPage() {
       const response = await api.createLead({
         name: formData.name.trim(),
         phone: formData.phone.trim(),
-        city: '', // Contact form doesn't have city field
-        homeType: '', // Contact form doesn't have homeType field
-        sourcePage: 'Contact Page',
+        city: "", // Contact form doesn't have city field
+        homeType: "", // Contact form doesn't have homeType field
+        sourcePage: "Contact Page",
         message: `Subject: ${formData.subject}\nMessage: ${formData.message}`,
         meta: {
           email: formData.email.trim(),
           subject: formData.subject,
-          page: 'contact'
-        }
+          page: "contact",
+        },
       });
 
       if (response.success) {
         setIsSubmitted(true);
-        setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
+        setFormData({
+          name: "",
+          email: "",
+          phone: "",
+          subject: "",
+          message: "",
+        });
       } else {
-        alert('Failed to send your message. Please try again.');
+        alert("Failed to send your message. Please try again.");
       }
     } catch (error) {
-      alert(`Failed to send your message: ${error.message || 'Please try again.'}`);
+      alert(
+        `Failed to send your message: ${error.message || "Please try again."}`,
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -53,7 +69,7 @@ export default function ContactPage() {
   const handleChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
@@ -62,26 +78,26 @@ export default function ContactPage() {
       icon: Mail,
       title: "Email Us",
       details: "info@homelineteam.com",
-      description: "We'll respond within 24 hours"
+      description: "We'll respond within 24 hours",
     },
     {
       icon: Phone,
       title: "Call Us",
       details: "+91 9611925494",
-      description: "Mon-Sat, 9:00 AM - 7:00 PM"
+      description: "Mon-Sat, 9:00 AM - 7:00 PM",
     },
     {
       icon: MapPin,
       title: "Visit Us",
       details: "B Narayanapura, Mahadevapura, Bengaluru, Karnataka 560093",
-      description: "By appointment only"
+      description: "By appointment only",
     },
     {
       icon: Clock,
       title: "Business Hours",
       details: "Monday - Saturday",
-      description: "9:00 AM - 7:00 PM IST"
-    }
+      description: "9:00 AM - 7:00 PM IST",
+    },
   ];
 
   return (
@@ -98,19 +114,19 @@ export default function ContactPage() {
           <div className="relative z-10 container-custom text-center">
             <div className="inline-flex items-center gap-2 bg-glass px-6 py-3 rounded-full shadow-lg mb-6">
               <MessageSquare className="w-5 h-5 text-primary-500" />
-              <span className="text-sm font-semibold text-gray-700">Get in Touch</span>
+              <span className="text-sm font-semibold text-gray-700">
+                Get in Touch
+              </span>
             </div>
 
             <h1 className="text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
-              Contact{' '}
-              <span className="text-gradient">
-                HomeLine
-              </span>
+              Contact <span className="text-gradient">HomeLineTeam</span>
             </h1>
 
             <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-              Have questions about our products or need help with your home design?
-              We're here to help! Reach out to us and we'll get back to you as soon as possible.
+              Have questions about our products or need help with your home
+              design? We're here to help! Reach out to us and we'll get back to
+              you as soon as possible.
             </p>
           </div>
         </section>
@@ -119,22 +135,72 @@ export default function ContactPage() {
         <section className="py-20">
           <div className="container-custom">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {contactInfo.map((info, index) => (
-                <div key={index} className="text-center group">
-                  <div className="w-20 h-20 bg-gradient-to-br from-primary-100 to-primary-200 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
-                    <info.icon className="w-10 h-10 text-primary-600" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
-                    {info.title}
-                  </h3>
-                  <p className="text-lg font-semibold text-primary-600 mb-2">
-                    {info.details}
-                  </p>
-                  <p className="text-gray-600 text-sm">
-                    {info.description}
-                  </p>
+              <div className="text-center group">
+                <div className="w-20 h-20 bg-gradient-to-br from-primary-100 to-primary-200 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                  <Mail className="w-10 h-10 text-primary-600" />
                 </div>
-              ))}
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  Mail Us
+                </h3>
+                <p className="text-lg font-semibold text-primary-600 mb-2">
+                  <a
+                    href="mailto:info@homelineteam.com"
+                    className="hover:text-primary-500 transition-colors duration-300"
+                  >
+                    info@homelineteam.com
+                  </a>
+                </p>
+                <p className="text-gray-600 text-sm">
+                  We'll respond within 24 hours
+                </p>
+              </div>
+              <div className="text-center group">
+                <div className="w-20 h-20 bg-gradient-to-br from-primary-100 to-primary-200 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                  <Phone className="w-10 h-10 text-primary-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  Call Us
+                </h3>
+                <p className="text-lg font-semibold text-primary-600 mb-2">
+                  <a
+                    href="tel:+919611925494"
+                    className="hover:text-primary-500 transition-colors duration-300"
+                  >
+                    +91 9611925494
+                  </a>
+                </p>
+                <p className="text-gray-600 text-sm">
+                  Call us anytime, we're always here for you!
+                </p>
+              </div>
+              <div className="text-center group">
+                <div className="w-20 h-20 bg-gradient-to-br from-primary-100 to-primary-200 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                  <MapPin className="w-10 h-10 text-primary-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  Visit Us
+                </h3>
+                <p className="text-lg font-semibold text-primary-600 mb-2">
+                  B Narayanapura, Mahadevapura, Bengaluru, Karnataka 560093
+                </p>
+                <p className="text-gray-600 text-sm">
+                  By appointment only
+                </p>
+              </div>
+              <div className="text-center group">
+                <div className="w-20 h-20 bg-gradient-to-br from-primary-100 to-primary-200 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                  <Clock className="w-10 h-10 text-primary-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  Business Hours
+                </h3>
+                <p className="text-lg font-semibold text-primary-600 mb-2">
+                  Monday - Saturday, 9:00 AM - 7:00 PM IST
+                </p>
+                <p className="text-gray-600 text-sm">
+                  We're here to assist you during our business hours!
+                </p>
+              </div>
             </div>
           </div>
         </section>
@@ -149,8 +215,8 @@ export default function ContactPage() {
                   Send us a Message
                 </h2>
                 <p className="text-gray-600 mb-8 leading-relaxed">
-                  Fill out the form below and we'll get back to you within 24 hours.
-                  For urgent inquiries, please call us directly.
+                  Fill out the form below and we'll get back to you within 24
+                  hours. For urgent inquiries, please call us directly.
                 </p>
 
                 {isSubmitted ? (
@@ -169,7 +235,10 @@ export default function ContactPage() {
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label
+                          htmlFor="name"
+                          className="block text-sm font-medium text-gray-700 mb-2"
+                        >
                           Full Name *
                         </label>
                         <input
@@ -179,13 +248,16 @@ export default function ContactPage() {
                           value={formData.name}
                           onChange={handleChange}
                           required
-                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-300"
+                          className="w-full px-4 py-3 border text-gray-700 border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-300"
                           placeholder="Enter your full name"
                         />
                       </div>
 
                       <div>
-                        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label
+                          htmlFor="email"
+                          className="block text-sm font-medium text-gray-700 mb-2"
+                        >
                           Email Address *
                         </label>
                         <input
@@ -195,7 +267,7 @@ export default function ContactPage() {
                           value={formData.email}
                           onChange={handleChange}
                           required
-                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-300"
+                          className="w-full px-4 py-3 border text-gray-700 border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-300"
                           placeholder="Enter your email"
                         />
                       </div>
@@ -203,7 +275,10 @@ export default function ContactPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label
+                          htmlFor="phone"
+                          className="block text-sm font-medium text-gray-700 mb-2"
+                        >
                           Phone Number
                         </label>
                         <input
@@ -212,13 +287,16 @@ export default function ContactPage() {
                           name="phone"
                           value={formData.phone}
                           onChange={handleChange}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-300"
+                          className="w-full px-4 py-3 border text-gray-700 border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-300"
                           placeholder="Enter your phone number"
                         />
                       </div>
 
                       <div>
-                        <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label
+                          htmlFor="subject"
+                          className="block text-sm font-medium text-gray-700 mb-2"
+                        >
                           Subject *
                         </label>
                         <input
@@ -228,14 +306,17 @@ export default function ContactPage() {
                           value={formData.subject}
                           onChange={handleChange}
                           required
-                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-300"
+                          className="w-full px-4 py-3 border text-gray-700 border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-300"
                           placeholder="What's this about?"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label
+                        htmlFor="message"
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
                         Message *
                       </label>
                       <textarea
@@ -245,7 +326,7 @@ export default function ContactPage() {
                         onChange={handleChange}
                         required
                         rows={6}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-300 resize-none"
+                        className="w-full px-4 py-3 border text-gray-700 border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-300 resize-none"
                         placeholder="Tell us more about your inquiry..."
                       />
                     </div>
@@ -306,7 +387,8 @@ export default function ContactPage() {
                     Need Immediate Help?
                   </h3>
                   <p className="text-gray-600 mb-4">
-                    For urgent inquiries or immediate assistance, please call us directly:
+                    For urgent inquiries or immediate assistance, please call us
+                    directly:
                   </p>
                   <div className="text-center">
                     <a
@@ -331,7 +413,8 @@ export default function ContactPage() {
                 Frequently Asked Questions
               </h2>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                Find quick answers to common questions about our products and services.
+                Find quick answers to common questions about our products and
+                services.
               </p>
             </div>
 
@@ -341,8 +424,8 @@ export default function ContactPage() {
                   What is your return policy?
                 </h3>
                 <p className="text-gray-600">
-                  We offer a 30-day return policy for all products in their original condition.
-                  Free returns for orders above ₹999.
+                  We offer a 30-day return policy for all products in their
+                  original condition. Free returns for orders above ₹999.
                 </p>
               </div>
 
@@ -351,8 +434,8 @@ export default function ContactPage() {
                   Do you offer installation services?
                 </h3>
                 <p className="text-gray-600">
-                  Yes, we provide professional installation services for curtains, blinds, and wallpapers
-                  in major cities across India.
+                  Yes, we provide professional installation services for
+                  curtains, blinds, and wallpapers in major cities across India.
                 </p>
               </div>
 
@@ -361,8 +444,8 @@ export default function ContactPage() {
                   How long does shipping take?
                 </h3>
                 <p className="text-gray-600">
-                  Standard delivery takes 3-5 business days. Express delivery (1-2 days) is available
-                  for select locations.
+                  Standard delivery takes 3-5 business days. Express delivery
+                  (1-2 days) is available for select locations.
                 </p>
               </div>
 
@@ -371,8 +454,9 @@ export default function ContactPage() {
                   Can I get design consultation?
                 </h3>
                 <p className="text-gray-600">
-                  Absolutely! Our interior design experts offer free consultation to help you choose
-                  the perfect products for your space.
+                  Absolutely! Our interior design experts offer free
+                  consultation to help you choose the perfect products for your
+                  space.
                 </p>
               </div>
             </div>

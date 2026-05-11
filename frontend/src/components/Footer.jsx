@@ -56,11 +56,15 @@ const Footer = () => {
               <div className="space-y-2 sm:space-y-3">
                 <div className="flex items-center gap-2 sm:gap-3 text-gray-300 text-sm sm:text-base">
                   <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-primary-400" />
-                  <span>info@homelineteam.com</span>
+                  <a href="mailto:info@homelineteam.com" className="hover:text-primary-400 transition-colors duration-300">
+                    info@homelineteam.com
+                  </a>
                 </div>
                 <div className="flex items-center gap-2 sm:gap-3 text-gray-300 text-sm sm:text-base">
                   <Phone className="w-4 h-4 sm:w-5 sm:h-5 text-primary-400" />
-                  <span>+91 9611925494</span>
+                  <a href="tel:+919611925494" className="hover:text-primary-400 transition-colors duration-300">
+                    +91 9611925494
+                  </a>
                 </div>
                 <div className="flex items-start gap-2 sm:gap-3 text-gray-300 text-sm sm:text-base">
                   <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-primary-400 mt-1" />
@@ -121,22 +125,22 @@ const Footer = () => {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/shipping" className="text-gray-300 hover:text-primary-400 transition-colors duration-300">
+                  <Link href="#" className="text-gray-300 hover:text-primary-400 transition-colors duration-300">
                     Shipping Info
                   </Link>
                 </li>
                 <li>
-                  <Link href="/returns" className="text-gray-300 hover:text-primary-400 transition-colors duration-300">
+                  <Link href="#" className="text-gray-300 hover:text-primary-400 transition-colors duration-300">
                     Returns & Exchanges
                   </Link>
                 </li>
                 <li>
-                  <Link href="/faq" className="text-gray-300 hover:text-primary-400 transition-colors duration-300">
+                  <Link href="#" className="text-gray-300 hover:text-primary-400 transition-colors duration-300">
                     FAQ
                   </Link>
                 </li>
                 <li>
-                  <Link href="/size-guide" className="text-gray-300 hover:text-primary-400 transition-colors duration-300">
+                  <Link href="#" className="text-gray-300 hover:text-primary-400 transition-colors duration-300">
                     Size Guide
                   </Link>
                 </li>
@@ -151,7 +155,7 @@ const Footer = () => {
         </div>
 
         {/* Newsletter Section */}
-        <div className="border-t border-white/10">
+        {/* <div className="border-t border-white/10">
           <div className="container-custom py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
             <div className="text-center">
               <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-white">
@@ -177,7 +181,7 @@ const Footer = () => {
               </p>
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Bottom Footer */}
         <div className="border-t border-white/10">
@@ -192,10 +196,10 @@ const Footer = () => {
                 <Link href="/privacy-policy" className="hover:text-white transition-colors duration-300">
                   Privacy Policy
                 </Link>
-                <Link href="/terms" className="hover:text-white transition-colors duration-300">
+                <Link href="#" className="hover:text-white transition-colors duration-300">
                   Terms of Service
                 </Link>
-                <Link href="/sitemap" className="hover:text-white transition-colors duration-300">
+                <Link href="/sitemap.xml" className="hover:text-white transition-colors duration-300">
                   Sitemap
                 </Link>
               </div>

@@ -89,9 +89,9 @@ export default async function CategorySection() {
           {/* Header */}
           <div className="flex items-end justify-between mb-8">
             <div>
-              <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-1">Collections</p>
+              <p className="text-xs font-bold text-gradient uppercase tracking-widest mb-1">Collections</p>
               <h2 id="cat-heading" className="text-3xl lg:text-4xl font-extrabold text-gray-900 leading-tight">
-                Shop by <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Category</span>
+                Shop by <span className="text-transparent bg-clip-text text-gradient">Category</span>
               </h2>
               <p className="mt-2 text-sm text-gray-500 max-w-md">
                 Curated collections to transform every room with style.

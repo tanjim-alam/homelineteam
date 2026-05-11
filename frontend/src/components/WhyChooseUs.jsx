@@ -1,164 +1,181 @@
-import { Shield, Truck, Clock, Star, Award, Users, Heart, Zap } from 'lucide-react';
+import { Shield, Truck, Clock, Star, Award, CheckCircle, ArrowRight } from 'lucide-react';
+import Link from 'next/link';
 
-const WhyChooseUs = () => {
-  const features = [
-    {
-      icon: Shield,
-      title: "Premium Quality",
-      description: "Every product is crafted with the finest materials and attention to detail",
-      color: "from-blue-500 to-blue-600"
-    },
-    {
-      icon: Truck,
-      title: "Free Shipping",
-      description: "Free delivery on all orders above ₹999 across India",
-      color: "from-green-500 to-green-600"
-    },
-    {
-      icon: Clock,
-      title: "Fast Delivery",
-      description: "Get your products delivered within 3-5 business days",
-      color: "from-purple-500 to-purple-600"
-    },
-    {
-      icon: Star,
-      title: "Customer First",
-      description: "24/7 support and easy returns for complete peace of mind",
-      color: "from-yellow-500 to-yellow-600"
-    }
-  ];
+const features = [
+  {
+    icon: Shield,
+    title: 'Premium Quality',
+    description: 'Every product is crafted with the finest materials and passes rigorous quality checks before reaching your home.',
+    accent: 'bg-red-500',
+  },
+  {
+    icon: Truck,
+    title: 'Free Shipping',
+    description: 'Free delivery on all orders above ₹999 across India. Fast, safe and reliable logistics you can count on.',
+    accent: 'bg-orange-500',
+  },
+  {
+    icon: Star,
+    title: 'Customer First',
+    description: '24/7 support, easy returns, and a dedicated team ready to help you make the right choices for your home.',
+    accent: 'bg-yellow-500',
+  },
+  {
+    icon: Clock,
+    title: 'Fast Delivery',
+    description: 'Get your products delivered within 3–5 business days. We value your time as much as you do.',
+    accent: 'bg-emerald-500',
+  },
+];
 
-  const stats = [
-    { number: "50,000+", label: "Happy Customers", icon: Users, color: "text-blue-600" },
-    { number: "10,000+", label: "Products Sold", icon: Heart, color: "text-primary-600" },
-    { number: "4.8/5", label: "Customer Rating", icon: Star, color: "text-yellow-600" },
-    { number: "24/7", label: "Support Available", icon: Zap, color: "text-green-600" }
-  ];
+const stats = [
+  { value: '50K+', label: 'Happy Customers', color: 'text-red-400'     },
+  { value: '10K+', label: 'Products Sold',   color: 'text-orange-400'  },
+  { value: '4.8★', label: 'Avg. Rating',     color: 'text-yellow-400'  },
+  { value: '24/7', label: 'Support',          color: 'text-emerald-400' },
+];
 
+const trust = [
+  'ISI Certified Materials',
+  'Easy 30-Day Returns',
+  'Cash on Delivery',
+  'Secure Payments',
+  'Pan-India Delivery',
+  'Expert Design Help',
+];
+
+export default function WhyChooseUs() {
   return (
-    <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 relative overflow-hidden">
-      {/* Background Elements */}
-      <div className="absolute inset-0">
-        <div className="absolute top-10 sm:top-20 left-5 sm:left-10 w-48 sm:w-72 h-48 sm:h-72 bg-gradient-to-r from-primary-500/20 to-pink-500/20 rounded-full mix-blend-multiply filter blur-3xl"></div>
-        <div className="absolute bottom-10 sm:bottom-20 right-5 sm:right-10 w-48 sm:w-72 h-48 sm:h-72 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full mix-blend-multiply filter blur-3xl"></div>
-        
-        {/* Grid Pattern */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:25px_25px] sm:bg-[size:50px_50px]"></div>
-      </div>
+    <section
+      className="relative overflow-hidden py-10 sm:py-14"
+      style={{ background: 'linear-gradient(135deg, #070d1a 0%, #0f172a 50%, #0c0f1e 100%)' }}
+      aria-labelledby="why-choose-heading"
+    >
+      {/* ── Ambient glow blobs ─────────────────────────────────────────── */}
+      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-red-600/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-indigo-600/10 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[200px] bg-red-900/10 rounded-full blur-[80px] pointer-events-none" />
 
-      <div className="relative z-10 container-custom px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div className="text-center mb-12 sm:mb-16">
-          <div className="inline-flex items-center gap-2 bg-glass-dark px-4 sm:px-6 py-2 sm:py-3 rounded-full shadow-lg border border-white/20 mb-4 sm:mb-6">
-            <Award className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400" />
-            <span className="text-xs sm:text-sm font-semibold text-white">Why Choose HomeLine</span>
-          </div>
-          
-          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4 sm:mb-6">
-            The{' '}
-            <span className="bg-gradient-to-r from-primary-400 via-pink-400 to-primary-500 bg-clip-text text-transparent">
-              HomeLineTeam
-            </span>
-            {' '}Difference
-          </h2>
-          
-          <p className="text-base sm:text-lg lg:text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed px-4">
-            We're not just selling home furnishings – we're helping you create the home of your dreams. 
-            Our commitment to quality, service, and innovation sets us apart.
-          </p>
+      {/* ── Grid overlay ───────────────────────────────────────────────── */}
+      <div
+        className="absolute inset-0 opacity-[0.04] pointer-events-none"
+        style={{
+          backgroundImage: `linear-gradient(rgba(255,255,255,1) 1px, transparent 1px),
+                            linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)`,
+          backgroundSize: '50px 50px',
+        }}
+      />
+
+      <div className="relative z-10 container-custom">
+
+        {/* ── Top label ──────────────────────────────────────────────────── */}
+        <div className="flex items-center gap-3 mb-7 sm:mb-8">
+          <span className="inline-flex items-center gap-1.5 border border-white/10 bg-white/5 backdrop-blur-sm text-white/60 text-[11px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full">
+            <Award className="w-3.5 h-3.5 text-red-400" />
+            Why Choose Us
+          </span>
+          <div className="flex-1 h-px bg-gradient-to-r from-white/10 to-transparent" />
         </div>
 
-        {/* Features Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 mb-12 sm:mb-16">
-          {features.map((feature, index) => (
-            <div key={index} className="group">
-              <div className="bg-glass-dark rounded-2xl p-4 sm:p-6 border border-white/10 hover:border-white/20 transition-all duration-500 hover:bg-white/10 transform hover:scale-105">
-                <div className={`w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r ${feature.color} rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 group-hover:scale-110 transition-transform duration-300`}>
-                  <feature.icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
-                </div>
-                
-                <h3 className="text-lg sm:text-xl font-bold text-white text-center mb-2 sm:mb-3">
-                  {feature.title}
-                </h3>
-                
-                <p className="text-gray-300 text-center leading-relaxed text-sm sm:text-base">
-                  {feature.description}
-                </p>
-              </div>
+        {/* ── Main 2-col layout ───────────────────────────────────────────── */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8 lg:gap-12 mb-7">
+
+          {/* Left — heading + feature list ─────────────────────────────── */}
+          <div>
+            <h2 id="why-choose-heading" className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white mb-2 leading-tight">
+              The{' '}
+              <span className="bg-gradient-to-r from-red-400 to-rose-500 bg-clip-text text-transparent">
+                HomelineTeam
+              </span>
+              {' '}Difference
+            </h2>
+            <p className="text-gray-400 text-sm max-w-lg mb-6 leading-relaxed">
+              We don't just sell home furnishings — we help you build a home you'll love every single day.
+            </p>
+
+            {/* Feature list */}
+            <div className="divide-y divide-white/[0.07]">
+              {features.map((f, i) => {
+                const Icon = f.icon;
+                return (
+                  <div
+                    key={f.title}
+                    className="group flex items-start gap-4 py-3.5 first:pt-0 hover:pl-1 transition-all duration-300"
+                  >
+                    {/* Icon */}
+                    <div className={`mt-0.5 w-8 h-8 ${f.accent} bg-opacity-15 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-opacity-25 transition-all`}>
+                      <Icon className="w-4 h-4 text-white opacity-90" />
+                    </div>
+
+                    {/* Text */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 mb-1">
+                        <h3 className="text-white font-bold text-sm group-hover:text-red-300 transition-colors">
+                          {f.title}
+                        </h3>
+                        <span className="text-[10px] font-bold text-white/20 tabular-nums">
+                          0{i + 1}
+                        </span>
+                      </div>
+                      <p className="text-gray-400 text-xs leading-relaxed">{f.description}</p>
+                    </div>
+
+                    {/* Animated chevron */}
+                    <div className="mt-1 opacity-0 group-hover:opacity-100 translate-x-0 group-hover:translate-x-1 transition-all duration-300 flex-shrink-0">
+                      <ArrowRight className="w-4 h-4 text-red-400" />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
+          </div>
+
+          {/* Right — big stats ──────────────────────────────────────────── */}
+          <div className="flex flex-col gap-4">
+            {/* Stats 2x2 */}
+            <div className="grid grid-cols-2 gap-3 flex-1">
+              {stats.map((s) => (
+                <div
+                  key={s.label}
+                  className="relative bg-white/[0.04] hover:bg-white/[0.07] border border-white/[0.07] rounded-xl p-4 flex flex-col justify-between transition-colors duration-300 overflow-hidden group"
+                >
+                  <div className="absolute -top-3 -right-3 w-12 h-12 bg-white/5 rounded-full blur-xl group-hover:bg-white/10 transition-colors" />
+                  <p className={`text-3xl font-black ${s.color} leading-none mb-1.5 tracking-tight`}>
+                    {s.value}
+                  </p>
+                  <p className="text-gray-500 text-[10px] font-semibold uppercase tracking-wider">
+                    {s.label}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* CTA card */}
+            <div className="bg-gradient-to-br from-red-600 to-rose-700 rounded-xl p-4 relative overflow-hidden">
+              <div className="absolute -top-4 -right-4 w-20 h-20 bg-rose-400/30 rounded-full blur-2xl pointer-events-none" />
+              <p className="text-white font-bold text-sm mb-0.5 relative z-10">Ready to transform?</p>
+              <p className="text-white/70 text-xs mb-3 relative z-10">Book a free consultation today.</p>
+              <Link
+                href="/contact"
+                className="relative z-10 inline-flex items-center gap-1.5 bg-white text-red-600 hover:bg-red-50 text-xs font-bold px-3 py-1.5 rounded-lg transition-colors"
+              >
+                Get Started <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Trust strip ─────────────────────────────────────────────────── */}
+        <div className="border-t border-white/[0.07] pt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2.5">
+          {trust.map((item) => (
+            <span key={item} className="flex items-center gap-2 text-xs text-gray-500 font-medium">
+              <CheckCircle className="w-3.5 h-3.5 text-red-500/70 flex-shrink-0" />
+              {item}
+            </span>
           ))}
         </div>
 
-        {/* Stats Section */}
-        <div className="bg-glass-dark rounded-3xl p-6 sm:p-8 border border-white/10 mb-12 sm:mb-16">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-            {stats.map((stat, index) => (
-              <div key={index} className="text-center group">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 group-hover:scale-110 transition-transform duration-300">
-                  <stat.icon className={`w-8 h-8 sm:w-10 sm:h-10 ${stat.color}`} />
-                </div>
-                
-                <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-1 sm:mb-2">
-                  {stat.number}
-                </div>
-                
-                <div className="text-gray-300 font-medium text-sm sm:text-base">
-                  {stat.label}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Trust Indicators */}
-        <div className="text-center">
-          <div className="bg-glass-dark rounded-3xl p-6 sm:p-8 border border-white/10">
-            <h3 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">
-              Trusted by Thousands of Indian Homes
-            </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-              <div className="text-center">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                  <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
-                </div>
-                <h4 className="text-base sm:text-lg font-semibold text-white mb-1 sm:mb-2">Quality Assured</h4>
-                <p className="text-gray-300 text-xs sm:text-sm">
-                  Every product undergoes rigorous quality checks before reaching your home
-                </p>
-              </div>
-              
-              <div className="text-center">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                  <Users className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
-                </div>
-                <h4 className="text-base sm:text-lg font-semibold text-white mb-1 sm:mb-2">Expert Support</h4>
-                <p className="text-gray-300 text-xs sm:text-sm">
-                  Our interior design experts are here to help you make the right choices
-                </p>
-              </div>
-              
-              <div className="text-center">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                  <Heart className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
-                </div>
-                <h4 className="text-base sm:text-lg font-semibold text-white mb-1 sm:mb-2">Made with Love</h4>
-                <p className="text-gray-300 text-xs sm:text-sm">
-                  Crafted with care and attention to detail for your perfect home
-                </p>
-              </div>
-            </div>
-            
-            <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-white/10">
-              <p className="text-gray-400 text-xs sm:text-sm">
-                Join our community of satisfied customers who have transformed their homes with HomeLine
-              </p>
-            </div>
-          </div>
-        </div>
       </div>
     </section>
   );
-};
-
-export default WhyChooseUs;
+}

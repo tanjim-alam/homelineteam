@@ -55,7 +55,7 @@ export default function AboutPage() {
           <h1 className="text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
             About{' '}
             <span className="text-gradient">
-              HomeLine
+              HomeLineTeam
             </span>
           </h1>
           
