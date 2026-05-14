@@ -4,6 +4,7 @@ import ProductNavbar from '@/components/ProductNavbar';
 import Footer from '@/components/Footer';
 import BottomNavbar from '@/components/BottomNavbar';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import CartDrawer from '@/components/CartDrawer';
 import { CartProvider } from '@/contexts/CartContext';
 import { SubmissionProvider } from '@/contexts/SubmissionContext';
 import { UserProvider } from '@/contexts/UserContext';
@@ -172,6 +173,7 @@ export default async function RootLayout({ children }) {
                 <main className="pb-20 lg:pb-0">{children}</main>
                 <Footer />
                 <BottomNavbar />
+                <CartDrawer />
               </SubmissionProvider>
             </CartProvider>
           </UserProvider>

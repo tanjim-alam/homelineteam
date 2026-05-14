@@ -449,11 +449,17 @@ class ApiService {
 
   // Leads
   async createLead(payload) {
-    return this.request('/leads', {
+    const result = await this.request('/leads', {
       method: 'POST',
       body: JSON.stringify(payload),
       headers: { 'Content-Type': 'application/json' }
     }, 0); // Disable retries for lead submissions to prevent duplicates
+    // request() swallows HTTP errors and returns { success: false } — re-throw them
+    // so callers' catch blocks can show the real error to the user
+    if (result && result.success === false) {
+      throw new Error(result.error || result.message || 'Submission failed. Please try again.');
+    }
+    return result;
   }
 
   async getLeads() {

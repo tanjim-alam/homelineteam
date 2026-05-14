@@ -54,7 +54,9 @@ export default function LeadsPage() {
     try {
       setLoading(true);
       const res = await api.get('/leads');
-      setLeads(res.data || []);
+      // backend returns { success, data: [...], total } — extract the array
+      const payload = res.data;
+      setLeads(Array.isArray(payload) ? payload : (payload?.data ?? []));
     } catch (e) {
       showToast('error', e.response?.data?.message || e.message || 'Failed to load leads');
     } finally {

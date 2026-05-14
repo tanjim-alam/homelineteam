@@ -20,117 +20,146 @@ const sendLeadNotificationEmail = async (lead, adminEmail) => {
         const transporter = createEmailTransporter();
         const emailTo = adminEmail || process.env.EMAIL_TO || 'homeline042@gmail.com';
 
-        // Format the lead data for email
-        const formatLeadData = (lead) => {
-            let details = `
-                <h3>Lead Information:</h3>
-                <ul>
-                    <li><strong>Name:</strong> ${lead.name}</li>
-                    <li><strong>Phone:</strong> ${lead.phone}</li>
-                    <li><strong>Email:</strong> ${lead.email || 'Not provided'}</li>
-                    <li><strong>City:</strong> ${lead.city || 'Not provided'}</li>
-                    <li><strong>Home Type:</strong> ${lead.homeType || 'Not provided'}</li>
-                    <li><strong>Source Page:</strong> ${lead.sourcePage || 'Not specified'}</li>
-                    <li><strong>Message:</strong> ${lead.message || 'No message provided'}</li>
-                    <li><strong>Submitted:</strong> ${new Date(lead.createdAt).toLocaleString()}</li>
-                </ul>
+        const submittedAt = new Date(lead.createdAt).toLocaleString('en-IN', {
+            day: 'numeric', month: 'long', year: 'numeric',
+            hour: '2-digit', minute: '2-digit', hour12: true,
+        });
+
+        const infoRow = (label, value) => value ? `
+          <tr>
+            <td style="padding:10px 16px;font-size:13px;color:#6b7280;font-weight:600;white-space:nowrap;width:130px;vertical-align:top;">${label}</td>
+            <td style="padding:10px 16px;font-size:13px;color:#111827;border-left:1px solid #f3f4f6;vertical-align:top;">${value}</td>
+          </tr>` : '';
+
+        const sectionHeader = (title, icon) => `
+          <tr>
+            <td colspan="2" style="padding:16px 16px 8px 16px;background:#fef2f2;border-top:3px solid #dc2626;">
+              <p style="margin:0;font-size:11px;font-weight:700;color:#dc2626;text-transform:uppercase;letter-spacing:1px;">${icon} ${title}</p>
+            </td>
+          </tr>`;
+
+        let detailRows = `
+          ${sectionHeader('Lead Information', '&#128100;')}
+          ${infoRow('Name', lead.name)}
+          ${infoRow('Phone', lead.phone)}
+          ${infoRow('City', lead.city || 'Not provided')}
+          ${infoRow('Home Type', lead.homeType || 'Not provided')}
+          ${infoRow('Source', lead.sourcePage || 'Not specified')}
+          ${infoRow('Message', lead.message || '—')}
+          ${infoRow('Submitted', submittedAt)}
+        `;
+
+        if (lead.productDetails && (lead.productDetails.name || lead.productDetails.price)) {
+            detailRows += `
+              ${sectionHeader('Interested Product', '&#127968;')}
+              ${infoRow('Product', lead.productDetails.name || '—')}
+              ${infoRow('Category', lead.productDetails.category || '—')}
+              ${lead.productDetails.price ? infoRow('Price', '&#8377;' + Number(lead.productDetails.price).toLocaleString('en-IN')) : ''}
             `;
+        }
 
-            // Add product details if available
-            if (lead.productDetails) {
-                details += `
-                    <h3>Product Details:</h3>
-                    <ul>
-                        <li><strong>Product Name:</strong> ${lead.productDetails.name || 'Not specified'}</li>
-                        <li><strong>Price:</strong> ₹${lead.productDetails.price || 'Not specified'}</li>
-                        <li><strong>Category:</strong> ${lead.productDetails.category || 'Not specified'}</li>
-                        <li><strong>Description:</strong> ${lead.productDetails.description || 'Not provided'}</li>
-                    </ul>
-                `;
-            }
+        if (lead.meta?.calculatorData) {
+            const cd = lead.meta.calculatorData;
+            detailRows += `
+              ${sectionHeader('Calculator Estimate', '&#128200;')}
+              ${infoRow('Home Type', cd.homeType || '—')}
+              ${infoRow('Style', cd.style || '—')}
+              ${infoRow('Timeline', cd.timeline || '—')}
+              ${cd.area ? infoRow('Area', cd.area + ' sq ft') : ''}
+              ${cd.estimatedCost ? infoRow('Estimate', '&#8377;' + Number(cd.estimatedCost).toLocaleString('en-IN')) : ''}
+            `;
+        }
 
-            // Add meta information if available (calculator data, package config, etc.)
-            if (lead.meta) {
-                details += `<h3>Additional Information:</h3>`;
-
-                if (lead.meta.calculatorData) {
-                    details += `
-                        <h4>Calculator Data:</h4>
-                        <ul>
-                            <li><strong>Home Type:</strong> ${lead.meta.calculatorData.homeType || 'Not specified'}</li>
-                            <li><strong>Rooms:</strong> ${lead.meta.calculatorData.rooms || 'Not specified'}</li>
-                            <li><strong>Area:</strong> ${lead.meta.calculatorData.area || 'Not specified'} sq ft</li>
-                            <li><strong>Budget:</strong> ₹${lead.meta.calculatorData.budget || 'Not specified'}</li>
-                            <li><strong>Style:</strong> ${lead.meta.calculatorData.style || 'Not specified'}</li>
-                            <li><strong>Timeline:</strong> ${lead.meta.calculatorData.timeline || 'Not specified'}</li>
-                            <li><strong>Estimated Cost:</strong> ₹${lead.meta.calculatorData.estimatedCost || 'Not calculated'}</li>
-                        </ul>
-                    `;
-                }
-
-                if (lead.meta.packageConfig) {
-                    details += `
-                        <h4>Package Configuration:</h4>
-                        <pre style="background-color: #f4f4f4; padding: 10px; border-radius: 5px;">${JSON.stringify(lead.meta.packageConfig, null, 2)}</pre>
-                    `;
-                }
-
-                if (lead.meta.kitchenConfig) {
-                    details += `
-                        <h4>Kitchen Configuration:</h4>
-                        <pre style="background-color: #f4f4f4; padding: 10px; border-radius: 5px;">${JSON.stringify(lead.meta.kitchenConfig, null, 2)}</pre>
-                    `;
-                }
-
-                if (lead.meta.selectedProduct) {
-                    details += `
-                        <h4>Selected Product:</h4>
-                        <ul>
-                            <li><strong>Product ID:</strong> ${lead.meta.selectedProduct.id || 'Not specified'}</li>
-                            <li><strong>Product Name:</strong> ${lead.meta.selectedProduct.name || 'Not specified'}</li>
-                            <li><strong>Base Price:</strong> ₹${lead.meta.selectedProduct.basePrice || 'Not specified'}</li>
-                        </ul>
-                    `;
-                }
-            }
-
-            return details;
-        };
+        if (lead.meta?.selectedProduct) {
+            const sp = lead.meta.selectedProduct;
+            detailRows += `
+              ${sectionHeader('Selected Product', '&#128230;')}
+              ${infoRow('Name', sp.name || '—')}
+              ${sp.basePrice ? infoRow('Base Price', '&#8377;' + Number(sp.basePrice).toLocaleString('en-IN')) : ''}
+            `;
+        }
 
         const mailOptions = {
-            from: process.env.EMAIL_FROM || 'noreply@homelineteams.com',
+            from: `"HomelineTeam" <${process.env.EMAIL_FROM || 'noreply@homelineteams.com'}>`,
             to: emailTo,
-            subject: `New Interior Design Lead - ${lead.name} (${lead.sourcePage})`,
+            subject: `New Lead: ${lead.name} — ${lead.sourcePage || 'Interior Design'}`,
             html: `
-                <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
-                    <div style="background-color: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-                        <h1 style="color: #333; text-align: center; margin: 0;">🏠 New Interior Design Lead</h1>
-                        <p style="text-align: center; color: #666; margin: 10px 0 0 0;">HomeLineTeam</p>
-                    </div>
-                    
-                    <div style="background-color: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-                        ${formatLeadData(lead)}
-                    </div>
-                    
-                    <div style="background-color: #e3f2fd; padding: 15px; border-radius: 10px; margin-top: 20px;">
-                        <h4 style="color: #1976d2; margin: 0 0 10px 0;">📞 Next Steps:</h4>
-                        <ul style="margin: 0; color: #333;">
-                            <li>Contact the lead within 24 hours</li>
-                            <li>Verify their requirements and budget</li>
-                            <li>Schedule a design consultation if needed</li>
-                            <li>Update lead status in admin panel</li>
-                        </ul>
-                    </div>
-                    
-                    <div style="text-align: center; margin-top: 20px; color: #666; font-size: 12px;">
-                        <p>HomeLineTeam Lead Management System</p>
-                        <p>Lead ID: ${lead._id}</p>
-                    </div>
-                </div>
-            `
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background-color:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f3f4f6;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="100%" style="max-width:580px;" cellpadding="0" cellspacing="0">
+
+        <!-- Header -->
+        <tr><td style="background:linear-gradient(135deg,#dc2626,#be123c);border-radius:16px 16px 0 0;padding:36px 32px;text-align:center;">
+          <p style="margin:0 0 6px 0;font-size:12px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.7);text-transform:uppercase;">HomelineTeam</p>
+          <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:800;line-height:1.2;">New Design Enquiry</h1>
+          <p style="margin:10px 0 0 0;color:rgba(255,255,255,0.85);font-size:14px;">A potential client is interested in your services</p>
+        </td></tr>
+
+        <!-- Quick summary bar -->
+        <tr><td style="background:#7f1d1d;padding:14px 32px;">
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="text-align:center;border-right:1px solid rgba(255,255,255,0.15);padding-right:12px;">
+                <p style="margin:0;font-size:10px;color:rgba(255,255,255,0.6);font-weight:600;text-transform:uppercase;letter-spacing:1px;">Name</p>
+                <p style="margin:4px 0 0 0;font-size:14px;font-weight:700;color:#fff;">${lead.name}</p>
+              </td>
+              <td style="text-align:center;border-right:1px solid rgba(255,255,255,0.15);padding:0 12px;">
+                <p style="margin:0;font-size:10px;color:rgba(255,255,255,0.6);font-weight:600;text-transform:uppercase;letter-spacing:1px;">Phone</p>
+                <p style="margin:4px 0 0 0;font-size:14px;font-weight:700;color:#fca5a5;">${lead.phone}</p>
+              </td>
+              <td style="text-align:center;padding-left:12px;">
+                <p style="margin:0;font-size:10px;color:rgba(255,255,255,0.6);font-weight:600;text-transform:uppercase;letter-spacing:1px;">City</p>
+                <p style="margin:4px 0 0 0;font-size:14px;font-weight:700;color:#fff;">${lead.city || 'N/A'}</p>
+              </td>
+            </tr>
+          </table>
+        </td></tr>
+
+        <!-- Detail table -->
+        <tr><td style="background:#ffffff;padding:0;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+            ${detailRows}
+          </table>
+        </td></tr>
+
+        <!-- CTA -->
+        <tr><td style="background:#fff;padding:24px 32px 28px 32px;text-align:center;border-top:1px solid #f3f4f6;">
+          <p style="margin:0 0 16px 0;font-size:13px;color:#6b7280;">Respond within 1 hour for best conversion rate</p>
+          <a href="tel:${lead.phone}" style="display:inline-block;background:#dc2626;color:#ffffff;font-weight:700;font-size:14px;text-decoration:none;padding:12px 32px;border-radius:10px;margin-right:8px;">
+            Call ${lead.name.split(' ')[0]}
+          </a>
+          <a href="https://wa.me/91${lead.phone.replace(/\D/g, '')}" style="display:inline-block;background:#16a34a;color:#ffffff;font-weight:700;font-size:14px;text-decoration:none;padding:12px 32px;border-radius:10px;">
+            WhatsApp
+          </a>
+        </td></tr>
+
+        <!-- Next steps -->
+        <tr><td style="background:#fef2f2;padding:20px 32px;border-top:1px solid #fee2e2;">
+          <p style="margin:0 0 10px 0;font-size:12px;font-weight:700;color:#dc2626;text-transform:uppercase;letter-spacing:1px;">Recommended Next Steps</p>
+          <p style="margin:0 0 6px 0;font-size:13px;color:#374151;">&#10003;&nbsp; Call or WhatsApp within 1 hour</p>
+          <p style="margin:0 0 6px 0;font-size:13px;color:#374151;">&#10003;&nbsp; Understand their requirement and budget</p>
+          <p style="margin:0 0 6px 0;font-size:13px;color:#374151;">&#10003;&nbsp; Schedule a free in-home consultation</p>
+          <p style="margin:0;font-size:13px;color:#374151;">&#10003;&nbsp; Update lead status in admin panel</p>
+        </td></tr>
+
+        <!-- Footer -->
+        <tr><td style="background:#111827;border-radius:0 0 16px 16px;padding:20px 32px;text-align:center;">
+          <p style="margin:0 0 4px 0;color:#ffffff;font-size:14px;font-weight:700;">HomelineTeam</p>
+          <p style="margin:0;color:#6b7280;font-size:11px;">Lead ID: ${lead._id} &nbsp;|&nbsp; &copy; ${new Date().getFullYear()} HomelineTeam</p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
         };
 
-        const result = await transporter.sendMail(mailOptions);
+        await transporter.sendMail(mailOptions);
         return true;
     } catch (error) {
         return false;

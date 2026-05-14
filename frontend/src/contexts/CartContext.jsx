@@ -9,6 +9,8 @@ export { CartContext };
 export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState([]);
   const [wishlistItems, setWishlistItems] = useState([]);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [lastAdded, setLastAdded] = useState('');
 
   // Load cart and wishlist from localStorage on mount
   useEffect(() => {
@@ -32,23 +34,24 @@ export function CartProvider({ children }) {
     localStorage.setItem('wishlist', JSON.stringify(wishlistItems));
   }, [wishlistItems]);
 
+  const openDrawer = () => setDrawerOpen(true);
+  const closeDrawer = () => { setDrawerOpen(false); setLastAdded(''); };
+
   // Cart functions
   const addToCart = (product, selectedVariant, quantity = 1) => {
     setCartItems(prev => {
       const existingItemIndex = prev.findIndex(
-        item => item.productId === product._id && 
+        item => item.productId === product._id &&
         JSON.stringify(item.variant) === JSON.stringify(selectedVariant)
       );
 
       if (existingItemIndex > -1) {
-        // Update existing item quantity
         const updatedCart = [...prev];
         updatedCart[existingItemIndex].quantity += quantity;
         return updatedCart;
       } else {
-        // Add new item
         const newItem = {
-          id: Date.now(), // Temporary ID
+          id: Date.now(),
           productId: product._id,
           name: product.name,
           image: product.images?.[0] || product.image || product.mainImages?.[0] || null,
@@ -56,11 +59,14 @@ export function CartProvider({ children }) {
           mrp: selectedVariant?.mrp || product.basePrice || 0,
           quantity,
           variant: selectedVariant?.fields || {},
-          product: product // Store full product data
+          product: product,
         };
         return [...prev, newItem];
       }
     });
+    setLastAdded(product.name);
+    setDrawerOpen(true);
+    setTimeout(() => setLastAdded(''), 3000);
   };
 
   const removeFromCart = (itemId) => {
@@ -126,6 +132,10 @@ export function CartProvider({ children }) {
     clearCart,
     getCartTotal,
     getCartCount,
+    drawerOpen,
+    openDrawer,
+    closeDrawer,
+    lastAdded,
     
     // Wishlist
     wishlistItems,

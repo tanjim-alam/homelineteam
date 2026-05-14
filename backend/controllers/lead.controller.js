@@ -28,20 +28,6 @@ exports.createLead = async (req, res, next) => {
       }
     }
 
-    // Check for duplicate leads (same phone number within last 5 minutes)
-    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-    const existingLead = await Lead.findOne({
-      phone: phone,
-      createdAt: { $gte: fiveMinutesAgo }
-    });
-
-    if (existingLead) {
-      return res.status(400).json({
-        success: false,
-        message: 'A lead with this phone number was submitted recently. Please wait a few minutes before submitting again.'
-      });
-    }
-
     // Create lead in database
     const lead = await Lead.create({ name, phone, city, homeType, sourcePage, message, meta, productDetails });
 
@@ -74,7 +60,7 @@ exports.getLeads = async (req, res, next) => {
     const filter = {};
     if (status) filter.status = status;
     const leads = await Lead.find(filter).sort({ createdAt: -1 });
-    res.json(leads);
+    res.json({ success: true, data: leads, total: leads.length });
   } catch (err) {
     next(err);
   }
