@@ -8,6 +8,7 @@ import CartDrawer from '@/components/CartDrawer';
 import { CartProvider } from '@/contexts/CartContext';
 import { SubmissionProvider } from '@/contexts/SubmissionContext';
 import { UserProvider } from '@/contexts/UserContext';
+import WhatsAppButton from '@/components/WhatsAppButton';
 
 const SITE_URL = 'https://homelineteam.com';
 
@@ -161,6 +162,34 @@ export default async function RootLayout({ children }) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
         />
+        <script id="tawk-to" strategy="afterInteractive">
+          {`
+            var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+            (function(){
+              var s1=document.createElement("script"),
+                  s0=document.getElementsByTagName("script")[0];
+              s1.async=true;
+              s1.src='https://embed.tawk.to/6a30cba2b319cc1d4d4319c4/1jr79mt74';
+              s1.charset='UTF-8';
+              s1.setAttribute('crossorigin','*');
+              s0.parentNode.insertBefore(s1,s0);
+            })();
+          `}
+        </script>
+        {/* Google Ads Tag */}
+        <script
+          src="https://www.googletagmanager.com/gtag/js?id=AW-433512772"
+          strategy="afterInteractive"
+        />
+
+        <script id="google-ads" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'AW-433512772');
+          `}
+        </script>
 
         <ErrorBoundary>
           <UserProvider>
@@ -173,6 +202,7 @@ export default async function RootLayout({ children }) {
                 <main className="pb-20 lg:pb-0">{children}</main>
                 <Footer />
                 <BottomNavbar />
+                <WhatsAppButton/>
                 <CartDrawer />
               </SubmissionProvider>
             </CartProvider>
