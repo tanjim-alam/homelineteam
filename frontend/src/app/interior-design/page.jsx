@@ -367,7 +367,7 @@ export default function InteriorDesignPage() {
         </div>
       </div>
 
-      {/* ── CTA Banner ── */}
+      {/* ── CTA Bnner ── */}
       <div className="bg-gradient-to-r from-red-600 to-rose-700 py-16">
         <div className="container-custom text-center">
           <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-4">Ready to transform your home?</h2>
