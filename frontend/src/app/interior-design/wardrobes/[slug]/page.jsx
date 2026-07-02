@@ -71,7 +71,7 @@ export default async function WardrobeDetailPage({ params }) {
       <div className="grid grid-cols-2 gap-3">
         {product.defaultOpening && (
           <div className="flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-xl p-3">
-            <Tag className="w-4 h-4 text-red-500 flex-shrink-0" />
+            <Tag className="w-4 h-4 text-sky-500 flex-shrink-0" />
             <div>
               <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Opening</p>
               <p className="text-xs font-bold text-gray-800 capitalize">{product.defaultOpening}</p>
@@ -80,7 +80,7 @@ export default async function WardrobeDetailPage({ params }) {
         )}
         {product.defaultType && (
           <div className="flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-xl p-3">
-            <Home className="w-4 h-4 text-red-500 flex-shrink-0" />
+            <Home className="w-4 h-4 text-sky-500 flex-shrink-0" />
             <div>
               <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Type</p>
               <p className="text-xs font-bold text-gray-800 capitalize">{product.defaultType}</p>
@@ -89,7 +89,7 @@ export default async function WardrobeDetailPage({ params }) {
         )}
         {deliveryTime && (
           <div className="flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-xl p-3">
-            <Clock className="w-4 h-4 text-red-500 flex-shrink-0" />
+            <Clock className="w-4 h-4 text-sky-500 flex-shrink-0" />
             <div>
               <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Delivery</p>
               <p className="text-xs font-bold text-gray-800">{deliveryTime}</p>
@@ -98,7 +98,7 @@ export default async function WardrobeDetailPage({ params }) {
         )}
         {warranty && (
           <div className="flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-xl p-3">
-            <Shield className="w-4 h-4 text-red-500 flex-shrink-0" />
+            <Shield className="w-4 h-4 text-sky-500 flex-shrink-0" />
             <div>
               <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Warranty</p>
               <p className="text-xs font-bold text-gray-800">{warranty}</p>
@@ -122,7 +122,7 @@ export default async function WardrobeDetailPage({ params }) {
           <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Style</p>
           <div className="flex flex-wrap gap-2">
             {styles.map(s => (
-              <span key={s} className="text-xs bg-red-50 text-red-600 border border-red-100 px-3 py-1 rounded-full font-medium capitalize">{s}</span>
+              <span key={s} className="text-xs bg-sky-50 text-sky-600 border border-sky-100 px-3 py-1 rounded-full font-medium capitalize">{s}</span>
             ))}
           </div>
         </div>
@@ -170,7 +170,7 @@ export default async function WardrobeDetailPage({ params }) {
               <div className="space-y-2">
                 {(product.availableFeatures || product.defaultFeatures).slice(0, 4).map((f, i) => (
                   <div key={i} className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 bg-red-500 rounded-full flex-shrink-0" />
+                    <div className="w-1.5 h-1.5 bg-sky-500 rounded-full flex-shrink-0" />
                     <span className="text-xs text-gray-700">{f.name}</span>
                   </div>
                 ))}
@@ -217,11 +217,11 @@ export default async function WardrobeDetailPage({ params }) {
       {/* Breadcrumb */}
       <div className="bg-white border-b border-gray-100">
         <div className="container-custom py-3 flex items-center gap-2 text-xs text-gray-500">
-          <Link href="/" className="hover:text-red-600 transition-colors">Home</Link>
+          <Link href="/" className="hover:text-sky-600 transition-colors">Home</Link>
           <span>/</span>
-          <Link href="/interior-design" className="hover:text-red-600 transition-colors">Interior Design</Link>
+          <Link href="/interior-design" className="hover:text-sky-600 transition-colors">Interior Design</Link>
           <span>/</span>
-          <Link href="/interior-design/wardrobes" className="hover:text-red-600 transition-colors">Wardrobes</Link>
+          <Link href="/interior-design/wardrobes" className="hover:text-sky-600 transition-colors">Wardrobes</Link>
           <span>/</span>
           <span className="text-gray-900 font-medium truncate max-w-[180px]">{product.name}</span>
         </div>

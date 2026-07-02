@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useCallback } from 'react';
 import Image from 'next/image';
@@ -9,6 +9,7 @@ import {
   Award, Headphones, Sparkles, ThumbsUp, Ruler, Users,
 } from 'lucide-react';
 import InquiryModal from '@/components/interior/InquiryModal';
+import BookingModal from '@/components/interior/BookingModal';
 
 /* ── Image Slider ──────────────────────────────────────────────────── */
 function ImageSlider({ images, altBase }) {
@@ -78,7 +79,7 @@ function ImageSlider({ images, altBase }) {
             <button
               key={i}
               onClick={() => setCurrent(i)}
-              className={`relative rounded-xl overflow-hidden bg-gray-100 aspect-square ring-2 transition-all duration-200 ${i === current ? 'ring-red-500' : 'ring-transparent hover:ring-red-300'}`}
+              className={`relative rounded-xl overflow-hidden bg-gray-100 aspect-square ring-2 transition-all duration-200 ${i === current ? 'ring-sky-500' : 'ring-transparent hover:ring-sky-300'}`}
             >
               <Image src={img} alt={`${altBase} ${i + 1}`} fill className="object-cover" sizes="20vw" />
             </button>
@@ -104,21 +105,21 @@ function WhyChooseUs() {
   return (
     <section className="bg-white rounded-2xl border border-gray-100 p-6 sm:p-8">
       <div className="flex items-center gap-2 mb-6">
-        <span className="inline-flex items-center gap-1.5 bg-red-50 border border-red-100 text-red-600 text-[11px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full">
+        <span className="inline-flex items-center gap-1.5 bg-sky-50 border border-sky-100 text-sky-600 text-[11px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full">
           <Users className="w-3 h-3" /> Why HomelineTeam
         </span>
       </div>
       <h2 className="text-xl font-extrabold text-gray-900 mb-6">
         Why Thousands of Homeowners{' '}
-        <span className="text-red-600">Trust Us</span>
+        <span className="text-sky-600">Trust Us</span>
       </h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {whyChoose.map((item) => {
           const Icon = item.icon;
           return (
-            <div key={item.title} className="flex items-start gap-3 p-4 bg-gray-50 hover:bg-red-50 rounded-xl transition-colors duration-200 group">
-              <div className="w-9 h-9 bg-red-100 group-hover:bg-red-600 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors duration-200">
-                <Icon className="w-4 h-4 text-red-600 group-hover:text-white transition-colors" />
+            <div key={item.title} className="flex items-start gap-3 p-4 bg-gray-50 hover:bg-sky-50 rounded-xl transition-colors duration-200 group">
+              <div className="w-9 h-9 bg-sky-100 group-hover:bg-sky-600 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors duration-200">
+                <Icon className="w-4 h-4 text-sky-600 group-hover:text-white transition-colors" />
               </div>
               <div>
                 <p className="text-sm font-bold text-gray-900 mb-0.5">{item.title}</p>
@@ -141,7 +142,7 @@ function SimilarCard({ product, basePath }) {
   return (
     <Link
       href={`${basePath}/${product.slug}`}
-      className="group bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-red-200 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 flex flex-col"
+      className="group bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-sky-200 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 flex flex-col"
     >
       <div className="relative overflow-hidden bg-gray-50 aspect-[4/3]">
         {image ? (
@@ -152,15 +153,15 @@ function SimilarCard({ product, basePath }) {
           </div>
         )}
         {discount > 0 && (
-          <span className="absolute top-2 left-2 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{discount}% OFF</span>
+          <span className="absolute top-2 left-2 bg-sky-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{discount}% OFF</span>
         )}
       </div>
       <div className="p-3 flex-1 flex flex-col">
-        <h4 className="text-sm font-bold text-gray-900 group-hover:text-red-700 transition-colors line-clamp-2 mb-1">{product.name}</h4>
+        <h4 className="text-sm font-bold text-gray-900 group-hover:text-sky-700 transition-colors line-clamp-2 mb-1">{product.name}</h4>
         <div className="mt-auto flex items-center justify-between">
           <span className="text-sm font-extrabold text-gray-900">₹{product.basePrice?.toLocaleString('en-IN')}</span>
-          <span className="w-6 h-6 bg-red-50 group-hover:bg-red-600 rounded-full flex items-center justify-center transition-colors duration-200 border border-red-100 group-hover:border-red-600">
-            <ArrowRight className="w-3 h-3 text-red-600 group-hover:text-white transition-colors" />
+          <span className="w-6 h-6 bg-sky-50 group-hover:bg-sky-600 rounded-full flex items-center justify-center transition-colors duration-200 border border-sky-100 group-hover:border-sky-600">
+            <ArrowRight className="w-3 h-3 text-sky-600 group-hover:text-white transition-colors" />
           </span>
         </div>
       </div>
@@ -177,7 +178,8 @@ export default function DesignDetailClient({
   basePath,
   detailSections,
 }) {
-  const [modalOpen, setModalOpen] = useState(false);
+  const [modalOpen, setModalOpen]     = useState(false);
+  const [bookingOpen, setBookingOpen] = useState(false);
 
   const discount = product.discount || (product.mrp && product.basePrice
     ? Math.round((1 - product.basePrice / product.mrp) * 100) : 0);
@@ -190,6 +192,12 @@ export default function DesignDetailClient({
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         productName={product.name}
+        sourcePage={basePath}
+      />
+      <BookingModal
+        isOpen={bookingOpen}
+        onClose={() => setBookingOpen(false)}
+        product={product}
         sourcePage={basePath}
       />
 
@@ -210,7 +218,7 @@ export default function DesignDetailClient({
           {/* Right — Info */}
           <div>
             {product.category && (
-              <span className="text-[11px] font-bold uppercase tracking-wider text-red-600 bg-red-50 px-2.5 py-1 rounded-full mb-3 inline-block">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-sky-600 bg-sky-50 px-2.5 py-1 rounded-full mb-3 inline-block">
                 {product.category.replace(/-/g, ' ')}
               </span>
             )}
@@ -238,7 +246,7 @@ export default function DesignDetailClient({
                 </>
               )}
               {discount > 0 && (
-                <span className="text-sm font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full">{discount}% OFF</span>
+                <span className="text-sm font-bold text-sky-600 bg-sky-50 px-2 py-0.5 rounded-full">{discount}% OFF</span>
               )}
             </div>
 
@@ -250,19 +258,27 @@ export default function DesignDetailClient({
             {detailSections}
 
             {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-3 mt-6">
+            <div className="flex flex-col gap-3 mt-6">
               <button
-                onClick={() => setModalOpen(true)}
-                className="flex-1 inline-flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white font-bold px-5 py-3 rounded-xl transition-colors"
+                onClick={() => setBookingOpen(true)}
+                className="w-full inline-flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold px-5 py-3.5 rounded-xl transition-colors shadow-md shadow-green-100"
               >
-                Get This Design <ArrowRight className="w-4 h-4" />
+                Book Now <ArrowRight className="w-4 h-4" />
               </button>
-              <button
-                onClick={() => setModalOpen(true)}
-                className="flex-1 inline-flex items-center justify-center gap-2 border-2 border-red-600 text-red-600 hover:bg-red-50 font-semibold px-5 py-3 rounded-xl transition-colors"
-              >
-                <Phone className="w-4 h-4" /> Book Consultation
-              </button>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => setModalOpen(true)}
+                  className="flex-1 inline-flex items-center justify-center gap-2 bg-sky-600 hover:bg-sky-700 text-white font-bold px-5 py-3 rounded-xl transition-colors"
+                >
+                  Get This Design <ArrowRight className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setModalOpen(true)}
+                  className="flex-1 inline-flex items-center justify-center gap-2 border-2 border-sky-600 text-sky-600 hover:bg-sky-50 font-semibold px-5 py-3 rounded-xl transition-colors"
+                >
+                  <Phone className="w-4 h-4" /> Book Consultation
+                </button>
+              </div>
             </div>
 
             {/* Trust strip */}
@@ -301,13 +317,13 @@ export default function DesignDetailClient({
         <div className="flex items-center justify-between pt-6 border-t border-gray-200">
           <Link
             href={backHref}
-            className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-red-600 font-medium transition-colors"
+            className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-sky-600 font-medium transition-colors"
           >
             <ArrowLeft className="w-4 h-4" /> {backLabel}
           </Link>
           <button
             onClick={() => setModalOpen(true)}
-            className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-bold text-sm px-5 py-2.5 rounded-xl transition-colors"
+            className="inline-flex items-center gap-2 bg-sky-600 hover:bg-sky-700 text-white font-bold text-sm px-5 py-2.5 rounded-xl transition-colors"
           >
             Book Consultation <ArrowRight className="w-4 h-4" />
           </button>

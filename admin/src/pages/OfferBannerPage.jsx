@@ -3,7 +3,16 @@ import { Plus, Trash2, Save, Tag, ToggleLeft, ToggleRight, Upload, Edit, X, Imag
 import apiClient from '../api/client'
 import { useToast } from '../context/ToastContext'
 
-const EMPTY_FORM = { text: '', link: '', backgroundColor: '#2563eb', textColor: '#ffffff', isActive: true }
+const EMPTY_FORM = { text: '', link: '', backgroundColor: '#2563eb', textColor: '#ffffff', isActive: true, position: 'below-hero' }
+
+const POSITIONS = [
+  { value: 'below-hero',       label: 'Below Hero Section' },
+  { value: 'below-categories', label: 'Below Categories Section' },
+  { value: 'below-products',   label: 'Below Products Section' },
+  { value: 'below-design',     label: 'Below Interior Design Section' },
+  { value: 'all',              label: 'All Sections (everywhere)' },
+]
+const POSITION_LABEL = Object.fromEntries(POSITIONS.map(p => [p.value, p.label]))
 
 export default function OfferBannerPage() {
   const { showToast } = useToast()
@@ -46,6 +55,7 @@ export default function OfferBannerPage() {
       backgroundColor: banner.backgroundColor || '#2563eb',
       textColor: banner.textColor || '#ffffff',
       isActive: banner.isActive !== false,
+      position: banner.position || 'below-hero',
     })
     setImageFile(null)
     setImagePreview(banner.imageUrl || '')
@@ -71,6 +81,7 @@ export default function OfferBannerPage() {
       fd.append('backgroundColor', form.backgroundColor)
       fd.append('textColor', form.textColor)
       fd.append('isActive', String(form.isActive))
+      fd.append('position', form.position)
       if (imageFile) fd.append('image', imageFile)
 
       if (editing) {
@@ -116,7 +127,7 @@ export default function OfferBannerPage() {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-gray-900">Offer Banners</h1>
-          <p className="text-sm text-gray-500 mt-1">Manage promotional banners shown below the hero section</p>
+          <p className="text-sm text-gray-500 mt-1">Manage ad/promotional banners — place each one below the hero, categories, products section, or show it everywhere</p>
         </div>
         <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors">
           <Plus className="w-4 h-4" /> Add Banner
@@ -174,6 +185,20 @@ export default function OfferBannerPage() {
                 placeholder="/collections"
                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Show On</label>
+              <select
+                value={form.position}
+                onChange={e => setForm(f => ({ ...f, position: e.target.value }))}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              >
+                {POSITIONS.map(p => (
+                  <option key={p.value} value={p.value}>{p.label}</option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-400 mt-1">Choose where on the home page this banner appears.</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -257,9 +282,14 @@ export default function OfferBannerPage() {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-gray-900 truncate">{banner.text || '(no text)'}</p>
                   {banner.link && <p className="text-xs text-gray-400 truncate">{banner.link}</p>}
-                  <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium ${banner.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                    {banner.isActive ? 'Active' : 'Inactive'}
-                  </span>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${banner.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                      {banner.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                    <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                      {POSITION_LABEL[banner.position] || banner.position || 'Below Hero Section'}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-2 flex-shrink-0">

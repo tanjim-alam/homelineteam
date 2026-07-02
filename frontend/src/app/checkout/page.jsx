@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import Script from 'next/script';
@@ -7,11 +7,12 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/contexts/CartContext';
 import { useUser } from '@/contexts/UserContext';
+import { useUserLocation } from '@/contexts/LocationContext';
 import {
   ArrowLeft, CreditCard, Lock, Truck, Shield,
   CheckCircle, AlertCircle, Package, Home,
   ShoppingBag, Sparkles, ChevronRight, User,
-  MapPin, Phone, Mail,
+  MapPin, Phone, Mail, Loader2, LocateFixed,
 } from 'lucide-react';
 import Metadata from '@/components/Metadata';
 import { generateCheckoutMetadata } from '@/utils/metadata';
@@ -20,9 +21,11 @@ import { generateCheckoutMetadata } from '@/utils/metadata';
 function Field({ label, icon: Icon, required, children }) {
   return (
     <div>
-      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-        {label}{required && <span className="text-primary-500 ml-0.5">*</span>}
-      </label>
+      {label && (
+        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+          {label}{required && <span className="text-primary-500 ml-0.5">*</span>}
+        </label>
+      )}
       <div className="relative">
         {Icon && (
           <Icon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 pointer-events-none" />
@@ -73,9 +76,11 @@ function Stepper({ active }) {
 export default function CheckoutPage() {
   const { cartItems, getCartTotal, clearCart } = useCart();
   const { user, isAuthenticated, loading: authLoading } = useUser();
+  const { location: detectedLocation, status: locationStatus, error: locationError, detectLocation } = useUserLocation();
   const router = useRouter();
 
   const [activeStep, setActiveStep] = useState(1);
+  const [autoFillRequested, setAutoFillRequested] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '', lastName: '', email: '', phone: '',
     address: '', city: '', state: '', pincode: '',
@@ -117,6 +122,28 @@ export default function CheckoutPage() {
       }));
     }
   }, [isAuthenticated, user]);
+
+  // Fill the address fields once the user has explicitly asked to use their detected location
+  useEffect(() => {
+    if (autoFillRequested && locationStatus === 'resolved' && detectedLocation) {
+      setFormData(p => ({
+        ...p,
+        address: p.address || detectedLocation.address || p.address,
+        city:    detectedLocation.city    || p.city,
+        state:   detectedLocation.state   || p.state,
+        pincode: detectedLocation.pincode || p.pincode,
+      }));
+      setAutoFillRequested(false);
+    }
+    if (autoFillRequested && (locationStatus === 'denied' || locationStatus === 'error')) {
+      setAutoFillRequested(false);
+    }
+  }, [autoFillRequested, locationStatus, detectedLocation]);
+
+  const handleUseCurrentLocation = () => {
+    setAutoFillRequested(true);
+    detectLocation();
+  };
 
   const buildPayload = () => ({
     userId: isAuthenticated ? user.id : null,
@@ -387,10 +414,28 @@ export default function CheckoutPage() {
             placeholder="+91 98765 43210" className={inputCls(true)} required />
         </Field>
       </div>
-      <Field label="Street Address" icon={MapPin} required>
+      <div className="flex items-center justify-between gap-3 mb-1.5">
+        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider">
+          Street Address<span className="text-primary-500 ml-0.5">*</span>
+        </label>
+        <button
+          type="button"
+          onClick={handleUseCurrentLocation}
+          disabled={locationStatus === 'locating'}
+          className="flex items-center gap-1.5 text-xs font-semibold text-primary-600 hover:text-primary-700 disabled:opacity-60 transition-colors"
+        >
+          {locationStatus === 'locating'
+            ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Locating…</>
+            : <><LocateFixed className="w-3.5 h-3.5" /> Use current location</>}
+        </button>
+      </div>
+      <Field icon={MapPin}>
         <input type="text" value={formData.address} onChange={e => set('address', e.target.value)}
           placeholder="House/Flat, Street, Area" className={inputCls(true)} required />
       </Field>
+      {locationStatus === 'denied' && (
+        <p className="text-xs text-sky-500 -mt-2">{locationError || 'Location permission denied — enter your address manually.'}</p>
+      )}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Field label="City" required>
           <input type="text" value={formData.city} onChange={e => set('city', e.target.value)}

@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import { ArrowRight, CheckCircle, Phone, Sparkles } from 'lucide-react';
 import InteriorListingClient from '@/components/interior/InteriorListingClient';
 
@@ -73,17 +73,17 @@ export default async function KitchenPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(kitchenJsonLd) }} />
       {/* Hero */}
       <div className="relative overflow-hidden bg-gradient-to-br from-gray-950 via-slate-900 to-gray-900 py-16 sm:py-20">
-        <div className="absolute top-0 left-0 w-[400px] h-[400px] bg-red-600/15 rounded-full blur-[100px] pointer-events-none" />
-        <div className="absolute bottom-0 right-0 w-[300px] h-[300px] bg-red-600/10 rounded-full blur-[80px] pointer-events-none" />
+        <div className="absolute top-0 left-0 w-[400px] h-[400px] bg-sky-600/15 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute bottom-0 right-0 w-[300px] h-[300px] bg-sky-600/10 rounded-full blur-[80px] pointer-events-none" />
 
         <div className="relative z-10 container-custom text-center">
-          <span className="inline-flex items-center gap-1.5 bg-red-600/20 border border-red-500/30 text-red-300 text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-full mb-5">
+          <span className="inline-flex items-center gap-1.5 bg-sky-600/20 border border-sky-500/30 text-sky-300 text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-full mb-5">
             <Sparkles className="w-3.5 h-3.5" />
             Interior Design
           </span>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white mb-4 leading-tight">
             Modular{' '}
-            <span className="bg-gradient-to-r from-red-400 to-rose-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-sky-400 to-rose-400 bg-clip-text text-transparent">
               Kitchen
             </span>{' '}
             Designs
@@ -94,7 +94,7 @@ export default async function KitchenPage() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/contact"
-              className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-3 rounded-xl transition-colors"
+              className="inline-flex items-center gap-2 bg-sky-600 hover:bg-sky-700 text-white font-bold px-6 py-3 rounded-xl transition-colors"
             >
               Get Free Consultation <ArrowRight className="w-4 h-4" />
             </Link>
@@ -113,7 +113,7 @@ export default async function KitchenPage() {
         <div className="container-custom py-4 flex flex-wrap items-center justify-center gap-x-8 gap-y-2">
           {['Custom Layouts', 'Premium Materials', 'Free Installation', '5-Year Warranty', 'Expert Designers'].map((f) => (
             <span key={f} className="flex items-center gap-2 text-xs text-gray-600 font-medium">
-              <CheckCircle className="w-3.5 h-3.5 text-red-500 flex-shrink-0" />
+              <CheckCircle className="w-3.5 h-3.5 text-sky-500 flex-shrink-0" />
               {f}
             </span>
           ))}
@@ -829,7 +829,7 @@ export default async function KitchenPage() {
       </section>
 
       {/* CTA Banner */}
-      <div className="bg-gradient-to-r from-red-600 to-rose-700 py-12">
+      <div className="bg-gradient-to-r from-sky-600 to-rose-700 py-12">
         <div className="container-custom text-center">
           <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-3">
             Not sure which kitchen suits you?
@@ -840,7 +840,7 @@ export default async function KitchenPage() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/contact"
-              className="inline-flex items-center gap-2 bg-white text-red-600 hover:bg-red-50 font-bold px-6 py-3 rounded-xl transition-colors"
+              className="inline-flex items-center gap-2 bg-white text-sky-600 hover:bg-sky-50 font-bold px-6 py-3 rounded-xl transition-colors"
             >
               Book Free Consultation <ArrowRight className="w-4 h-4" />
             </Link>

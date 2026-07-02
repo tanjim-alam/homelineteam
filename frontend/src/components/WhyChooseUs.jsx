@@ -1,4 +1,4 @@
-import { Shield, Truck, Clock, Star, Award, CheckCircle, ArrowRight } from 'lucide-react';
+﻿import { Shield, Truck, Clock, Star, Award, CheckCircle, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
 const features = [
@@ -6,7 +6,7 @@ const features = [
     icon: Shield,
     title: 'Premium Quality',
     description: 'Every product is crafted with the finest materials and passes rigorous quality checks before reaching your home.',
-    accent: 'bg-red-500',
+    accent: 'bg-sky-500',
   },
   {
     icon: Truck,
@@ -29,7 +29,7 @@ const features = [
 ];
 
 const stats = [
-  { value: '50K+', label: 'Happy Customers', color: 'text-red-400'     },
+  { value: '50K+', label: 'Happy Customers', color: 'text-sky-400'     },
   { value: '10K+', label: 'Products Sold',   color: 'text-orange-400'  },
   { value: '4.8★', label: 'Avg. Rating',     color: 'text-yellow-400'  },
   { value: '24/7', label: 'Support',          color: 'text-emerald-400' },
@@ -52,9 +52,9 @@ export default function WhyChooseUs() {
       aria-labelledby="why-choose-heading"
     >
       {/* ── Ambient glow blobs ─────────────────────────────────────────── */}
-      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-red-600/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-sky-600/10 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-indigo-600/10 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[200px] bg-red-900/10 rounded-full blur-[80px] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[200px] bg-sky-900/10 rounded-full blur-[80px] pointer-events-none" />
 
       {/* ── Grid overlay ───────────────────────────────────────────────── */}
       <div
@@ -71,7 +71,7 @@ export default function WhyChooseUs() {
         {/* ── Top label ──────────────────────────────────────────────────── */}
         <div className="flex items-center gap-3 mb-7 sm:mb-8">
           <span className="inline-flex items-center gap-1.5 border border-white/10 bg-white/5 backdrop-blur-sm text-white/60 text-[11px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full">
-            <Award className="w-3.5 h-3.5 text-red-400" />
+            <Award className="w-3.5 h-3.5 text-sky-400" />
             Why Choose Us
           </span>
           <div className="flex-1 h-px bg-gradient-to-r from-white/10 to-transparent" />
@@ -84,7 +84,7 @@ export default function WhyChooseUs() {
           <div>
             <h2 id="why-choose-heading" className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white mb-2 leading-tight">
               The{' '}
-              <span className="bg-gradient-to-r from-red-400 to-rose-500 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-sky-400 to-rose-500 bg-clip-text text-transparent">
                 HomelineTeam
               </span>
               {' '}Difference
@@ -110,7 +110,7 @@ export default function WhyChooseUs() {
                     {/* Text */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 mb-1">
-                        <h3 className="text-white font-bold text-sm group-hover:text-red-300 transition-colors">
+                        <h3 className="text-white font-bold text-sm group-hover:text-sky-300 transition-colors">
                           {f.title}
                         </h3>
                         <span className="text-[10px] font-bold text-white/20 tabular-nums">
@@ -122,7 +122,7 @@ export default function WhyChooseUs() {
 
                     {/* Animated chevron */}
                     <div className="mt-1 opacity-0 group-hover:opacity-100 translate-x-0 group-hover:translate-x-1 transition-all duration-300 flex-shrink-0">
-                      <ArrowRight className="w-4 h-4 text-red-400" />
+                      <ArrowRight className="w-4 h-4 text-sky-400" />
                     </div>
                   </div>
                 );
@@ -151,13 +151,13 @@ export default function WhyChooseUs() {
             </div>
 
             {/* CTA card */}
-            <div className="bg-gradient-to-br from-red-600 to-rose-700 rounded-xl p-4 relative overflow-hidden">
+            <div className="bg-gradient-to-br from-sky-600 to-rose-700 rounded-xl p-4 relative overflow-hidden">
               <div className="absolute -top-4 -right-4 w-20 h-20 bg-rose-400/30 rounded-full blur-2xl pointer-events-none" />
               <p className="text-white font-bold text-sm mb-0.5 relative z-10">Ready to transform?</p>
               <p className="text-white/70 text-xs mb-3 relative z-10">Book a free consultation today.</p>
               <Link
                 href="/contact"
-                className="relative z-10 inline-flex items-center gap-1.5 bg-white text-red-600 hover:bg-red-50 text-xs font-bold px-3 py-1.5 rounded-lg transition-colors"
+                className="relative z-10 inline-flex items-center gap-1.5 bg-white text-sky-600 hover:bg-sky-50 text-xs font-bold px-3 py-1.5 rounded-lg transition-colors"
               >
                 Get Started <ArrowRight className="w-3.5 h-3.5" />
               </Link>
@@ -169,7 +169,7 @@ export default function WhyChooseUs() {
         <div className="border-t border-white/[0.07] pt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2.5">
           {trust.map((item) => (
             <span key={item} className="flex items-center gap-2 text-xs text-gray-500 font-medium">
-              <CheckCircle className="w-3.5 h-3.5 text-red-500/70 flex-shrink-0" />
+              <CheckCircle className="w-3.5 h-3.5 text-sky-500/70 flex-shrink-0" />
               {item}
             </span>
           ))}

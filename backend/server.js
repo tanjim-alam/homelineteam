@@ -30,6 +30,7 @@ const analyticsRoutes = require('./routes/analytics.routes');
 const returnRoutes = require('./routes/return.routes');
 const settingsRoutes = require('./routes/settings.routes');
 const offerBannerRoutes = require('./routes/offerBanner.routes');
+const teamRoutes = require('./routes/team.routes');
 
 // Middlewares
 const { notFoundHandler, errorHandler } = require('./middlewares/error.middleware');
@@ -113,6 +114,7 @@ app.use('/analytics', analyticsRoutes);
 app.use('/returns', returnRoutes);
 app.use('/settings', settingsRoutes);
 app.use('/offer-banners', offerBannerRoutes);
+app.use('/team', authLimiter, teamRoutes);
 
 
 app.use(notFoundHandler);

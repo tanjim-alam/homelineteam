@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useUser } from '../../contexts/UserContext';
@@ -76,7 +76,7 @@ function ReturnRequestContent() {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                 <div className="text-center max-w-md mx-auto px-4">
-                    <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+                    <AlertCircle className="w-12 h-12 text-sky-500 mx-auto mb-4" />
                     <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Order</h2>
                     <p className="text-gray-600 mb-6">{error}</p>
                     <button

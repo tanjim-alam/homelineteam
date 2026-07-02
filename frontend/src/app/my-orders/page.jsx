@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useUser } from '@/contexts/UserContext';
@@ -55,7 +55,7 @@ export default function MyOrdersPage() {
             case 'delivered':
                 return 'bg-green-100 text-green-800 border-green-200';
             case 'cancelled':
-                return 'bg-red-100 text-red-800 border-red-200';
+                return 'bg-sky-100 text-sky-800 border-sky-200';
             default:
                 return 'bg-gray-100 text-gray-800 border-gray-200';
         }
@@ -68,7 +68,7 @@ export default function MyOrdersPage() {
             case 'paid':
                 return 'bg-green-100 text-green-800 border-green-200';
             case 'failed':
-                return 'bg-red-100 text-red-800 border-red-200';
+                return 'bg-sky-100 text-sky-800 border-sky-200';
             case 'refunded':
                 return 'bg-blue-100 text-blue-800 border-blue-200';
             default:
@@ -166,7 +166,7 @@ export default function MyOrdersPage() {
                         </div>
                     </div>
                 ) : error ? (
-                    <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-xl mb-6 flex items-center gap-3">
+                    <div className="bg-sky-50 border border-sky-200 text-sky-700 px-6 py-4 rounded-xl mb-6 flex items-center gap-3">
                         <AlertCircle className="w-5 h-5 flex-shrink-0" />
                         <span className="font-medium">{error}</span>
                     </div>

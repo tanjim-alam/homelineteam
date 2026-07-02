@@ -1,6 +1,6 @@
 const Lead = require('../models/Lead');
 const Settings = require('../models/Settings');
-const { sendLeadNotificationEmail } = require('../utils/emailService');
+const { sendLeadNotificationEmail, sendBookingNotificationEmail } = require('../utils/emailService');
 
 exports.createLead = async (req, res, next) => {
   try {
@@ -31,11 +31,16 @@ exports.createLead = async (req, res, next) => {
     // Create lead in database
     const lead = await Lead.create({ name, phone, city, homeType, sourcePage, message, meta, productDetails });
 
-    // Send email notification for interior design leads
+    // Send email notification — different template for bookings vs design leads
     try {
       const settings = await Settings.findOne();
       const adminEmail = settings?.leadNotificationEmail || process.env.EMAIL_TO || '';
-      await sendLeadNotificationEmail(lead, adminEmail);
+      const isBooking = meta?.requestType === 'product-booking';
+      if (isBooking) {
+        await sendBookingNotificationEmail(lead, adminEmail);
+      } else {
+        await sendLeadNotificationEmail(lead, adminEmail);
+      }
     } catch (emailError) {
       // Don't fail the lead creation if email fails
     }
@@ -57,10 +62,23 @@ exports.createLead = async (req, res, next) => {
 exports.getLeads = async (req, res, next) => {
   try {
     const { status } = req.query;
-    const filter = {};
+    // Exclude product bookings — they have their own page
+    const filter = { 'meta.requestType': { $ne: 'product-booking' } };
     if (status) filter.status = status;
     const leads = await Lead.find(filter).sort({ createdAt: -1 });
     res.json({ success: true, data: leads, total: leads.length });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.getBookings = async (req, res, next) => {
+  try {
+    const { status } = req.query;
+    const filter = { 'meta.requestType': 'product-booking' };
+    if (status) filter.status = status;
+    const bookings = await Lead.find(filter).sort({ createdAt: -1 });
+    res.json({ success: true, data: bookings, total: bookings.length });
   } catch (err) {
     next(err);
   }

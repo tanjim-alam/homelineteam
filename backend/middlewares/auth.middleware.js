@@ -9,7 +9,14 @@ function authenticate(req, res, next) {
 		else if (tokenFromCookie) token = tokenFromCookie;
 		if (!token) return res.status(401).json({ message: 'Unauthorized' });
 		const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev_secret');
-		req.user = { _id: decoded.sub, id: decoded.sub, role: decoded.role, email: decoded.email, name: decoded.name };
+		req.user = {
+			_id: decoded.sub,
+			id: decoded.sub,
+			role: decoded.role,
+			email: decoded.email,
+			name: decoded.name,
+			permissions: decoded.permissions || [],
+		};
 		next();
 	} catch (err) {
 		return res.status(401).json({ message: 'Unauthorized' });
@@ -21,6 +28,16 @@ function requireAdmin(req, res, next) {
 	return next();
 }
 
-module.exports = { authenticate, requireAdmin };
+// Allows role 'admin' through unconditionally; other roles must have the module in their permissions.
+function requirePermission(moduleKey) {
+	return (req, res, next) => {
+		if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
+		if (req.user.role === 'admin') return next();
+		if (req.user.permissions?.includes(moduleKey)) return next();
+		return res.status(403).json({ message: 'Forbidden' });
+	};
+}
+
+module.exports = { authenticate, requireAdmin, requirePermission };
 
 

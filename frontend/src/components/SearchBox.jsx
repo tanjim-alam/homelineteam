@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
@@ -20,7 +20,7 @@ function Highlighted({ text, query }) {
     <>
       {parts.map((p, i) =>
         regex.test(p)
-          ? <mark key={i} className="bg-red-100 text-red-700 font-bold not-italic rounded px-0.5">{p}</mark>
+          ? <mark key={i} className="bg-sky-100 text-sky-700 font-bold not-italic rounded px-0.5">{p}</mark>
           : p
       )}
     </>
@@ -151,7 +151,7 @@ export default function SearchBox({
             autoComplete="off"
             spellCheck="false"
             className={`w-full bg-white text-gray-800 border border-gray-200
-              focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400
+              focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400
               transition-all placeholder:text-gray-400
               ${isLg
                 ? 'pl-12 pr-28 py-4 text-base rounded-2xl border-2'
@@ -177,7 +177,7 @@ export default function SearchBox({
               type="submit"
               disabled={!query.trim()}
               className="absolute right-2 top-1/2 -translate-y-1/2
-                bg-red-600 hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed
+                bg-sky-600 hover:bg-sky-700 disabled:opacity-40 disabled:cursor-not-allowed
                 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-colors"
             >
               Search
@@ -193,7 +193,7 @@ export default function SearchBox({
           {/* Loading spinner */}
           {fetching && suggestions.length === 0 && (
             <div className="flex items-center justify-center py-6">
-              <div className="w-5 h-5 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+              <div className="w-5 h-5 border-2 border-sky-500 border-t-transparent rounded-full animate-spin" />
             </div>
           )}
 
@@ -211,7 +211,7 @@ export default function SearchBox({
                       onMouseDown={(e) => e.preventDefault()} // keep focus on input
                       onClick={() => pickSuggestion(item.name)}
                       className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors
-                        ${activeIdx === i ? 'bg-red-50' : 'hover:bg-gray-50'}`}
+                        ${activeIdx === i ? 'bg-sky-50' : 'hover:bg-gray-50'}`}
                     >
                       {/* Thumbnail */}
                       {item.imageUrl ? (
@@ -238,7 +238,7 @@ export default function SearchBox({
 
                       {/* Price */}
                       {item.basePrice != null && (
-                        <span className="text-sm font-bold text-red-600 flex-shrink-0 ml-2">
+                        <span className="text-sm font-bold text-sky-600 flex-shrink-0 ml-2">
                           ₹{item.basePrice.toLocaleString('en-IN')}
                         </span>
                       )}
@@ -253,7 +253,7 @@ export default function SearchBox({
                   type="button"
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => submit(query)}
-                  className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold text-red-600 hover:text-red-700 transition-colors"
+                  className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold text-sky-600 hover:text-sky-700 transition-colors"
                 >
                   <Search className="w-3.5 h-3.5" />
                   See all results for &ldquo;{query}&rdquo;
@@ -275,7 +275,7 @@ export default function SearchBox({
                     type="button"
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => pickSuggestion(term)}
-                    className="px-3 py-1.5 bg-gray-100 text-gray-600 text-xs font-semibold rounded-full hover:bg-red-50 hover:text-red-600 transition-colors"
+                    className="px-3 py-1.5 bg-gray-100 text-gray-600 text-xs font-semibold rounded-full hover:bg-sky-50 hover:text-sky-600 transition-colors"
                   >
                     {term}
                   </button>

@@ -10,14 +10,18 @@ exports.getBanners = async (req, res, next) => {
 
 exports.getActiveBanners = async (req, res, next) => {
     try {
-        const banners = await OfferBanner.find({ isActive: true }).sort({ order: 1, createdAt: 1 });
+        const { position } = req.query;
+        const filter = { isActive: true };
+        // A banner placed at 'all' shows up in every position slot the frontend asks for
+        if (position) filter.position = { $in: [position, 'all'] };
+        const banners = await OfferBanner.find(filter).sort({ order: 1, createdAt: 1 });
         res.json({ success: true, data: banners });
     } catch (err) { next(err); }
 };
 
 exports.createBanner = async (req, res, next) => {
     try {
-        const { text, link, backgroundColor, textColor, isActive, order } = req.body;
+        const { text, link, backgroundColor, textColor, isActive, order, position } = req.body;
         let imageUrl = '', publicId = '';
 
         if (req.file) {
@@ -32,6 +36,7 @@ exports.createBanner = async (req, res, next) => {
             textColor: textColor || '#ffffff',
             isActive: isActive !== 'false',
             order: order || 0,
+            position: position || 'below-hero',
         });
         res.status(201).json({ success: true, data: banner });
     } catch (err) { next(err); }
@@ -40,8 +45,8 @@ exports.createBanner = async (req, res, next) => {
 exports.updateBanner = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { text, link, backgroundColor, textColor, isActive, order } = req.body;
-        const update = { text, link, backgroundColor, textColor, isActive: isActive !== 'false', order };
+        const { text, link, backgroundColor, textColor, isActive, order, position } = req.body;
+        const update = { text, link, backgroundColor, textColor, isActive: isActive === true || isActive === 'true', order, position };
 
         if (req.file) {
             const result = await uploadBuffer(req.file.buffer, 'offer-banners');

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect } from 'react';
 import Image from 'next/image';
@@ -164,7 +164,7 @@ export default function CartDrawer() {
                     {/* Remove */}
                     <button
                       onClick={() => removeFromCart(item.id)}
-                      className="self-start mt-0.5 text-gray-300 hover:text-red-500 transition-colors cursor-pointer flex-shrink-0"
+                      className="self-start mt-0.5 text-gray-300 hover:text-sky-500 transition-colors cursor-pointer flex-shrink-0"
                       title="Remove"
                     >
                       <Trash2 className="w-3.5 h-3.5" />

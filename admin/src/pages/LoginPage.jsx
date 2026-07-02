@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { login, clearError } from '../store/slices/authSlice'
 import { Home, Mail, Lock, LogIn, AlertCircle, Loader2, Eye, EyeOff, Shield } from 'lucide-react'
 
-export default function LoginPage({ onGoRegister }) {
+export default function LoginPage() {
   const dispatch = useDispatch()
   const { loading, error } = useSelector(s => s.auth)
   const [form, setForm] = useState({ email: '', password: '' })
@@ -113,18 +113,6 @@ export default function LoginPage({ onGoRegister }) {
                 }
               </button>
             </form>
-
-            {/* Register link */}
-            <p className="mt-6 text-center text-sm text-gray-500">
-              Need to create an admin account?{' '}
-              <button
-                type="button"
-                onClick={onGoRegister}
-                className="text-blue-600 hover:text-blue-700 font-semibold transition-colors"
-              >
-                Register
-              </button>
-            </p>
           </div>
         </div>
 

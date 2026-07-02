@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const controller = require('../controllers/auth.controller');
-const { authenticate } = require('../middlewares/auth.middleware');
+const { authenticate, requireAdmin } = require('../middlewares/auth.middleware');
 
-router.post('/register', controller.register); // use once to seed first admin; then disable in prod
+// Locked to existing admins only — new accounts are created via Team Management.
+router.post('/register', authenticate, requireAdmin, controller.register);
 router.post('/login', controller.login);
 router.post('/logout', controller.logout);
 router.get('/me', authenticate, controller.me);

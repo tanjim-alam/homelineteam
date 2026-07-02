@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import apiService from '../services/api';
@@ -211,9 +211,9 @@ const ReturnRequestForm = ({ order, onClose, onSuccess }) => {
 
                 {/* Error / Success */}
                 {error && (
-                    <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl p-4">
-                        <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 shrink-0" />
-                        <p className="text-red-700 text-sm font-medium">{error}</p>
+                    <div className="flex items-start gap-3 bg-sky-50 border border-sky-200 rounded-xl p-4">
+                        <AlertCircle className="w-5 h-5 text-sky-500 mt-0.5 shrink-0" />
+                        <p className="text-sky-700 text-sm font-medium">{error}</p>
                     </div>
                 )}
                 {success && (
@@ -264,7 +264,7 @@ const ReturnRequestForm = ({ order, onClose, onSuccess }) => {
                                             <div className="flex items-start justify-between gap-2">
                                                 <p className="font-semibold text-gray-900 text-sm leading-snug">{item.name}</p>
                                                 {isSelected ? (
-                                                    <button type="button" onClick={() => removeItem(id)} className="p-1 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg shrink-0">
+                                                    <button type="button" onClick={() => removeItem(id)} className="p-1 text-sky-400 hover:text-sky-600 hover:bg-sky-50 rounded-lg shrink-0">
                                                         <X className="w-4 h-4" />
                                                     </button>
                                                 ) : (

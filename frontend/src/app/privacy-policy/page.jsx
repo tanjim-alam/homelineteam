@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import {
@@ -138,23 +138,23 @@ export default function PrivacyPolicy() {
                         </p>
                     </div>
 
-                    <div className="bg-red-50 border-l-4 border-red-400 p-6 rounded-r-lg">
-                        <h4 className="text-lg font-semibold text-red-900 mb-3">When We May Collect Without Consent</h4>
-                        <ul className="space-y-2 text-red-800">
+                    <div className="bg-sky-50 border-l-4 border-sky-400 p-6 rounded-r-lg">
+                        <h4 className="text-lg font-semibold text-sky-900 mb-3">When We May Collect Without Consent</h4>
+                        <ul className="space-y-2 text-sky-800">
                             <li className="flex items-start gap-2">
-                                <span className="w-2 h-2 bg-red-600 rounded-full mt-2 flex-shrink-0"></span>
+                                <span className="w-2 h-2 bg-sky-600 rounded-full mt-2 flex-shrink-0"></span>
                                 When permitted or required by law
                             </li>
                             <li className="flex items-start gap-2">
-                                <span className="w-2 h-2 bg-red-600 rounded-full mt-2 flex-shrink-0"></span>
+                                <span className="w-2 h-2 bg-sky-600 rounded-full mt-2 flex-shrink-0"></span>
                                 In an emergency that threatens an individual's life, health, or personal security
                             </li>
                             <li className="flex items-start gap-2">
-                                <span className="w-2 h-2 bg-red-600 rounded-full mt-2 flex-shrink-0"></span>
+                                <span className="w-2 h-2 bg-sky-600 rounded-full mt-2 flex-shrink-0"></span>
                                 When the Personal Information is available from a public source
                             </li>
                             <li className="flex items-start gap-2">
-                                <span className="w-2 h-2 bg-red-600 rounded-full mt-2 flex-shrink-0"></span>
+                                <span className="w-2 h-2 bg-sky-600 rounded-full mt-2 flex-shrink-0"></span>
                                 For the purposes of collecting a debt or protection from fraud
                             </li>
                         </ul>
@@ -394,7 +394,7 @@ export default function PrivacyPolicy() {
     ];
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-primary-50 to-red-50">
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-primary-50 to-sky-50">
             {/* Hero Section */}
             <div className="relative overflow-hidden bg-primary">
                 <div className="absolute inset-0 bg-primary"></div>
@@ -417,7 +417,7 @@ export default function PrivacyPolicy() {
                             Privacy Policy
                         </h1>
 
-                        <p className="text-xl sm:text-2xl text-red-100 mb-8 max-w-3xl mx-auto leading-relaxed">
+                        <p className="text-xl sm:text-2xl text-sky-100 mb-8 max-w-3xl mx-auto leading-relaxed">
                             Your privacy matters to us. Learn how we collect, use, and protect your personal information.
                         </p>
 
@@ -539,7 +539,7 @@ export default function PrivacyPolicy() {
                         <h2 className="text-3xl sm:text-4xl font-bold mb-6">
                             Questions About Your Privacy?
                         </h2>
-                        <p className="text-xl text-red-100 mb-8 max-w-2xl mx-auto">
+                        <p className="text-xl text-sky-100 mb-8 max-w-2xl mx-auto">
                             We're here to help. Contact us if you have any questions about our privacy practices or your personal data.
                         </p>
 
@@ -566,21 +566,21 @@ export default function PrivacyPolicy() {
                                     <Mail className="w-8 h-8" />
                                 </div>
                                 <h3 className="font-semibold mb-2">Email Support</h3>
-                                <p className="text-red-100 text-sm">support@homelineteam.com</p>
+                                <p className="text-sky-100 text-sm">support@homelineteam.com</p>
                             </div>
                             <div className="text-center">
                                 <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
                                     <Phone className="w-8 h-8" />
                                 </div>
                                 <h3 className="font-semibold mb-2">Phone Support</h3>
-                                <p className="text-red-100 text-sm">+91-9611 925 494</p>
+                                <p className="text-sky-100 text-sm">+91-9611 925 494</p>
                             </div>
                             <div className="text-center">
                                 <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
                                     <MapPin className="w-8 h-8" />
                                 </div>
                                 <h3 className="font-semibold mb-2">Location</h3>
-                                <p className="text-red-100 text-sm">India</p>
+                                <p className="text-sky-100 text-sm">India</p>
                             </div>
                         </div>
                     </div>

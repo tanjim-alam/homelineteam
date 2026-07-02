@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -291,9 +291,9 @@ export default function ProfilePage() {
 
                                     <button
                                         onClick={handleLogout}
-                                        className="group w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 transition-all duration-200"
+                                        className="group w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sky-600 hover:bg-sky-50 transition-all duration-200"
                                     >
-                                        <XCircle className="w-5 h-5 text-red-500 group-hover:text-red-600" />
+                                        <XCircle className="w-5 h-5 text-sky-500 group-hover:text-sky-600" />
                                         <span className="font-medium">Sign Out</span>
                                     </button>
                                 </nav>
@@ -305,9 +305,9 @@ export default function ProfilePage() {
                             <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-100 p-8">
                                 {/* Alert Messages */}
                                 {error && (
-                                    <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg flex items-center gap-3">
-                                        <XCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-                                        <p className="text-red-700 font-medium">{error}</p>
+                                    <div className="mb-6 p-4 bg-sky-50 border-l-4 border-sky-500 rounded-lg flex items-center gap-3">
+                                        <XCircle className="w-5 h-5 text-sky-500 flex-shrink-0" />
+                                        <p className="text-sky-700 font-medium">{error}</p>
                                     </div>
                                 )}
 
@@ -696,7 +696,7 @@ export default function ProfilePage() {
                                                                     </button>
                                                                     <button
                                                                         onClick={() => handleDeleteAddress(address._id)}
-                                                                        className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                                                                        className="p-2 text-gray-500 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors duration-200"
                                                                         title="Delete address"
                                                                     >
                                                                         <Trash2 className="w-4 h-4" />

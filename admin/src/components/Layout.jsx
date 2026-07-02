@@ -24,6 +24,8 @@ import {
   Tag,
   SlidersHorizontal,
   Mail,
+  ShoppingBag,
+  UserCog,
 } from 'lucide-react'
 
 const INTERIOR_CHILDREN = [
@@ -39,27 +41,33 @@ const SETTINGS_CHILDREN = [
   { path: '/admin-settings',  label: 'Email Settings',  icon: Mail },
 ]
 
+// `permission` keys must match backend PERMISSION_MODULES (Admin model). `adminOnly` items
+// only render for role 'admin', regardless of the permissions array.
 const menuItems = [
-  { path: '/dashboard',         label: 'Dashboard',          icon: BarChart3 },
-  { path: '/categories',        label: 'Categories',         icon: FolderOpen },
-  { path: '/products',          label: 'Products',           icon: Package },
+  { path: '/dashboard',         label: 'Dashboard',          icon: BarChart3,    permission: null },
+  { path: '/categories',        label: 'Categories',         icon: FolderOpen,   permission: 'categories' },
+  { path: '/products',          label: 'Products',           icon: Package,      permission: 'products' },
   {
     key: 'interior-design',
     label: 'Interior Design',
     icon: Layers,
+    permission: 'interior-design',
     children: INTERIOR_CHILDREN,
   },
-  { path: '/delivery-partners', label: 'Delivery Partners',  icon: Truck },
-  { path: '/orders',            label: 'Orders',             icon: ShoppingCart },
-  { path: '/users',             label: 'Users',              icon: User },
-  { path: '/leads',             label: 'Leads',              icon: User },
-  { path: '/returns',           label: 'Returns & Exchanges',icon: RefreshCw },
+  { path: '/delivery-partners', label: 'Delivery Partners',  icon: Truck,        permission: 'delivery-partners' },
+  { path: '/orders',            label: 'Orders',             icon: ShoppingCart, permission: 'orders' },
+  { path: '/users',             label: 'Users',              icon: User,         permission: 'users' },
+  { path: '/leads',             label: 'Leads',              icon: User,         permission: 'leads' },
+  { path: '/bookings',          label: 'Product Bookings',   icon: ShoppingBag,  permission: 'bookings' },
+  { path: '/returns',           label: 'Returns & Exchanges',icon: RefreshCw,    permission: 'returns' },
   {
     key: 'settings',
     label: 'Settings',
     icon: SlidersHorizontal,
+    permission: 'settings',
     children: SETTINGS_CHILDREN,
   },
+  { path: '/team',              label: 'Team Management',    icon: UserCog,      adminOnly: true },
 ]
 
 const pageTitles = {
@@ -79,7 +87,9 @@ const pageTitles = {
   '/offer-banner':      'Offer Banner',
   '/admin-settings':    'Email Settings',
   '/leads':             'Leads',
+  '/bookings':          'Product Bookings',
   '/returns':           'Returns & Exchanges',
+  '/team':              'Team Management',
 }
 
 const GROUP_CHILDREN = {
@@ -90,6 +100,14 @@ const GROUP_CHILDREN = {
 const Sidebar = ({ isOpen, onClose }) => {
   const location = useLocation()
   const dispatch = useDispatch()
+  const user = useSelector((s) => s.auth.user)
+  const isAdmin = user?.role === 'admin'
+  const canAccess = (item) => {
+    if (item.adminOnly) return isAdmin
+    if (!item.permission) return true
+    return isAdmin || user?.permissions?.includes(item.permission)
+  }
+  const visibleMenuItems = menuItems.filter(canAccess)
 
   const initialOpen = {}
   Object.entries(GROUP_CHILDREN).forEach(([key, children]) => {
@@ -140,7 +158,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         <div className="flex-1 overflow-y-auto px-4 pb-4 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none' }}>
           <p className="text-slate-500 text-xs font-semibold uppercase tracking-widest px-2 mb-2 mt-2">Menu</p>
           <nav className="space-y-0.5">
-            {menuItems.map(item => {
+            {visibleMenuItems.map(item => {
               const Icon = item.icon
 
               // ── Group item (has children) ──────────────────────────────

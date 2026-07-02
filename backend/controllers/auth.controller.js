@@ -3,18 +3,33 @@ const bcrypt = require('bcryptjs');
 const Admin = require('../models/Admin');
 
 function signToken(admin) {
-	const payload = { sub: admin._id, role: admin.role, email: admin.email, name: admin.name };
+	const payload = {
+		sub: admin._id,
+		role: admin.role,
+		email: admin.email,
+		name: admin.name,
+		permissions: admin.permissions || [],
+	};
 	return jwt.sign(payload, process.env.JWT_SECRET || 'dev_secret', { expiresIn: '7d' });
 }
 
+// Admin-only: creating accounts now happens through Team Management (see team.routes.js),
+// this stays as the underlying create logic.
 exports.register = async (req, res, next) => {
 	try {
-		const { name, email, password } = req.body;
+		const { name, email, password, role, permissions } = req.body;
 		const existing = await Admin.findOne({ email });
 		if (existing) return res.status(409).json({ message: 'Email already exists' });
 		const passwordHash = await bcrypt.hash(password, 10);
-		const admin = await Admin.create({ name, email, passwordHash });
-		res.status(201).json({ id: admin._id, email: admin.email, name: admin.name });
+		const admin = await Admin.create({
+			name,
+			email,
+			passwordHash,
+			role: role || 'staff',
+			permissions: role === 'admin' ? [] : (permissions || []),
+			createdBy: req.user?.id,
+		});
+		res.status(201).json({ id: admin._id, email: admin.email, name: admin.name, role: admin.role });
 	} catch (err) {
 		next(err);
 	}
@@ -50,7 +65,7 @@ exports.login = async (req, res, next) => {
 			.cookie('token', token, cookieOptions)
 			.json({
 				message: 'Logged in',
-				admin: { id: admin._id, email: admin.email, name: admin.name },
+				admin: { id: admin._id, email: admin.email, name: admin.name, role: admin.role, permissions: admin.permissions || [] },
 				token: token // Also send token in response for fallback
 			});
 	} catch (err) {
@@ -75,9 +90,19 @@ exports.logout = async (req, res) => {
 };
 
 exports.me = async (req, res) => {
-	const user = req.user;
-	if (!user) return res.status(401).json({ message: 'Unauthorized' });
-	res.json({ user });
+	if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
+	// Re-fetch from DB so role/permission changes apply without waiting for the JWT to expire.
+	const admin = await Admin.findById(req.user.id);
+	if (!admin || !admin.isActive) return res.status(401).json({ message: 'Unauthorized' });
+	res.json({
+		user: {
+			id: admin._id,
+			email: admin.email,
+			name: admin.name,
+			role: admin.role,
+			permissions: admin.permissions || [],
+		},
+	});
 };
 
 

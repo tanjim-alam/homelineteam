@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import Image from 'next/image'
@@ -8,7 +8,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 function BannerCard({ banner }) {
   const card = (
     <div className="rounded-2xl overflow-hidden shadow-sm bg-gray-100 group cursor-pointer">
-      <div className="relative w-full" style={{ paddingBottom: '55%' }}>
+      <div className="relative w-full h-36 sm:h-44 md:h-52 lg:h-60 xl:h-64">
         {banner.imageUrl ? (
           <Image
             src={banner.imageUrl}
@@ -153,7 +153,7 @@ export default function OfferBannerCarousel({ banners }) {
                 aria-label={`Go to banner ${i + 1}`}
                 className={`rounded-full transition-all duration-300 ${
                   i === current
-                    ? 'w-5 h-2 bg-red-600'
+                    ? 'w-5 h-2 bg-primary-600'
                     : 'w-2 h-2 bg-gray-300 hover:bg-gray-400'
                 }`}
               />

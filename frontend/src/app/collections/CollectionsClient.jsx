@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
@@ -39,13 +39,13 @@ function SubCard({ sub, showBadge }) {
 
         {/* Content */}
         <div className="p-3 sm:p-4 flex flex-col flex-1">
-          <h3 className="text-sm sm:text-base font-bold text-gray-900 group-hover:text-red-600 transition-colors leading-snug mb-1">
+          <h3 className="text-sm sm:text-base font-bold text-gray-900 group-hover:text-sky-600 transition-colors leading-snug mb-1">
             {stripEmoji(sub.name)}
           </h3>
           {sub.description && (
             <p className="text-xs text-gray-500 line-clamp-2 mb-3 flex-1">{sub.description}</p>
           )}
-          <span className="mt-auto flex items-center gap-1 text-xs font-semibold text-red-600">
+          <span className="mt-auto flex items-center gap-1 text-xs font-semibold text-sky-600">
             Browse <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
           </span>
         </div>
@@ -144,7 +144,7 @@ export default function CollectionsClient({ mainCategories = [] }) {
               onClick={() => setActiveId(null)}
               className={`flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-semibold transition-all ${
                 !activeId
-                  ? 'bg-red-600 text-white shadow-sm'
+                  ? 'bg-sky-600 text-white shadow-sm'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
@@ -157,7 +157,7 @@ export default function CollectionsClient({ mainCategories = [] }) {
                 onClick={() => setActiveId(mc._id === activeId ? null : mc._id)}
                 className={`flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-semibold transition-all whitespace-nowrap ${
                   activeId === mc._id
-                    ? 'bg-red-600 text-white shadow-sm'
+                    ? 'bg-sky-600 text-white shadow-sm'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
@@ -240,7 +240,7 @@ export default function CollectionsClient({ mainCategories = [] }) {
                     {mcId && items.length > 1 && (
                       <button
                         onClick={() => setActiveId(mcId)}
-                        className="text-sm font-semibold text-red-600 hover:text-red-700 flex items-center gap-1"
+                        className="text-sm font-semibold text-sky-600 hover:text-sky-700 flex items-center gap-1"
                       >
                         See all <ArrowRight className="w-3.5 h-3.5" />
                       </button>

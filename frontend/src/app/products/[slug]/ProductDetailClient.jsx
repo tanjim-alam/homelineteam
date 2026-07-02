@@ -5,10 +5,11 @@ import Image from 'next/image';
 import Link from 'next/link';
 import {
   ChevronRight, Star, Heart, ShoppingCart, Truck, Shield,
-  RotateCcw, Package, Minus, Plus, MessageCircle
+  RotateCcw, Package, Minus, Plus, MessageCircle, BookOpen
 } from 'lucide-react';
 import api from '@/services/api';
 import { CartContext } from '@/contexts/CartContext';
+import BookingModal from '@/components/interior/BookingModal';
 
 export default function ProductDetailClient({ slug }) {
   const { addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useContext(CartContext);
@@ -26,7 +27,8 @@ export default function ProductDetailClient({ slug }) {
   const [customFieldValues, setCustomFieldValues] = useState({});
   const [activeTab, setActiveTab] = useState('description');
   const [related, setRelated] = useState([]);
-  const [cartAdded, setCartAdded] = useState(false);
+  const [cartAdded, setCartAdded]     = useState(false);
+  const [bookingOpen, setBookingOpen] = useState(false);
 
   const getCustomSizeFields = () => {
     if (!product?.customSize?.enabled) return [];
@@ -353,6 +355,13 @@ export default function ProductDetailClient({ slug }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <BookingModal
+        isOpen={bookingOpen}
+        onClose={() => setBookingOpen(false)}
+        product={{ ...product, category: category?.name || product?.category || '' }}
+        sourcePage={`/products/${slug}`}
+      />
+
       {/* Breadcrumb */}
       <div className="bg-white border-b">
         <div className="container-custom py-3 sm:py-4 px-4 sm:px-6 lg:px-8">
@@ -472,7 +481,7 @@ export default function ProductDetailClient({ slug }) {
                   {discount > 0 && (
                     <>
                       <span className="text-lg sm:text-xl text-gray-500 line-through">₹{currentMRP.toFixed(2)}</span>
-                      <span className="bg-red-100 text-red-600 px-2 py-1 rounded-full text-xs sm:text-sm font-bold">
+                      <span className="bg-sky-100 text-sky-600 px-2 py-1 rounded-full text-xs sm:text-sm font-bold">
                         -{discount}% OFF
                       </span>
                     </>
@@ -670,7 +679,7 @@ export default function ProductDetailClient({ slug }) {
                           )}
 
                           {field.required && !value && (
-                            <p className="text-xs text-red-600">This field is required for custom configuration.</p>
+                            <p className="text-xs text-sky-600">This field is required for custom configuration.</p>
                           )}
                         </div>
                       );
@@ -755,22 +764,45 @@ export default function ProductDetailClient({ slug }) {
 
               {/* Action Buttons */}
               <div className="space-y-3">
+                {/* Mobile: Book Now full width (hidden on lg) */}
+                <button
+                  onClick={() => setBookingOpen(true)}
+                  aria-label="Book this product"
+                  className="lg:hidden w-full py-3 rounded-xl font-bold text-base transition-all duration-300 flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white hover:shadow-xl cursor-pointer"
+                >
+                  <BookOpen className="w-5 h-5" aria-hidden="true" />
+                  Book Now
+                </button>
+
+                {/* lg: all three in one row | mobile: Cart + Wish row */}
                 <div className="flex gap-3">
+                  {/* Book Now — lg only */}
+                  <button
+                    onClick={() => setBookingOpen(true)}
+                    aria-label="Book this product"
+                    className="hidden lg:flex flex-1 py-3 rounded-xl font-bold text-base transition-all duration-300 items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white hover:shadow-xl cursor-pointer"
+                  >
+                    <BookOpen className="w-5 h-5" aria-hidden="true" />
+                    Book Now
+                  </button>
+
+                  {/* Add to Cart */}
                   <button
                     onClick={handleAddToCart}
                     disabled={isOutOfStock()}
                     aria-label={isOutOfStock() ? 'Out of stock' : cartAdded ? 'Added to cart' : 'Add to cart'}
-                    className={`flex-1 py-3 px-6 sm:px-8 rounded-xl font-bold text-base sm:text-lg transition-all duration-300 flex items-center justify-center gap-2 sm:gap-3 ${isOutOfStock()
+                    className={`flex-1 py-3 px-4 rounded-xl font-bold text-base transition-all duration-300 flex items-center justify-center gap-2 ${isOutOfStock()
                       ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
                       : cartAdded
                         ? 'bg-green-600 text-white cursor-pointer'
-                        : 'bg-primary-600 text-white hover:bg-primary-700 hover:shadow-xl transform hover:scale-105 cursor-pointer'
+                        : 'border-2 border-primary-600 text-primary-600 hover:bg-primary-50 hover:shadow-md cursor-pointer'
                       }`}
                   >
-                    <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6" aria-hidden="true" />
-                    {isOutOfStock() ? 'Out of Stock' : cartAdded ? 'Added to Cart!' : 'Add to Cart'}
+                    <ShoppingCart className="w-5 h-5" aria-hidden="true" />
+                    {isOutOfStock() ? 'Out of Stock' : cartAdded ? 'Added!' : 'Add to Cart'}
                   </button>
 
+                  {/* Wishlist */}
                   <button
                     onClick={() => {
                       if (!addToWishlist || !removeFromWishlist) return;
@@ -784,9 +816,9 @@ export default function ProductDetailClient({ slug }) {
                     }}
                     aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
                     aria-pressed={isWishlisted}
-                    className={`p-3 rounded-xl border-2 transition-all duration-300 cursor-pointer hover:shadow-lg ${isWishlisted ? 'border-red-500 bg-red-50 text-red-600' : 'border-gray-300 text-gray-400 hover:border-red-300 hover:text-red-500'}`}
+                    className={`p-3 rounded-xl border-2 transition-all duration-300 cursor-pointer hover:shadow-lg ${isWishlisted ? 'border-primary-600 bg-primary-50 text-primary-600' : 'border-gray-300 text-gray-400 hover:border-primary-300 hover:text-primary-500'}`}
                   >
-                    <Heart className={`w-5 h-5 sm:w-6 sm:h-6 ${isWishlisted ? 'fill-current' : ''}`} aria-hidden="true" />
+                    <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-current' : ''}`} aria-hidden="true" />
                   </button>
                 </div>
 

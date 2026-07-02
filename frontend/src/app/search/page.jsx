@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -206,7 +206,7 @@ function SearchContent() {
                 {hasActiveFilters && (
                   <button
                     onClick={clearFilters}
-                    className="flex items-center gap-1 text-sm text-red-500 hover:text-red-700 cursor-pointer"
+                    className="flex items-center gap-1 text-sm text-sky-500 hover:text-sky-700 cursor-pointer"
                   >
                     <X className="w-3.5 h-3.5" /> Clear filters
                   </button>
@@ -342,8 +342,8 @@ function SearchContent() {
         {/* Error */}
         {!loading && error && (
           <div className="text-center py-20">
-            <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-5">
-              <X className="w-10 h-10 text-red-500" />
+            <div className="w-20 h-20 bg-sky-100 rounded-full flex items-center justify-center mx-auto mb-5">
+              <X className="w-10 h-10 text-sky-500" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">Something went wrong</h3>
             <p className="text-gray-500 mb-6">{error}</p>

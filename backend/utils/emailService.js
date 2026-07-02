@@ -166,6 +166,133 @@ const sendLeadNotificationEmail = async (lead, adminEmail) => {
     }
 };
 
+// Send booking notification email (product bookings — different format from design leads)
+const sendBookingNotificationEmail = async (lead, adminEmail) => {
+    try {
+        const transporter = createEmailTransporter();
+        const emailTo = adminEmail || process.env.EMAIL_TO || 'homeline042@gmail.com';
+
+        const submittedAt = new Date(lead.createdAt).toLocaleString('en-IN', {
+            day: 'numeric', month: 'long', year: 'numeric',
+            hour: '2-digit', minute: '2-digit', hour12: true,
+        });
+
+        const row = (label, value) => value ? `
+          <tr>
+            <td style="padding:10px 16px;font-size:13px;color:#6b7280;font-weight:600;white-space:nowrap;width:130px;vertical-align:top;">${label}</td>
+            <td style="padding:10px 16px;font-size:13px;color:#111827;border-left:1px solid #f3f4f6;vertical-align:top;">${value}</td>
+          </tr>` : '';
+
+        const sectionHdr = (title, icon) => `
+          <tr>
+            <td colspan="2" style="padding:14px 16px 8px 16px;background:#eff6ff;border-top:3px solid #2563eb;">
+              <p style="margin:0;font-size:11px;font-weight:700;color:#2563eb;text-transform:uppercase;letter-spacing:1px;">${icon} ${title}</p>
+            </td>
+          </tr>`;
+
+        const address = lead.meta?.address || '';
+        const pd = lead.productDetails || {};
+
+        const mailOptions = {
+            from: `"HomelineTeam" <${process.env.EMAIL_FROM || 'noreply@homelineteams.com'}>`,
+            to: emailTo,
+            subject: `New Booking: ${lead.name} — ${pd.name || 'Product'}`,
+            html: `
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background-color:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f3f4f6;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="100%" style="max-width:580px;" cellpadding="0" cellspacing="0">
+
+        <!-- Header -->
+        <tr><td style="background:linear-gradient(135deg,#1d4ed8,#1e40af);border-radius:16px 16px 0 0;padding:36px 32px;text-align:center;">
+          <p style="margin:0 0 6px 0;font-size:12px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.7);text-transform:uppercase;">HomelineTeam</p>
+          <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:800;line-height:1.2;">&#128230; New Product Booking</h1>
+          <p style="margin:10px 0 0 0;color:rgba(255,255,255,0.85);font-size:14px;">A customer has booked a product</p>
+        </td></tr>
+
+        <!-- Quick summary bar -->
+        <tr><td style="background:#1e3a8a;padding:14px 32px;">
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="text-align:center;border-right:1px solid rgba(255,255,255,0.15);padding-right:12px;">
+                <p style="margin:0;font-size:10px;color:rgba(255,255,255,0.6);font-weight:600;text-transform:uppercase;letter-spacing:1px;">Customer</p>
+                <p style="margin:4px 0 0 0;font-size:14px;font-weight:700;color:#fff;">${lead.name}</p>
+              </td>
+              <td style="text-align:center;border-right:1px solid rgba(255,255,255,0.15);padding:0 12px;">
+                <p style="margin:0;font-size:10px;color:rgba(255,255,255,0.6);font-weight:600;text-transform:uppercase;letter-spacing:1px;">Phone</p>
+                <p style="margin:4px 0 0 0;font-size:14px;font-weight:700;color:#93c5fd;">${lead.phone}</p>
+              </td>
+              <td style="text-align:center;padding-left:12px;">
+                <p style="margin:0;font-size:10px;color:rgba(255,255,255,0.6);font-weight:600;text-transform:uppercase;letter-spacing:1px;">City</p>
+                <p style="margin:4px 0 0 0;font-size:14px;font-weight:700;color:#fff;">${lead.city || 'N/A'}</p>
+              </td>
+            </tr>
+          </table>
+        </td></tr>
+
+        <!-- Detail table -->
+        <tr><td style="background:#ffffff;padding:0;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+            ${sectionHdr('Customer Details', '&#128100;')}
+            ${row('Name',      lead.name)}
+            ${row('Phone',     lead.phone)}
+            ${row('City',      lead.city || 'Not provided')}
+            ${address ? row('Address', address) : ''}
+            ${row('Submitted', submittedAt)}
+
+            ${pd.name ? `
+            ${sectionHdr('Booked Product', '&#128230;')}
+            ${pd.image ? `<tr><td colspan="2" style="padding:12px 16px;"><img src="${pd.image}" alt="product" style="width:120px;height:80px;object-fit:cover;border-radius:8px;border:1px solid #e5e7eb;"></td></tr>` : ''}
+            ${row('Product',   pd.name)}
+            ${row('Category',  pd.category || '—')}
+            ${pd.price ? row('Price', '&#8377;' + Number(pd.price).toLocaleString('en-IN')) : ''}
+            ` : ''}
+          </table>
+        </td></tr>
+
+        <!-- CTA -->
+        <tr><td style="background:#fff;padding:24px 32px 28px 32px;text-align:center;border-top:1px solid #f3f4f6;">
+          <p style="margin:0 0 16px 0;font-size:13px;color:#6b7280;">Contact the customer to confirm delivery details</p>
+          <a href="tel:${lead.phone}" style="display:inline-block;background:#2563eb;color:#ffffff;font-weight:700;font-size:14px;text-decoration:none;padding:12px 32px;border-radius:10px;margin-right:8px;">
+            Call ${lead.name.split(' ')[0]}
+          </a>
+          <a href="https://wa.me/91${lead.phone.replace(/\D/g, '')}" style="display:inline-block;background:#16a34a;color:#ffffff;font-weight:700;font-size:14px;text-decoration:none;padding:12px 32px;border-radius:10px;">
+            WhatsApp
+          </a>
+        </td></tr>
+
+        <!-- Next steps -->
+        <tr><td style="background:#eff6ff;padding:20px 32px;border-top:1px solid #dbeafe;">
+          <p style="margin:0 0 10px 0;font-size:12px;font-weight:700;color:#2563eb;text-transform:uppercase;letter-spacing:1px;">Next Steps</p>
+          <p style="margin:0 0 6px 0;font-size:13px;color:#374151;">&#10003;&nbsp; Call or WhatsApp to confirm the booking</p>
+          <p style="margin:0 0 6px 0;font-size:13px;color:#374151;">&#10003;&nbsp; Confirm delivery address and timeline</p>
+          <p style="margin:0 0 6px 0;font-size:13px;color:#374151;">&#10003;&nbsp; Arrange shipment / installation if needed</p>
+          <p style="margin:0;font-size:13px;color:#374151;">&#10003;&nbsp; Update booking status in admin panel</p>
+        </td></tr>
+
+        <!-- Footer -->
+        <tr><td style="background:#111827;border-radius:0 0 16px 16px;padding:20px 32px;text-align:center;">
+          <p style="margin:0 0 4px 0;color:#ffffff;font-size:14px;font-weight:700;">HomelineTeam</p>
+          <p style="margin:0;color:#6b7280;font-size:11px;">Booking ID: ${lead._id} &nbsp;|&nbsp; &copy; ${new Date().getFullYear()} HomelineTeam</p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+        };
+
+        await transporter.sendMail(mailOptions);
+        return true;
+    } catch (error) {
+        return false;
+    }
+};
+
 // Send OTP via email (existing function moved here for reusability)
 const sendOTPEmail = async (email, otp) => {
     try {
@@ -471,6 +598,7 @@ const sendReturnAdminNotificationEmail = async (returnRequest, adminEmail) => {
 module.exports = {
     createEmailTransporter,
     sendLeadNotificationEmail,
+    sendBookingNotificationEmail,
     sendOTPEmail,
     sendOrderConfirmationEmail,
     sendOrderAdminNotificationEmail,

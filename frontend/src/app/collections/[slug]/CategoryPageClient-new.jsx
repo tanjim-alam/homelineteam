@@ -138,7 +138,7 @@ export default function CategoryPageClient({
       <div className="flex items-center justify-between pb-4 border-b border-gray-200">
         <span className="text-sm font-bold text-gray-900 uppercase tracking-widest">Filter</span>
         {activeCount() > 0 && (
-          <button onClick={clearAllFilters} className="text-xs text-gray-500 hover:text-red-600 underline underline-offset-2 transition-colors">
+          <button onClick={clearAllFilters} className="text-xs text-gray-500 hover:text-sky-600 underline underline-offset-2 transition-colors">
             Clear all ({activeCount()})
           </button>
         )}
@@ -260,7 +260,7 @@ export default function CategoryPageClient({
             <div className="text-center py-20">
               <ShoppingBag className="w-14 h-14 text-gray-200 mx-auto mb-4" />
               <h2 className="text-xl font-bold text-gray-900 mb-2">No subcategories found</h2>
-              <Link href="/collections" className="text-sm text-red-600 hover:text-red-700 font-semibold">
+              <Link href="/collections" className="text-sm text-sky-600 hover:text-sky-700 font-semibold">
                 Back to Collections
               </Link>
             </div>
@@ -310,7 +310,7 @@ export default function CategoryPageClient({
 
                       {/* "Browse" pill — slides up on hover */}
                       <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-300">
-                        <span className="flex items-center gap-1 bg-white text-red-600 text-[10px] font-bold px-2.5 py-1 rounded-full shadow-md">
+                        <span className="flex items-center gap-1 bg-white text-sky-600 text-[10px] font-bold px-2.5 py-1 rounded-full shadow-md">
                           Browse <ArrowRight className="w-3 h-3" />
                         </span>
                       </div>
@@ -347,14 +347,14 @@ export default function CategoryPageClient({
             onClick={() => setShowFilters(p => !p)}
             className={`flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl border text-sm font-semibold transition-colors ${
               showFilters
-                ? 'bg-red-50 border-red-200 text-red-600'
+                ? 'bg-sky-50 border-sky-200 text-sky-600'
                 : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
             }`}
           >
             <Filter className="w-4 h-4" />
             Filters
             {activeCount() > 0 && (
-              <span className="bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+              <span className="bg-sky-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
                 {activeCount()}
               </span>
             )}
@@ -378,14 +378,14 @@ export default function CategoryPageClient({
               <p className="text-sm text-gray-500">
                 <span className="font-bold text-gray-900">{products.length}</span> product{products.length !== 1 ? 's' : ''}
                 {activeCount() > 0 && (
-                  <span className="text-red-600 ml-1">· {activeCount()} filter{activeCount() !== 1 ? 's' : ''}</span>
+                  <span className="text-sky-600 ml-1">· {activeCount()} filter{activeCount() !== 1 ? 's' : ''}</span>
                 )}
               </p>
               <div className="flex items-center gap-2">
                 <select
                   value={sortBy}
                   onChange={e => setSortBy(e.target.value)}
-                  className="border border-gray-200 text-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 cursor-pointer"
+                  className="border border-gray-200 text-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400 cursor-pointer"
                 >
                   <option value="newest">Newest First</option>
                   <option value="price-low">Price: Low → High</option>
@@ -399,7 +399,7 @@ export default function CategoryPageClient({
                       key={mode}
                       onClick={() => setViewMode(mode)}
                       className={`p-2 cursor-pointer transition-colors ${
-                        viewMode === mode ? 'bg-red-600 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'
+                        viewMode === mode ? 'bg-sky-600 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'
                       }`}
                     >
                       <Icon className="w-4 h-4" />
@@ -417,7 +417,7 @@ export default function CategoryPageClient({
                 <p className="text-gray-500 text-sm mb-6">Try adjusting your filters or browse other categories.</p>
                 <Link
                   href="/collections"
-                  className="inline-flex items-center gap-2 bg-red-600 text-white px-5 py-2.5 rounded-xl hover:bg-red-700 transition-colors font-semibold text-sm"
+                  className="inline-flex items-center gap-2 bg-sky-600 text-white px-5 py-2.5 rounded-xl hover:bg-sky-700 transition-colors font-semibold text-sm"
                 >
                   Browse All Categories
                 </Link>

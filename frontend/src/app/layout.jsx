@@ -8,6 +8,7 @@ import CartDrawer from '@/components/CartDrawer';
 import { CartProvider } from '@/contexts/CartContext';
 import { SubmissionProvider } from '@/contexts/SubmissionContext';
 import { UserProvider } from '@/contexts/UserContext';
+import { LocationProvider } from '@/contexts/LocationContext';
 import WhatsAppButton from '@/components/WhatsAppButton';
 
 const SITE_URL = 'https://homelineteam.com';
@@ -193,19 +194,21 @@ export default async function RootLayout({ children }) {
 
         <ErrorBoundary>
           <UserProvider>
-            <CartProvider>
-              <SubmissionProvider>
-                <div className="sticky top-0 z-40">
-                  <Navbar categories={categories} />
-                  <ProductNavbar categories={categories} />
-                </div>
-                <main className="pb-20 lg:pb-0">{children}</main>
-                <Footer />
-                <BottomNavbar />
-                <WhatsAppButton/>
-                <CartDrawer />
-              </SubmissionProvider>
-            </CartProvider>
+            <LocationProvider>
+              <CartProvider>
+                <SubmissionProvider>
+                  <div className="sticky top-0 z-40">
+                    <Navbar categories={categories} />
+                    <ProductNavbar categories={categories} />
+                  </div>
+                  <main className="pb-20 lg:pb-0">{children}</main>
+                  <Footer />
+                  <BottomNavbar />
+                  <WhatsAppButton/>
+                  <CartDrawer />
+                </SubmissionProvider>
+              </CartProvider>
+            </LocationProvider>
           </UserProvider>
         </ErrorBoundary>
       </body>

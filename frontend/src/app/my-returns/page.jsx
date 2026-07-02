@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -13,7 +13,7 @@ import {
 const STATUS_META = {
     pending:    { label: 'Pending',    bg: 'bg-amber-100',   text: 'text-amber-800',  border: 'border-amber-200',  icon: Clock        },
     approved:   { label: 'Approved',   bg: 'bg-blue-100',    text: 'text-blue-800',   border: 'border-blue-200',   icon: CheckCircle  },
-    rejected:   { label: 'Rejected',   bg: 'bg-red-100',     text: 'text-red-800',    border: 'border-red-200',    icon: XCircle      },
+    rejected:   { label: 'Rejected',   bg: 'bg-sky-100',     text: 'text-sky-800',    border: 'border-sky-200',    icon: XCircle      },
     processing: { label: 'Processing', bg: 'bg-purple-100',  text: 'text-purple-800', border: 'border-purple-200', icon: RefreshCw    },
     shipped:    { label: 'Shipped',    bg: 'bg-indigo-100',  text: 'text-indigo-800', border: 'border-indigo-200', icon: Truck        },
     received:   { label: 'Received',   bg: 'bg-cyan-100',    text: 'text-cyan-800',   border: 'border-cyan-200',   icon: Package      },
@@ -118,7 +118,7 @@ const MyReturnsPage = () => {
         <div className="min-h-screen bg-gray-50">
             {/* Toast */}
             {toast && (
-                <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-xl shadow-xl text-sm font-semibold ${toast.type === 'error' ? 'bg-red-600 text-white' : 'bg-green-600 text-white'}`}>
+                <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-xl shadow-xl text-sm font-semibold ${toast.type === 'error' ? 'bg-sky-600 text-white' : 'bg-green-600 text-white'}`}>
                     {toast.type === 'error' ? <AlertCircle className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
                     {toast.msg}
                 </div>
@@ -175,9 +175,9 @@ const MyReturnsPage = () => {
 
                 {/* Error */}
                 {error && (
-                    <div className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-6">
-                        <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
-                        <p className="text-sm text-red-700">{error}</p>
+                    <div className="flex items-center gap-3 bg-sky-50 border border-sky-200 rounded-xl px-4 py-3 mb-6">
+                        <AlertCircle className="w-5 h-5 text-sky-500 shrink-0" />
+                        <p className="text-sm text-sky-700">{error}</p>
                     </div>
                 )}
 
@@ -233,7 +233,7 @@ const MyReturnsPage = () => {
                                                         {r.type === 'return' ? 'Return' : 'Exchange'} Request
                                                     </p>
                                                     <StatusBadge status={r.status} />
-                                                    <span className={`text-xs px-2 py-0.5 rounded font-semibold ${r.type === 'return' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'}`}>
+                                                    <span className={`text-xs px-2 py-0.5 rounded font-semibold ${r.type === 'return' ? 'bg-sky-50 text-sky-600' : 'bg-blue-50 text-blue-600'}`}>
                                                         {r.type}
                                                     </span>
                                                 </div>
@@ -250,7 +250,7 @@ const MyReturnsPage = () => {
                                                 <button
                                                     onClick={() => handleCancel(r._id)}
                                                     disabled={cancelling === r._id}
-                                                    className="px-3 py-1.5 text-xs font-semibold text-red-600 border border-red-200 rounded-lg hover:bg-red-50 disabled:opacity-50 transition-colors"
+                                                    className="px-3 py-1.5 text-xs font-semibold text-sky-600 border border-sky-200 rounded-lg hover:bg-sky-50 disabled:opacity-50 transition-colors"
                                                 >
                                                     {cancelling === r._id ? 'Cancelling…' : 'Cancel'}
                                                 </button>

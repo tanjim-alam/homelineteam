@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import api from '@/services/api';
@@ -106,7 +106,7 @@ export default function QuickQuoteEstimator({ className = '' }) {
       {/* Floating trigger button */}
       <button
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-20 lg:bottom-8 right-4 sm:right-6 lg:right-8 w-14 h-14 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 z-40 flex items-center justify-center group ${className}`}
+        className={`fixed bottom-20 lg:bottom-8 right-4 sm:right-6 lg:right-8 w-14 h-14 bg-sky-600 hover:bg-sky-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 z-40 flex items-center justify-center group ${className}`}
         aria-label="Get Quick Quote"
       >
         <Calculator className="w-6 h-6 group-hover:scale-110 transition-transform duration-300" />
@@ -123,7 +123,7 @@ export default function QuickQuoteEstimator({ className = '' }) {
             onClick={e => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-red-600 to-rose-700 px-6 py-5 flex-shrink-0 relative">
+            <div className="bg-gradient-to-r from-sky-600 to-rose-700 px-6 py-5 flex-shrink-0 relative">
               <button
                 onClick={handleClose}
                 className="absolute top-4 right-4 w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors"
@@ -156,7 +156,7 @@ export default function QuickQuoteEstimator({ className = '' }) {
                   </p>
                   <button
                     onClick={handleClose}
-                    className="bg-red-600 hover:bg-red-700 text-white font-bold px-8 py-2.5 rounded-xl transition-colors"
+                    className="bg-sky-600 hover:bg-sky-700 text-white font-bold px-8 py-2.5 rounded-xl transition-colors"
                   >
                     Done
                   </button>
@@ -166,7 +166,7 @@ export default function QuickQuoteEstimator({ className = '' }) {
                   {/* Home Type */}
                   <div>
                     <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">
-                      Home Type <span className="text-red-500">*</span>
+                      Home Type <span className="text-sky-500">*</span>
                     </label>
                     <div className="grid grid-cols-4 gap-2">
                       {homeTypes.map(type => (
@@ -176,8 +176,8 @@ export default function QuickQuoteEstimator({ className = '' }) {
                           onClick={() => set('homeType', type.id)}
                           className={`p-2.5 rounded-xl border-2 text-center transition-all duration-200 ${
                             formData.homeType === type.id
-                              ? 'border-red-600 bg-red-50 text-red-700'
-                              : 'border-gray-200 hover:border-red-300 text-gray-700'
+                              ? 'border-sky-600 bg-sky-50 text-sky-700'
+                              : 'border-gray-200 hover:border-sky-300 text-gray-700'
                           }`}
                         >
                           <div className="font-bold text-sm">{type.name}</div>
@@ -200,8 +200,8 @@ export default function QuickQuoteEstimator({ className = '' }) {
                           onClick={() => toggleRoom(room.id)}
                           className={`p-2.5 rounded-xl border-2 text-center transition-all duration-200 ${
                             formData.rooms.includes(room.id)
-                              ? 'border-red-600 bg-red-50'
-                              : 'border-gray-200 hover:border-red-300'
+                              ? 'border-sky-600 bg-sky-50'
+                              : 'border-gray-200 hover:border-sky-300'
                           }`}
                         >
                           <div className="text-xl mb-0.5">{room.icon}</div>
@@ -224,8 +224,8 @@ export default function QuickQuoteEstimator({ className = '' }) {
                           onClick={() => set('purpose', p.id)}
                           className={`p-2.5 rounded-xl border-2 text-left transition-all duration-200 ${
                             formData.purpose === p.id
-                              ? 'border-red-600 bg-red-50'
-                              : 'border-gray-200 hover:border-red-300'
+                              ? 'border-sky-600 bg-sky-50'
+                              : 'border-gray-200 hover:border-sky-300'
                           }`}
                         >
                           <div className="text-sm font-semibold text-gray-900">{p.name}</div>
@@ -248,8 +248,8 @@ export default function QuickQuoteEstimator({ className = '' }) {
                           onClick={() => set('timeline', t)}
                           className={`py-2.5 px-3 rounded-xl border-2 text-sm font-semibold text-center transition-all duration-200 ${
                             formData.timeline === t
-                              ? 'border-red-600 bg-red-50 text-red-700'
-                              : 'border-gray-200 hover:border-red-300 text-gray-700'
+                              ? 'border-sky-600 bg-sky-50 text-sky-700'
+                              : 'border-gray-200 hover:border-sky-300 text-gray-700'
                           }`}
                         >
                           {t}
@@ -261,7 +261,7 @@ export default function QuickQuoteEstimator({ className = '' }) {
                   {/* Contact Info */}
                   <div className="space-y-3">
                     <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider">
-                      Your Details <span className="text-red-500">*</span>
+                      Your Details <span className="text-sky-500">*</span>
                     </label>
                     <div className="grid grid-cols-2 gap-3">
                       <input
@@ -269,14 +269,14 @@ export default function QuickQuoteEstimator({ className = '' }) {
                         value={formData.contactInfo.name}
                         onChange={e => setContact('name', e.target.value)}
                         placeholder="Full Name"
-                        className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                        className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                       />
                       <input
                         type="tel"
                         value={formData.contactInfo.phone}
                         onChange={e => setContact('phone', e.target.value)}
                         placeholder="Phone Number"
-                        className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                        className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                       />
                     </div>
                     <input
@@ -284,15 +284,15 @@ export default function QuickQuoteEstimator({ className = '' }) {
                       value={formData.city}
                       onChange={e => set('city', e.target.value)}
                       placeholder="City (e.g. Bangalore, Mumbai)"
-                      className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                     />
                   </div>
 
                   {/* Summary pill */}
                   {formData.homeType && (
-                    <div className="bg-red-50 border border-red-100 rounded-xl px-4 py-3 text-center">
-                      <p className="text-[11px] text-red-400 font-medium uppercase tracking-wider mb-0.5">Your Project</p>
-                      <p className="text-red-700 font-bold text-sm">
+                    <div className="bg-sky-50 border border-sky-100 rounded-xl px-4 py-3 text-center">
+                      <p className="text-[11px] text-sky-400 font-medium uppercase tracking-wider mb-0.5">Your Project</p>
+                      <p className="text-sky-700 font-bold text-sm">
                         {homeTypes.find(h => h.id === formData.homeType)?.name} Interior Design
                         {formData.rooms.length > 0 && ` · ${formData.rooms.length} room${formData.rooms.length > 1 ? 's' : ''}`}
                       </p>
@@ -301,7 +301,7 @@ export default function QuickQuoteEstimator({ className = '' }) {
 
                   {/* Error */}
                   {error && (
-                    <p className="text-red-600 text-xs font-medium bg-red-50 border border-red-100 rounded-xl px-3 py-2">
+                    <p className="text-sky-600 text-xs font-medium bg-sky-50 border border-sky-100 rounded-xl px-3 py-2">
                       {error}
                     </p>
                   )}
@@ -323,7 +323,7 @@ export default function QuickQuoteEstimator({ className = '' }) {
                   type="button"
                   onClick={handleSubmit}
                   disabled={!canSubmit || submitting}
-                  className="flex-1 flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-bold py-3 rounded-xl transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 bg-sky-600 hover:bg-sky-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-bold py-3 rounded-xl transition-colors"
                 >
                   {submitting
                     ? 'Submitting…'

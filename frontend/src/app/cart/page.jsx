@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import Image from 'next/image';
@@ -129,7 +129,7 @@ export default function CartPage() {
                         </h3>
                         <button
                           onClick={() => removeFromCart(item.id)}
-                          className="text-gray-300 hover:text-red-500 transition-colors cursor-pointer flex-shrink-0 mt-0.5"
+                          className="text-gray-300 hover:text-sky-500 transition-colors cursor-pointer flex-shrink-0 mt-0.5"
                           title="Remove"
                         >
                           <Trash2 className="w-4 h-4" />

@@ -77,7 +77,7 @@ export default async function TwoBHKDetailPage({ params }) {
       <div className="grid grid-cols-2 gap-3">
         {pkg.kitchenLayout && (
           <div className="flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-xl p-3">
-            <Users className="w-4 h-4 text-red-500 flex-shrink-0" />
+            <Users className="w-4 h-4 text-sky-500 flex-shrink-0" />
             <div>
               <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Kitchen</p>
               <p className="text-xs font-bold text-gray-800 capitalize">{pkg.kitchenLayout}</p>
@@ -86,7 +86,7 @@ export default async function TwoBHKDetailPage({ params }) {
         )}
         {pkg.wardrobeType && (
           <div className="flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-xl p-3">
-            <Users className="w-4 h-4 text-red-500 flex-shrink-0" />
+            <Users className="w-4 h-4 text-sky-500 flex-shrink-0" />
             <div>
               <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Wardrobe</p>
               <p className="text-xs font-bold text-gray-800 capitalize">{pkg.wardrobeType}</p>
@@ -95,7 +95,7 @@ export default async function TwoBHKDetailPage({ params }) {
         )}
         {deliveryTime && (
           <div className="flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-xl p-3">
-            <Clock className="w-4 h-4 text-red-500 flex-shrink-0" />
+            <Clock className="w-4 h-4 text-sky-500 flex-shrink-0" />
             <div>
               <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Delivery</p>
               <p className="text-xs font-bold text-gray-800">{deliveryTime}</p>
@@ -104,7 +104,7 @@ export default async function TwoBHKDetailPage({ params }) {
         )}
         {warranty && (
           <div className="flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-xl p-3">
-            <Shield className="w-4 h-4 text-red-500 flex-shrink-0" />
+            <Shield className="w-4 h-4 text-sky-500 flex-shrink-0" />
             <div>
               <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Warranty</p>
               <p className="text-xs font-bold text-gray-800">{warranty}</p>
@@ -113,7 +113,7 @@ export default async function TwoBHKDetailPage({ params }) {
         )}
         {area && (area.min || area.max) && (
           <div className="flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-xl p-3 col-span-2">
-            <Users className="w-4 h-4 text-red-500 flex-shrink-0" />
+            <Users className="w-4 h-4 text-sky-500 flex-shrink-0" />
             <div>
               <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Area Coverage</p>
               <p className="text-xs font-bold text-gray-800">
@@ -129,7 +129,7 @@ export default async function TwoBHKDetailPage({ params }) {
           <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Style</p>
           <div className="flex flex-wrap gap-2">
             {styles.map(s => (
-              <span key={s} className="text-xs bg-red-50 text-red-600 border border-red-100 px-3 py-1 rounded-full font-medium capitalize">{s}</span>
+              <span key={s} className="text-xs bg-sky-50 text-sky-600 border border-sky-100 px-3 py-1 rounded-full font-medium capitalize">{s}</span>
             ))}
           </div>
         </div>
@@ -156,7 +156,7 @@ export default async function TwoBHKDetailPage({ params }) {
               </div>
             ))}
             {inclusions.length > 8 && (
-              <p className="text-xs text-red-500 font-medium col-span-2">+{inclusions.length - 8} more items included</p>
+              <p className="text-xs text-sky-500 font-medium col-span-2">+{inclusions.length - 8} more items included</p>
             )}
           </div>
         </div>
@@ -168,7 +168,7 @@ export default async function TwoBHKDetailPage({ params }) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {features.slice(0, 6).map((f, i) => (
               <div key={i} className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 bg-red-500 rounded-full flex-shrink-0" />
+                <div className="w-1.5 h-1.5 bg-sky-500 rounded-full flex-shrink-0" />
                 <span className="text-xs text-gray-700">{f.name}</span>
               </div>
             ))}
@@ -212,11 +212,11 @@ export default async function TwoBHKDetailPage({ params }) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <div className="bg-white border-b border-gray-100">
         <div className="container-custom py-3 flex items-center gap-2 text-xs text-gray-500">
-          <Link href="/" className="hover:text-red-600 transition-colors">Home</Link>
+          <Link href="/" className="hover:text-sky-600 transition-colors">Home</Link>
           <span>/</span>
-          <Link href="/interior-design" className="hover:text-red-600 transition-colors">Interior Design</Link>
+          <Link href="/interior-design" className="hover:text-sky-600 transition-colors">Interior Design</Link>
           <span>/</span>
-          <Link href="/interior-design/2bhk-package" className="hover:text-red-600 transition-colors">2 BHK Package</Link>
+          <Link href="/interior-design/2bhk-package" className="hover:text-sky-600 transition-colors">2 BHK Package</Link>
           <span>/</span>
           <span className="text-gray-900 font-medium truncate max-w-[180px]">{pkg.name}</span>
         </div>
