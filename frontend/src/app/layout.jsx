@@ -163,7 +163,7 @@ export default async function RootLayout({ children }) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
         />
-        <script id="tawk-to" strategy="afterInteractive">
+        {/* <script id="tawk-to" strategy="afterInteractive">
           {`
             var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
             (function(){
@@ -176,7 +176,7 @@ export default async function RootLayout({ children }) {
               s0.parentNode.insertBefore(s1,s0);
             })();
           `}
-        </script>
+        </script> */}
         {/* Google Ads Tag */}
         <script
           src="https://www.googletagmanager.com/gtag/js?id=AW-433512772"
