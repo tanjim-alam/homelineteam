@@ -184,7 +184,7 @@ export default function InquiryModal({ isOpen, onClose, productName, sourcePage,
               </div>
 
               {error && (
-                <p className="text-sky-600 text-xs font-medium bg-sky-50 border border-sky-100 rounded-xl px-3 py-2">
+                <p className="text-primary-600 text-xs font-medium bg-primary-50 border border-primary-100 rounded-xl px-3 py-2">
                   {error}
                 </p>
               )}

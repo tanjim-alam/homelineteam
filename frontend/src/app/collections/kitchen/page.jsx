@@ -163,7 +163,7 @@ export default function KitchenCollectionPage() {
             <div className="flex flex-col lg:flex-row gap-8">
               {/* Fixed Sidebar Filter */}
               <div className="lg:w-80 lg:sticky lg:top-8 lg:h-fit">
-                <div className="bg-gradient-to-b from-orange-50 to-sky-50 rounded-2xl p-4 border border-orange-100 shadow-lg">
+                <div className="bg-gradient-to-b from-orange-50 to-primary-50 rounded-2xl p-4 border border-orange-100 shadow-lg">
                   <div className="text-center mb-4">
                     <h3 className="text-xl font-bold text-gray-900 mb-1">Filters</h3>
                     <p className="text-sm text-gray-600">{filteredKitchenPackages.length} kitchens found</p>
@@ -219,7 +219,7 @@ export default function KitchenCollectionPage() {
                     </button>
                     <button
                       onClick={() => setShowDesignSession(true)}
-                      className="bg-gradient-to-r cursor-pointer from-orange-600 to-sky-600 hover:from-orange-700 hover:to-sky-700 text-white px-3 py-2 rounded-md text-sm font-semibold shadow-lg transition-all duration-200"
+                      className="bg-gradient-to-r cursor-pointer from-orange-600 to-primary-600 hover:from-orange-700 hover:to-primary-700 text-white px-3 py-2 rounded-md text-sm font-semibold shadow-lg transition-all duration-200"
                     >
                       Book Consultation
                     </button>
@@ -238,8 +238,8 @@ export default function KitchenCollectionPage() {
                   </div>
                 ) : error ? (
                   <div className="text-center py-16">
-                    <div className="w-20 h-20 mx-auto mb-4 bg-sky-100 rounded-full flex items-center justify-center">
-                      <ChefHat className="w-10 h-10 text-sky-400" />
+                    <div className="w-20 h-20 mx-auto mb-4 bg-primary-100 rounded-full flex items-center justify-center">
+                      <ChefHat className="w-10 h-10 text-primary-400" />
                     </div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">Unable to load products</h3>
                     <p className="text-gray-600 mb-4">{error}</p>
@@ -307,7 +307,7 @@ export default function KitchenCollectionPage() {
                               setSelectedProduct(kitchen);
                               setShowDesignSession(true);
                             }}
-                            className="w-full bg-gradient-to-r cursor-pointer from-orange-600 to-sky-600 hover:from-orange-700 hover:to-sky-700 text-white py-2 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 text-sm"
+                            className="w-full bg-gradient-to-r cursor-pointer from-orange-600 to-primary-600 hover:from-orange-700 hover:to-primary-700 text-white py-2 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 text-sm"
                           >
                             Book Consultation
                           </button>

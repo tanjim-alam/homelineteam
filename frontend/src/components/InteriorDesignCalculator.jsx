@@ -98,12 +98,12 @@ function StepBar({ current }) {
             <div className="flex flex-col items-center gap-1">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-colors ${
                 done  ? 'bg-green-500 border-green-500 text-white' :
-                active ? 'bg-sky-600 border-sky-600 text-white' :
+                active ? 'bg-primary-600 border-primary-600 text-white' :
                          'bg-white border-gray-200 text-gray-400'
               }`}>
                 {done ? <CheckCircle className="w-4 h-4" /> : num}
               </div>
-              <span className={`text-[10px] font-semibold hidden sm:block ${active ? 'text-sky-600' : done ? 'text-green-600' : 'text-gray-400'}`}>
+              <span className={`text-[10px] font-semibold hidden sm:block ${active ? 'text-primary-600' : done ? 'text-green-600' : 'text-gray-400'}`}>
                 {label}
               </span>
             </div>
@@ -122,11 +122,11 @@ function StepBar({ current }) {
 function LiveEstimate({ estimate }) {
   if (!estimate) return null;
   return (
-    <div className="flex items-center gap-2 bg-sky-50 border border-sky-100 rounded-xl px-4 py-2.5 mb-6">
-      <IndianRupee className="w-4 h-4 text-sky-500 flex-shrink-0" />
-      <span className="text-xs text-sky-600 font-medium">Live estimate:</span>
-      <span className="text-sm font-extrabold text-sky-700">{fmt(estimate.total)}</span>
-      <span className="text-[10px] text-sky-400 ml-auto hidden sm:block">updates as you fill the form</span>
+    <div className="flex items-center gap-2 bg-primary-50 border border-primary-100 rounded-xl px-4 py-2.5 mb-6">
+      <IndianRupee className="w-4 h-4 text-primary-500 flex-shrink-0" />
+      <span className="text-xs text-primary-600 font-medium">Live estimate:</span>
+      <span className="text-sm font-extrabold text-primary-700">{fmt(estimate.total)}</span>
+      <span className="text-[10px] text-primary-400 ml-auto hidden sm:block">updates as you fill the form</span>
     </div>
   );
 }
@@ -204,7 +204,7 @@ export default function InteriorDesignCalculator() {
     const { total, breakdown } = estimate;
     const bars = [
       { label: 'Design & Planning', value: breakdown.design,    pct: 30, color: 'bg-blue-500' },
-      { label: 'Materials',         value: breakdown.materials, pct: 40, color: 'bg-sky-500'  },
+      { label: 'Materials',         value: breakdown.materials, pct: 40, color: 'bg-primary-500'  },
       { label: 'Labour',            value: breakdown.labor,     pct: 20, color: 'bg-amber-500' },
       { label: 'Miscellaneous',     value: breakdown.misc,      pct: 10, color: 'bg-gray-400' },
     ];
@@ -219,7 +219,7 @@ export default function InteriorDesignCalculator() {
           <p className="text-gray-500 text-sm mb-6 max-w-sm mx-auto">
             Our design expert will call you within 24 hours to discuss your project and provide a detailed quote.
           </p>
-          <button onClick={reset} className="inline-flex items-center gap-2 bg-sky-600 hover:bg-sky-700 text-white font-bold px-6 py-3 rounded-xl transition-colors">
+          <button onClick={reset} className="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-bold px-6 py-3 rounded-xl transition-colors">
             <RotateCcw className="w-4 h-4" /> Calculate Again
           </button>
         </div>
@@ -266,7 +266,7 @@ export default function InteriorDesignCalculator() {
           </div>
 
           {/* Contact to get detailed quote */}
-          <div className="bg-sky-50 border border-sky-100 rounded-xl p-5 mb-6">
+          <div className="bg-primary-50 border border-primary-100 rounded-xl p-5 mb-6">
             <p className="text-sm font-bold text-gray-800 mb-1">Want a precise quote?</p>
             <p className="text-xs text-gray-500 mb-4">Enter your details and our designer will prepare a detailed plan and exact pricing for you.</p>
 
@@ -276,14 +276,14 @@ export default function InteriorDesignCalculator() {
                 value={data.name}
                 onChange={e => set('name', e.target.value)}
                 placeholder="Full Name *"
-                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
               <input
                 type="tel"
                 value={data.phone}
                 onChange={e => set('phone', e.target.value)}
                 placeholder="Phone *"
-                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
             <input
@@ -291,17 +291,17 @@ export default function InteriorDesignCalculator() {
               value={data.city}
               onChange={e => set('city', e.target.value)}
               placeholder="City (e.g. Bangalore)"
-              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent mb-3"
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent mb-3"
             />
 
             {error && (
-              <p className="text-sky-600 text-xs font-medium bg-sky-100 px-3 py-2 rounded-xl mb-3">{error}</p>
+              <p className="text-primary-600 text-xs font-medium bg-primary-100 px-3 py-2 rounded-xl mb-3">{error}</p>
             )}
 
             <button
               onClick={handleSubmit}
               disabled={!data.name.trim() || !data.phone.trim() || isSubmitting(formId)}
-              className="w-full flex items-center justify-center gap-2 bg-sky-600 hover:bg-sky-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl transition-colors"
+              className="w-full flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl transition-colors"
             >
               {isSubmitting(formId)
                 ? 'Sending…'
@@ -323,7 +323,7 @@ export default function InteriorDesignCalculator() {
     <div className="bg-white rounded-2xl border border-gray-100 shadow-lg p-6 sm:p-8">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 bg-sky-600 rounded-xl flex items-center justify-center flex-shrink-0">
+        <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center flex-shrink-0">
           <Calculator className="w-5 h-5 text-white" />
         </div>
         <div>
@@ -346,14 +346,14 @@ export default function InteriorDesignCalculator() {
                 onClick={() => set('homeType', ht.id)}
                 className={`p-4 rounded-xl border-2 text-left transition-all duration-200 ${
                   data.homeType === ht.id
-                    ? 'border-sky-600 bg-sky-50'
-                    : 'border-gray-200 hover:border-sky-300'
+                    ? 'border-primary-600 bg-primary-50'
+                    : 'border-gray-200 hover:border-primary-300'
                 }`}
               >
                 <div className="text-lg font-extrabold text-gray-900 mb-0.5">{ht.name}</div>
                 <div className="text-xs text-gray-500 mb-2">{ht.description}</div>
                 <div className="text-xs font-bold text-gray-500">{ht.area}</div>
-                <div className="text-xs font-bold text-sky-600 mt-1">Starting {fmt(ht.basePrice)}</div>
+                <div className="text-xs font-bold text-primary-600 mt-1">Starting {fmt(ht.basePrice)}</div>
               </button>
             ))}
           </div>
@@ -372,8 +372,8 @@ export default function InteriorDesignCalculator() {
                 onClick={() => toggleRoom(room.id)}
                 className={`p-3 rounded-xl border-2 text-center transition-all duration-200 ${
                   data.rooms.includes(room.id)
-                    ? 'border-sky-600 bg-sky-50'
-                    : 'border-gray-200 hover:border-sky-300'
+                    ? 'border-primary-600 bg-primary-50'
+                    : 'border-gray-200 hover:border-primary-300'
                 }`}
               >
                 <div className="text-2xl mb-1">{room.icon}</div>
@@ -382,7 +382,7 @@ export default function InteriorDesignCalculator() {
             ))}
           </div>
           {data.rooms.length > 0 && (
-            <p className="text-xs text-sky-600 font-medium mt-3">
+            <p className="text-xs text-primary-600 font-medium mt-3">
               {data.rooms.length} room{data.rooms.length !== 1 ? 's' : ''} selected
             </p>
           )}
@@ -402,8 +402,8 @@ export default function InteriorDesignCalculator() {
                   onClick={() => set('style', s.id)}
                   className={`p-3 rounded-xl border-2 text-center transition-all duration-200 ${
                     data.style === s.id
-                      ? 'border-sky-600 bg-sky-50'
-                      : 'border-gray-200 hover:border-sky-300'
+                      ? 'border-primary-600 bg-primary-50'
+                      : 'border-gray-200 hover:border-primary-300'
                   }`}
                 >
                   <div className="text-lg mb-1">{s.emoji}</div>
@@ -424,8 +424,8 @@ export default function InteriorDesignCalculator() {
                   onClick={() => set('area', String(a))}
                   className={`flex-1 py-1.5 text-xs font-bold rounded-lg border-2 transition-colors ${
                     data.area === String(a)
-                      ? 'border-sky-600 bg-sky-50 text-sky-700'
-                      : 'border-gray-200 text-gray-600 hover:border-sky-300'
+                      ? 'border-primary-600 bg-primary-50 text-primary-700'
+                      : 'border-gray-200 text-gray-600 hover:border-primary-300'
                   }`}
                 >
                   {a}
@@ -437,7 +437,7 @@ export default function InteriorDesignCalculator() {
               value={data.area}
               onChange={e => set('area', e.target.value)}
               placeholder="Or type custom area…"
-              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
           </div>
 
@@ -451,8 +451,8 @@ export default function InteriorDesignCalculator() {
                   onClick={() => set('timeline', t.id)}
                   className={`p-3 rounded-xl border-2 text-center transition-all duration-200 ${
                     data.timeline === t.id
-                      ? 'border-sky-600 bg-sky-50'
-                      : 'border-gray-200 hover:border-sky-300'
+                      ? 'border-primary-600 bg-primary-50'
+                      : 'border-gray-200 hover:border-primary-300'
                   }`}
                 >
                   <div className="text-xs font-extrabold text-gray-900 mb-0.5">{t.name}</div>
@@ -487,14 +487,14 @@ export default function InteriorDesignCalculator() {
                 value={data.name}
                 onChange={e => set('name', e.target.value)}
                 placeholder="Full Name *"
-                className="w-full px-3 py-3 border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                className="w-full px-3 py-3 border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
               <input
                 type="tel"
                 value={data.phone}
                 onChange={e => set('phone', e.target.value)}
                 placeholder="Phone Number *"
-                className="w-full px-3 py-3 border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                className="w-full px-3 py-3 border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </div>
             <input
@@ -502,7 +502,7 @@ export default function InteriorDesignCalculator() {
               value={data.city}
               onChange={e => set('city', e.target.value)}
               placeholder="City (e.g. Bangalore, Mumbai)"
-              className="w-full px-3 py-3 border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
+              className="w-full px-3 py-3 border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
           </div>
         </div>
@@ -521,7 +521,7 @@ export default function InteriorDesignCalculator() {
         <button
           onClick={handleNext}
           disabled={!canNext[step]}
-          className="flex-1 flex items-center justify-center gap-2 bg-sky-600 hover:bg-sky-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl transition-colors"
+          className="flex-1 flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl transition-colors"
         >
           {step === 4
             ? <><Sparkles className="w-4 h-4" /> See My Estimate</>

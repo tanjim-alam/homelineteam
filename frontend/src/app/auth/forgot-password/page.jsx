@@ -75,11 +75,11 @@ export default function ForgotPasswordPage() {
     };
 
     const Alert = ({ type, message }) => (
-        <div role={type === 'error' ? 'alert' : 'status'} className={`flex items-start gap-3 rounded-xl p-4 mb-6 ${type === 'error' ? 'bg-sky-50 border border-sky-200' : 'bg-green-50 border border-green-200'}`}>
+        <div role={type === 'error' ? 'alert' : 'status'} className={`flex items-start gap-3 rounded-xl p-4 mb-6 ${type === 'error' ? 'bg-primary-50 border border-primary-200' : 'bg-green-50 border border-green-200'}`}>
             {type === 'error'
-                ? <AlertCircle className="w-5 h-5 text-sky-500 flex-shrink-0 mt-0.5" aria-hidden="true" />
+                ? <AlertCircle className="w-5 h-5 text-primary-500 flex-shrink-0 mt-0.5" aria-hidden="true" />
                 : <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" aria-hidden="true" />}
-            <p className={`text-sm font-medium ${type === 'error' ? 'text-sky-700' : 'text-green-700'}`}>{message}</p>
+            <p className={`text-sm font-medium ${type === 'error' ? 'text-primary-700' : 'text-green-700'}`}>{message}</p>
         </div>
     );
 

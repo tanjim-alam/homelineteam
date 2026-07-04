@@ -72,7 +72,7 @@ export default async function KitchenDetailPage({ params }) {
       <div className="grid grid-cols-2 gap-3">
         {deliveryTime && (
           <div className="flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-xl p-3">
-            <Clock className="w-4 h-4 text-sky-500 flex-shrink-0" />
+            <Clock className="w-4 h-4 text-primary-500 flex-shrink-0" />
             <div>
               <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Delivery</p>
               <p className="text-xs font-bold text-gray-800">{deliveryTime}</p>
@@ -81,7 +81,7 @@ export default async function KitchenDetailPage({ params }) {
         )}
         {warranty && (
           <div className="flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-xl p-3">
-            <Shield className="w-4 h-4 text-sky-500 flex-shrink-0" />
+            <Shield className="w-4 h-4 text-primary-500 flex-shrink-0" />
             <div>
               <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Warranty</p>
               <p className="text-xs font-bold text-gray-800">{warranty}</p>
@@ -90,7 +90,7 @@ export default async function KitchenDetailPage({ params }) {
         )}
         {product.kitchenMetadata?.installation?.included !== undefined && (
           <div className="flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-xl p-3 col-span-2">
-            <CheckCircle className="w-4 h-4 text-sky-500 flex-shrink-0" />
+            <CheckCircle className="w-4 h-4 text-primary-500 flex-shrink-0" />
             <div>
               <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Installation</p>
               <p className="text-xs font-bold text-gray-800">
@@ -118,7 +118,7 @@ export default async function KitchenDetailPage({ params }) {
           <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Style</p>
           <div className="flex flex-wrap gap-2">
             {styles.map(s => (
-              <span key={s} className="text-xs bg-sky-50 text-sky-600 border border-sky-100 px-3 py-1 rounded-full font-medium capitalize">{s}</span>
+              <span key={s} className="text-xs bg-primary-50 text-primary-600 border border-primary-100 px-3 py-1 rounded-full font-medium capitalize">{s}</span>
             ))}
           </div>
         </div>
@@ -165,7 +165,7 @@ export default async function KitchenDetailPage({ params }) {
               <div className="space-y-2">
                 {features.slice(0, 4).map((f, i) => (
                   <div key={i} className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 bg-sky-500 rounded-full flex-shrink-0" />
+                    <div className="w-1.5 h-1.5 bg-primary-500 rounded-full flex-shrink-0" />
                     <span className="text-xs text-gray-700">{f.name}</span>
                   </div>
                 ))}
@@ -211,11 +211,11 @@ export default async function KitchenDetailPage({ params }) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <div className="bg-white border-b border-gray-100">
         <div className="container-custom py-3 flex items-center gap-2 text-xs text-gray-500">
-          <Link href="/" className="hover:text-sky-600 transition-colors">Home</Link>
+          <Link href="/" className="hover:text-primary-600 transition-colors">Home</Link>
           <span>/</span>
-          <Link href="/interior-design" className="hover:text-sky-600 transition-colors">Interior Design</Link>
+          <Link href="/interior-design" className="hover:text-primary-600 transition-colors">Interior Design</Link>
           <span>/</span>
-          <Link href="/interior-design/kitchen" className="hover:text-sky-600 transition-colors">Kitchen</Link>
+          <Link href="/interior-design/kitchen" className="hover:text-primary-600 transition-colors">Kitchen</Link>
           <span>/</span>
           <span className="text-gray-900 font-medium truncate max-w-[180px]">{product.name}</span>
         </div>

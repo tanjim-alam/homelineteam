@@ -183,7 +183,7 @@ export default function BookingModal({ isOpen, onClose, product, sourcePage }) {
               </div>
 
               {error && (
-                <p className="text-sky-600 text-sm font-medium bg-sky-50 border border-sky-200 rounded-xl px-3 py-2">
+                <p className="text-primary-600 text-sm font-medium bg-primary-50 border border-primary-200 rounded-xl px-3 py-2">
                   {error}
                 </p>
               )}

@@ -131,7 +131,7 @@ export default function ProductCard({ product, viewMode = 'grid' }) {
       >
         {/* SALE Badge */}
         {hasOffers() && (
-          <span className="absolute top-2 left-2 bg-sky-500 text-white text-xs font-semibold px-2 py-1 rounded z-10">
+          <span className="absolute top-2 left-2 bg-primary-500 text-white text-xs font-semibold px-2 py-1 rounded z-10">
             SALE
           </span>
         )}
@@ -154,7 +154,7 @@ export default function ProductCard({ product, viewMode = 'grid' }) {
                   handleWishlistToggle();
                 }}
                 className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors cursor-pointer shadow-lg ${isInWishlist(product._id)
-                    ? 'bg-sky-500 text-white hover:bg-sky-600'
+                    ? 'bg-primary-500 text-white hover:bg-primary-600'
                     : 'bg-white text-gray-700 hover:bg-gray-100'
                   }`}
                 title={isInWishlist(product._id) ? 'Remove from wishlist' : 'Add to wishlist'}
@@ -208,7 +208,7 @@ export default function ProductCard({ product, viewMode = 'grid' }) {
 
             {/* Discount - Always show if available or calculated */}
             {calculatedDiscount && (
-              <span className="text-sm text-sky-600 font-medium">
+              <span className="text-sm text-primary-600 font-medium">
                 {calculatedDiscount}% OFF
               </span>
             )}
@@ -235,13 +235,13 @@ export default function ProductCard({ product, viewMode = 'grid' }) {
     >
       {/* SALE Badge - Show only when there's an actual discount */}
       {hasOffers() && (
-        <span className="absolute top-2 left-2 bg-sky-500 text-white text-xs font-semibold px-2 py-1 rounded z-10">
+        <span className="absolute top-2 left-2 bg-primary-500 text-white text-xs font-semibold px-2 py-1 rounded z-10">
           SALE
         </span>
       )}
 
       {/* Image - Clickable Link */}
-      <Link href={`/products/${product?.slug || product?._id}`} className="block relative w-full h-64">
+      <Link href={`/products/${product?.slug || product?._id}`} className="block relative w-full h-44 sm:h-56 md:h-64">
         <img
           src={product?.mainImages[0]}
           alt={product?.name}
@@ -258,7 +258,7 @@ export default function ProductCard({ product, viewMode = 'grid' }) {
                 handleWishlistToggle();
               }}
               className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors cursor-pointer shadow-lg ${isInWishlist(product._id)
-                  ? 'bg-sky-500 text-white hover:bg-sky-600'
+                  ? 'bg-primary-500 text-white hover:bg-primary-600'
                   : 'bg-white text-gray-700 hover:bg-gray-100'
                 }`}
               title={isInWishlist(product._id) ? 'Remove from wishlist' : 'Add to wishlist'}
@@ -286,7 +286,7 @@ export default function ProductCard({ product, viewMode = 'grid' }) {
       </Link>
 
       {/* Product Details - Clickable Link */}
-      <Link href={`/products/${product?.slug || product?._id}`} className="block p-3 hover:bg-gray-50 transition-colors">
+      <Link href={`/products/${product?.slug || product?._id}`} className="block p-2 sm:p-3 hover:bg-gray-50 transition-colors">
         <h3 className="text-sm font-medium text-gray-800 line-clamp-2 hover:text-primary-600 transition-colors">
           {product?.name}
         </h3>
@@ -305,7 +305,7 @@ export default function ProductCard({ product, viewMode = 'grid' }) {
 
           {/* Discount - Always show if available or calculated */}
           {calculatedDiscount && (
-            <span className="text-sm text-sky-600 font-medium">
+            <span className="text-sm text-primary-600 font-medium">
               {calculatedDiscount}% OFF
             </span>
           )}

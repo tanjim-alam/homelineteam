@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import {
   ChevronRight, Star, Heart, ShoppingCart, Truck, Shield,
-  RotateCcw, Package, Minus, Plus, MessageCircle, BookOpen
+  RotateCcw, Package, Minus, Plus, MessageCircle, BookOpen, Phone
 } from 'lucide-react';
 import api from '@/services/api';
 import { CartContext } from '@/contexts/CartContext';
@@ -220,7 +220,7 @@ export default function ProductDetailClient({ slug }) {
   const handleWhatsAppOrder = () => {
     if (!product) return;
 
-    const whatsappNumber = '919611925494';
+    const whatsappNumber = product.categoryId?.whatsappNumber || '919611925494';
     const productName = product.name;
     const productPrice = getCurrentPrice();
     const selectedVariantText = selectedVariant ? `\n*Variant:* ${selectedVariant.name}` : '';
@@ -481,7 +481,7 @@ export default function ProductDetailClient({ slug }) {
                   {discount > 0 && (
                     <>
                       <span className="text-lg sm:text-xl text-gray-500 line-through">₹{currentMRP.toFixed(2)}</span>
-                      <span className="bg-sky-100 text-sky-600 px-2 py-1 rounded-full text-xs sm:text-sm font-bold">
+                      <span className="bg-primary-100 text-primary-600 px-2 py-1 rounded-full text-xs sm:text-sm font-bold">
                         -{discount}% OFF
                       </span>
                     </>
@@ -679,7 +679,7 @@ export default function ProductDetailClient({ slug }) {
                           )}
 
                           {field.required && !value && (
-                            <p className="text-xs text-sky-600">This field is required for custom configuration.</p>
+                            <p className="text-xs text-primary-600">This field is required for custom configuration.</p>
                           )}
                         </div>
                       );
@@ -822,21 +822,36 @@ export default function ProductDetailClient({ slug }) {
                   </button>
                 </div>
 
-                {/* WhatsApp Order Button */}
-                <button
-                  onClick={handleWhatsAppOrder}
-                  aria-label="Order via WhatsApp"
-                  className="group relative w-full py-3 px-6 sm:px-8 rounded-2xl font-bold text-base sm:text-lg transition-all duration-300 flex items-center justify-center gap-3 bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 hover:shadow-2xl transform hover:scale-[1.02] active:scale-[0.98] overflow-hidden cursor-pointer"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-green-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" aria-hidden="true" />
-                  <div className="relative z-10 flex items-center gap-3">
-                    <div className="p-2 bg-white/20 rounded-full group-hover:bg-white/30 transition-colors duration-300">
-                      <MessageCircle className="w-4 h-4" aria-hidden="true" />
+                {/* WhatsApp + Call Buttons */}
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={handleWhatsAppOrder}
+                    aria-label="Order via WhatsApp"
+                    className="group relative py-3 px-4 rounded-2xl font-bold text-sm sm:text-base transition-all duration-300 flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] overflow-hidden cursor-pointer"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-green-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" aria-hidden="true" />
+                    <div className="relative z-10 flex items-center gap-2">
+                      <div className="p-1.5 bg-white/20 rounded-full group-hover:bg-white/30 transition-colors duration-300">
+                        <MessageCircle className="w-4 h-4" aria-hidden="true" />
+                      </div>
+                      <span className="font-semibold">WhatsApp</span>
                     </div>
-                    <span className="font-semibold">Order via WhatsApp</span>
-                  </div>
-                  <div className="absolute inset-0 -top-1 -left-1 w-0 h-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:w-full transition-all duration-700 ease-out" aria-hidden="true" />
-                </button>
+                  </button>
+
+                  <a
+                    href={`tel:${product?.categoryId?.phoneNumber || '+919611925494'}`}
+                    aria-label="Call us"
+                    className="group relative py-3 px-4 rounded-2xl font-bold text-sm sm:text-base transition-all duration-300 flex items-center justify-center gap-2 bg-gradient-to-r from-primary-600 to-primary-700 text-white hover:from-primary-700 hover:to-primary-800 hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] overflow-hidden cursor-pointer"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary-500 to-primary-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" aria-hidden="true" />
+                    <div className="relative z-10 flex items-center gap-2">
+                      <div className="p-1.5 bg-white/20 rounded-full group-hover:bg-white/30 transition-colors duration-300">
+                        <Phone className="w-4 h-4" aria-hidden="true" />
+                      </div>
+                      <span className="font-semibold">Call Us</span>
+                    </div>
+                  </a>
+                </div>
               </div>
 
               {/* Trust badges */}
@@ -1080,7 +1095,7 @@ export default function ProductDetailClient({ slug }) {
         <section aria-labelledby="related-heading" className="bg-white border-t border-gray-100">
           <div className="container-custom py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
             <h2 id="related-heading" className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Related Products</h2>
-            <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-3 sm:gap-6 grid-cols-2 sm:grid-cols-2 lg:grid-cols-4">
               {related.map((p) => (
                 <article key={p._id} className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow">
                   <Link href={`/products/${p.slug}`} className="block">

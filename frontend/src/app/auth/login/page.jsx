@@ -95,9 +95,9 @@ export default function LoginPage() {
                     <div className="bg-white rounded-2xl shadow-lg shadow-gray-200/60 border border-gray-100 p-8">
 
                         {error && (
-                            <div role="alert" className="flex items-start gap-3 bg-sky-50 border border-sky-200 rounded-xl p-4 mb-6">
-                                <AlertCircle className="w-5 h-5 text-sky-500 flex-shrink-0 mt-0.5" aria-hidden="true" />
-                                <p className="text-sky-700 text-sm font-medium">{error}</p>
+                            <div role="alert" className="flex items-start gap-3 bg-primary-50 border border-primary-200 rounded-xl p-4 mb-6">
+                                <AlertCircle className="w-5 h-5 text-primary-500 flex-shrink-0 mt-0.5" aria-hidden="true" />
+                                <p className="text-primary-700 text-sm font-medium">{error}</p>
                             </div>
                         )}
 

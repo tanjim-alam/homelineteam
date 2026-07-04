@@ -53,11 +53,11 @@ function ColoredCard({ s }) {
   return (
     <Link
       href={s.href}
-      className="group relative bg-gradient-to-br from-sky-500 via-sky-600 to-rose-700 rounded-2xl overflow-hidden shadow-lg shadow-sky-500/25 hover:shadow-xl hover:shadow-sky-500/35 hover:-translate-y-1.5 transition-all duration-300 flex flex-col"
+      className="group relative bg-gradient-to-br from-primary-500 via-primary-600 to-rose-700 rounded-2xl overflow-hidden shadow-lg shadow-primary-500/25 hover:shadow-xl hover:shadow-primary-500/35 hover:-translate-y-1.5 transition-all duration-300 flex flex-col"
     >
       {/* Decorative blobs */}
       <div className="absolute -top-8 -right-8 w-32 h-32 bg-rose-400/30 rounded-full blur-2xl pointer-events-none" />
-      <div className="absolute -bottom-6 -left-6 w-28 h-28 bg-sky-400/20 rounded-full blur-2xl pointer-events-none" />
+      <div className="absolute -bottom-6 -left-6 w-28 h-28 bg-primary-400/20 rounded-full blur-2xl pointer-events-none" />
 
       {/* Dot pattern overlay */}
       <div
@@ -102,7 +102,7 @@ function ColoredCard({ s }) {
         <div className="flex items-center justify-between pt-4 border-t border-white/20">
           <span className="text-white text-xs font-bold tracking-wide">Explore Service</span>
           <span className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center group-hover:bg-white transition-colors duration-300">
-            <ArrowRight className="w-4 h-4 text-white group-hover:text-sky-600 transition-colors group-hover:translate-x-0.5" />
+            <ArrowRight className="w-4 h-4 text-white group-hover:text-primary-600 transition-colors group-hover:translate-x-0.5" />
           </span>
         </div>
       </div>
@@ -116,24 +116,24 @@ function PlainCard({ s }) {
   return (
     <Link
       href={s.href}
-      className="group relative bg-white border-2 border-sky-500 hover:border-sky-600 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg hover:shadow-sky-100 hover:-translate-y-1.5 transition-all duration-300 flex flex-col"
+      className="group relative bg-white border-2 border-primary-500 hover:border-primary-600 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg hover:shadow-primary-100 hover:-translate-y-1.5 transition-all duration-300 flex flex-col"
     >
       {/* Subtle red tint on hover fill */}
-      <div className="absolute inset-0 bg-sky-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+      <div className="absolute inset-0 bg-primary-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
       <div className="relative z-10 p-5 sm:p-6 flex flex-col flex-1">
         {/* Icon + badge */}
         <div className="flex items-start justify-between mb-5">
-          <div className="w-12 h-12 bg-sky-50 group-hover:bg-sky-100 rounded-xl flex items-center justify-center transition-colors">
-            <Icon className="w-6 h-6 text-sky-600" />
+          <div className="w-12 h-12 bg-primary-50 group-hover:bg-primary-100 rounded-xl flex items-center justify-center transition-colors">
+            <Icon className="w-6 h-6 text-primary-600" />
           </div>
-          <span className="text-[10px] font-bold uppercase tracking-widest text-sky-500 bg-sky-50 border border-sky-200 px-2 py-1 rounded-full">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-primary-500 bg-primary-50 border border-primary-200 px-2 py-1 rounded-full">
             {s.label}
           </span>
         </div>
 
         {/* Title */}
-        <h3 className="text-lg font-extrabold text-gray-900 group-hover:text-sky-700 leading-snug mb-2 transition-colors">
+        <h3 className="text-lg font-extrabold text-gray-900 group-hover:text-primary-700 leading-snug mb-2 transition-colors">
           {s.title}
         </h3>
 
@@ -145,7 +145,7 @@ function PlainCard({ s }) {
         {/* Features */}
         <div className="flex flex-wrap gap-1.5 mb-5">
           {s.features.map(f => (
-            <span key={f} className="flex items-center gap-1 bg-sky-50 border border-sky-200 text-sky-700 text-[11px] font-semibold px-2.5 py-1 rounded-full">
+            <span key={f} className="flex items-center gap-1 bg-primary-50 border border-primary-200 text-primary-700 text-[11px] font-semibold px-2.5 py-1 rounded-full">
               <CheckCircle className="w-2.5 h-2.5" />
               {f}
             </span>
@@ -153,10 +153,10 @@ function PlainCard({ s }) {
         </div>
 
         {/* CTA */}
-        <div className="flex items-center justify-between pt-4 border-t border-sky-100">
-          <span className="text-sky-600 text-xs font-bold tracking-wide">Explore Service</span>
-          <span className="w-8 h-8 bg-sky-50 group-hover:bg-sky-600 rounded-full flex items-center justify-center transition-colors duration-300 border border-sky-200 group-hover:border-sky-600">
-            <ArrowRight className="w-4 h-4 text-sky-600 group-hover:text-white transition-colors group-hover:translate-x-0.5" />
+        <div className="flex items-center justify-between pt-4 border-t border-primary-100">
+          <span className="text-primary-600 text-xs font-bold tracking-wide">Explore Service</span>
+          <span className="w-8 h-8 bg-primary-50 group-hover:bg-primary-600 rounded-full flex items-center justify-center transition-colors duration-300 border border-primary-200 group-hover:border-primary-600">
+            <ArrowRight className="w-4 h-4 text-primary-600 group-hover:text-white transition-colors group-hover:translate-x-0.5" />
           </span>
         </div>
       </div>
@@ -172,7 +172,7 @@ export default function InteriorDesignSection() {
 
         {/* Header */}
         <div className="text-center mb-10">
-          <span className="inline-flex items-center gap-1.5 bg-sky-50 border border-sky-100 text-sky-600 text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-full mb-4">
+          <span className="inline-flex items-center gap-1.5 bg-primary-50 border border-primary-100 text-primary-600 text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-full mb-4">
             <Layers className="w-3.5 h-3.5" />
             Interior Design
           </span>
@@ -207,7 +207,7 @@ export default function InteriorDesignSection() {
 
           <Link
             href="/interior-design"
-            className="flex-shrink-0 inline-flex items-center gap-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-colors"
+            className="flex-shrink-0 inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-colors"
           >
             View All Services <ArrowRight className="w-4 h-4" />
           </Link>

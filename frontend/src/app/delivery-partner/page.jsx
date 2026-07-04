@@ -86,7 +86,7 @@ export default function DeliveryPartnerDashboard() {
             'in_transit': 'bg-purple-100 text-purple-800',
             'out_for_delivery': 'bg-orange-100 text-orange-800',
             'delivered': 'bg-green-100 text-green-800',
-            'failed': 'bg-sky-100 text-sky-800',
+            'failed': 'bg-primary-100 text-primary-800',
             'returned': 'bg-gray-100 text-gray-800'
         };
         return colors[status] || 'bg-gray-100 text-gray-800';
@@ -157,7 +157,7 @@ export default function DeliveryPartnerDashboard() {
                         </div>
 
                         {error && (
-                            <div className="bg-sky-50 border border-sky-200 text-sky-600 px-4 py-3 rounded-md">
+                            <div className="bg-primary-50 border border-primary-200 text-primary-600 px-4 py-3 rounded-md">
                                 {error}
                             </div>
                         )}
@@ -245,7 +245,7 @@ export default function DeliveryPartnerDashboard() {
 
                     <div className="bg-white rounded-lg shadow p-6">
                         <div className="flex items-center">
-                            <AlertCircle className="h-8 w-8 text-sky-600" />
+                            <AlertCircle className="h-8 w-8 text-primary-600" />
                             <div className="ml-4">
                                 <p className="text-sm font-medium text-gray-600">Failed</p>
                                 <p className="text-2xl font-semibold text-gray-900">

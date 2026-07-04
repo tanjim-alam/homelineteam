@@ -69,7 +69,7 @@ export default async function FeaturedProducts() {
             <p className="text-gray-500 text-base sm:text-lg">No featured products available at the moment.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4 mb-8 sm:mb-12">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4 mb-8 sm:mb-12">
             {products.map((product) => (
               <ProductCard key={product._id} product={product} />
             ))}

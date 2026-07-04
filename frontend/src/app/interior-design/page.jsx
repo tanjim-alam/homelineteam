@@ -124,13 +124,13 @@ export default function InteriorDesignPage() {
 
             {/* Left: 3 cols */}
             <div className="lg:col-span-3">
-              <span className="inline-flex items-center gap-1.5 bg-sky-600/20 border border-sky-500/30 text-sky-300 text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-full mb-6">
+              <span className="inline-flex items-center gap-1.5 bg-primary-600/20 border border-primary-500/30 text-primary-300 text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-full mb-6">
                 <Sparkles className="w-3.5 h-3.5" /> Premium Interior Design
               </span>
 
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-[1.1] mb-6">
                 Design your dream{' '}
-                <span className="bg-gradient-to-r from-sky-400 to-rose-400 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-primary-400 to-rose-400 bg-clip-text text-transparent">
                   home interior
                 </span>{' '}
                 with us.
@@ -144,7 +144,7 @@ export default function InteriorDesignPage() {
               <div className="flex flex-col sm:flex-row gap-3">
                 <Link
                   href="/contact"
-                  className="inline-flex items-center justify-center gap-2 bg-sky-600 hover:bg-sky-700 text-white font-bold px-7 py-3.5 rounded-xl transition-colors"
+                  className="inline-flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-bold px-7 py-3.5 rounded-xl transition-colors"
                 >
                   Get Free Consultation <ArrowRight className="w-4 h-4" />
                 </Link>
@@ -163,13 +163,13 @@ export default function InteriorDesignPage() {
                 <Link
                   key={href}
                   href={href}
-                  className="group bg-white/5 hover:bg-white/10 border border-white/10 hover:border-sky-500/40 rounded-2xl p-5 flex flex-col gap-3 transition-all duration-200"
+                  className="group bg-white/5 hover:bg-white/10 border border-white/10 hover:border-primary-500/40 rounded-2xl p-5 flex flex-col gap-3 transition-all duration-200"
                 >
                   <div className="flex items-start justify-between">
-                    <div className="w-9 h-9 bg-sky-600/20 group-hover:bg-sky-600 rounded-lg flex items-center justify-center transition-colors duration-200">
-                      <Icon className="w-4.5 h-4.5 text-sky-300 group-hover:text-white transition-colors" />
+                    <div className="w-9 h-9 bg-primary-600/20 group-hover:bg-primary-600 rounded-lg flex items-center justify-center transition-colors duration-200">
+                      <Icon className="w-4.5 h-4.5 text-primary-300 group-hover:text-white transition-colors" />
                     </div>
-                    <ArrowUpRight className="w-4 h-4 text-gray-600 group-hover:text-sky-400 transition-colors" />
+                    <ArrowUpRight className="w-4 h-4 text-gray-600 group-hover:text-primary-400 transition-colors" />
                   </div>
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-0.5">{subtitle}</p>
@@ -183,13 +183,13 @@ export default function InteriorDesignPage() {
       </div>
 
       {/* ── Stats band ── */}
-      <div className="bg-sky-600">
+      <div className="bg-primary-600">
         <div className="container-custom py-6">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-0 sm:divide-x divide-sky-500">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-0 sm:divide-x divide-primary-500">
             {stats.map(({ num, label }) => (
               <div key={label} className="text-center sm:px-6">
                 <div className="text-2xl sm:text-3xl font-extrabold text-white">{num}</div>
-                <div className="text-xs text-sky-200 font-medium mt-0.5">{label}</div>
+                <div className="text-xs text-primary-200 font-medium mt-0.5">{label}</div>
               </div>
             ))}
           </div>
@@ -201,7 +201,7 @@ export default function InteriorDesignPage() {
         <div className="container-custom py-3 flex flex-wrap items-center justify-center gap-x-8 gap-y-2">
           {['Free Consultation', 'Premium Materials', 'On-Time Delivery', 'Expert Designers', '5-Year Warranty'].map((f) => (
             <span key={f} className="flex items-center gap-1.5 text-xs text-gray-600 font-medium">
-              <CheckCircle className="w-3.5 h-3.5 text-sky-500 flex-shrink-0" /> {f}
+              <CheckCircle className="w-3.5 h-3.5 text-primary-500 flex-shrink-0" /> {f}
             </span>
           ))}
         </div>
@@ -212,7 +212,7 @@ export default function InteriorDesignPage() {
         <div className="container-custom">
           <div className="flex items-end justify-between mb-10 pb-6 border-b border-gray-100">
             <div>
-              <span className="text-xs font-bold uppercase tracking-widest text-sky-600">What we offer</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-primary-600">What we offer</span>
               <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mt-2">Our Services</h2>
             </div>
             <span className="text-xs text-gray-400 hidden sm:block">4 specialisations</span>
@@ -226,7 +226,7 @@ export default function InteriorDesignPage() {
                 className="group flex items-start gap-6 sm:gap-10 py-8 sm:py-10 -mx-2 px-2 rounded-xl hover:bg-gray-50 transition-colors duration-200"
               >
                 {/* Big faded number */}
-                <span className="text-5xl sm:text-7xl font-extrabold text-gray-100 group-hover:text-sky-100 leading-none flex-shrink-0 select-none transition-colors pt-1 hidden sm:block">
+                <span className="text-5xl sm:text-7xl font-extrabold text-gray-100 group-hover:text-primary-100 leading-none flex-shrink-0 select-none transition-colors pt-1 hidden sm:block">
                   {num}
                 </span>
 
@@ -234,12 +234,12 @@ export default function InteriorDesignPage() {
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="w-8 h-8 bg-sky-50 group-hover:bg-sky-600 rounded-lg flex items-center justify-center transition-colors duration-300 flex-shrink-0">
-                          <Icon className="w-4 h-4 text-sky-600 group-hover:text-white transition-colors duration-300" />
+                        <div className="w-8 h-8 bg-primary-50 group-hover:bg-primary-600 rounded-lg flex items-center justify-center transition-colors duration-300 flex-shrink-0">
+                          <Icon className="w-4 h-4 text-primary-600 group-hover:text-white transition-colors duration-300" />
                         </div>
-                        <span className="text-[11px] font-bold uppercase tracking-widest text-sky-500">{subtitle}</span>
+                        <span className="text-[11px] font-bold uppercase tracking-widest text-primary-500">{subtitle}</span>
                       </div>
-                      <h3 className="text-xl sm:text-2xl font-extrabold text-gray-900 mb-2 group-hover:text-sky-700 transition-colors">
+                      <h3 className="text-xl sm:text-2xl font-extrabold text-gray-900 mb-2 group-hover:text-primary-700 transition-colors">
                         {title}
                       </h3>
                       <p className="text-gray-500 text-sm leading-relaxed mb-4 max-w-xl">{description}</p>
@@ -253,7 +253,7 @@ export default function InteriorDesignPage() {
                     </div>
 
                     {/* Arrow button */}
-                    <div className="w-10 h-10 bg-gray-100 group-hover:bg-sky-600 rounded-full flex items-center justify-center flex-shrink-0 transition-colors duration-300 mt-1">
+                    <div className="w-10 h-10 bg-gray-100 group-hover:bg-primary-600 rounded-full flex items-center justify-center flex-shrink-0 transition-colors duration-300 mt-1">
                       <ArrowRight className="w-4 h-4 text-gray-500 group-hover:text-white transition-colors" />
                     </div>
                   </div>
@@ -268,7 +268,7 @@ export default function InteriorDesignPage() {
       <div className="bg-gray-50 py-16 sm:py-20 border-t border-gray-100">
         <div className="container-custom">
           <div className="text-center mb-12">
-            <span className="text-xs font-bold uppercase tracking-widest text-sky-600">Our Process</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-primary-600">Our Process</span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mt-2 mb-3">How It Works</h2>
             <p className="text-gray-500 text-sm max-w-md mx-auto">Simple, transparent, and stress-free from first call to final handover.</p>
           </div>
@@ -276,8 +276,8 @@ export default function InteriorDesignPage() {
           <div className="relative grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Connecting dashes (desktop) */}
             <div className="hidden md:flex absolute top-8 left-[calc(16.666%+1.5rem)] right-[calc(16.666%+1.5rem)] items-center pointer-events-none">
-              <div className="flex-1 border-t-2 border-dashed border-sky-200" />
-              <div className="flex-1 border-t-2 border-dashed border-sky-200" />
+              <div className="flex-1 border-t-2 border-dashed border-primary-200" />
+              <div className="flex-1 border-t-2 border-dashed border-primary-200" />
             </div>
 
             {process.map(({ step, icon: Icon, title, desc }, i) => (
@@ -286,7 +286,7 @@ export default function InteriorDesignPage() {
                   <div className="w-16 h-16 bg-gray-950 rounded-2xl flex items-center justify-center">
                     <Icon className="w-7 h-7 text-white" />
                   </div>
-                  <span className="absolute -top-2 -right-2 w-6 h-6 bg-sky-600 rounded-full text-white text-[10px] font-extrabold flex items-center justify-center">
+                  <span className="absolute -top-2 -right-2 w-6 h-6 bg-primary-600 rounded-full text-white text-[10px] font-extrabold flex items-center justify-center">
                     {i + 1}
                   </span>
                 </div>
@@ -304,7 +304,7 @@ export default function InteriorDesignPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 lg:gap-16">
             {/* Left panel */}
             <div className="lg:col-span-1">
-              <span className="text-xs font-bold uppercase tracking-widest text-sky-400">Why Us</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-primary-400">Why Us</span>
               <h2 className="text-3xl font-extrabold text-white mt-3 mb-4 leading-tight">
                 Why thousands choose HomelineTeam
               </h2>
@@ -313,7 +313,7 @@ export default function InteriorDesignPage() {
               </p>
               <Link
                 href="/contact"
-                className="inline-flex items-center gap-2 bg-sky-600 hover:bg-sky-700 text-white font-bold px-6 py-3 rounded-xl transition-colors text-sm"
+                className="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-bold px-6 py-3 rounded-xl transition-colors text-sm"
               >
                 Talk to an Expert <ArrowRight className="w-4 h-4" />
               </Link>
@@ -323,8 +323,8 @@ export default function InteriorDesignPage() {
             <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
               {whyUs.map(({ icon: Icon, title, desc }) => (
                 <div key={title} className="flex items-start gap-4 bg-white/5 border border-white/10 rounded-xl p-5">
-                  <div className="w-10 h-10 bg-sky-600/20 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Icon className="w-5 h-5 text-sky-400" />
+                  <div className="w-10 h-10 bg-primary-600/20 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Icon className="w-5 h-5 text-primary-400" />
                   </div>
                   <div>
                     <h4 className="text-sm font-bold text-white mb-1">{title}</h4>
@@ -343,7 +343,7 @@ export default function InteriorDesignPage() {
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-10 lg:gap-16 items-start">
             {/* Left: text */}
             <div className="lg:col-span-2">
-              <span className="text-xs font-bold uppercase tracking-widest text-sky-600">Cost Estimator</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-primary-600">Cost Estimator</span>
               <h2 className="text-3xl font-extrabold text-gray-900 mt-2 mb-4 leading-tight">
                 Get an instant cost estimate
               </h2>
@@ -368,7 +368,7 @@ export default function InteriorDesignPage() {
       </div>
 
       {/* ── CTA Bnner ── */}
-      <div className="bg-gradient-to-r from-sky-600 to-rose-700 py-16">
+      <div className="bg-gradient-to-r from-primary-600 to-rose-700 py-16">
         <div className="container-custom text-center">
           <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-4">Ready to transform your home?</h2>
           <p className="text-white/80 text-base sm:text-lg mb-8 max-w-xl mx-auto">
@@ -377,7 +377,7 @@ export default function InteriorDesignPage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/contact"
-              className="inline-flex items-center justify-center gap-2 bg-white text-sky-600 hover:bg-sky-50 font-bold px-8 py-4 rounded-xl transition-colors"
+              className="inline-flex items-center justify-center gap-2 bg-white text-primary-600 hover:bg-primary-50 font-bold px-8 py-4 rounded-xl transition-colors"
             >
               Book Free Consultation <ArrowRight className="w-5 h-5" />
             </Link>

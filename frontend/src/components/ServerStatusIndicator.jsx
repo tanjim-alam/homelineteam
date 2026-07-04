@@ -37,7 +37,7 @@ const ServerStatusIndicator = () => {
     <div className={`fixed bottom-4 right-4 px-3 py-2 rounded-lg shadow-lg text-sm flex items-center gap-2 z-50 ${
       isOnline 
         ? 'bg-green-100 text-green-700' 
-        : 'bg-sky-100 text-sky-700'
+        : 'bg-primary-100 text-primary-700'
     }`}>
       {isOnline ? (
         <>

@@ -434,7 +434,7 @@ export default function CheckoutPage() {
           placeholder="House/Flat, Street, Area" className={inputCls(true)} required />
       </Field>
       {locationStatus === 'denied' && (
-        <p className="text-xs text-sky-500 -mt-2">{locationError || 'Location permission denied — enter your address manually.'}</p>
+        <p className="text-xs text-primary-500 -mt-2">{locationError || 'Location permission denied — enter your address manually.'}</p>
       )}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Field label="City" required>
