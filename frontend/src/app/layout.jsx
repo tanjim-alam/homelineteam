@@ -1,4 +1,5 @@
 import './globals.css';
+import { headers } from 'next/headers';
 import Navbar from '@/components/Navbar';
 import ProductNavbar from '@/components/ProductNavbar';
 import Footer from '@/components/Footer';
@@ -149,7 +150,11 @@ const websiteJsonLd = {
 
 /* ── Root layout ────────────────────────────────────────────────────────────── */
 export default async function RootLayout({ children }) {
-  const categories = await fetchCategories();
+  const headersList = await headers();
+  const pathname = headersList.get('x-pathname') || '';
+  const isLandingPage = pathname.startsWith('/sales/');
+
+  const categories = isLandingPage ? [] : await fetchCategories();
 
   return (
     <html lang="en">
@@ -197,15 +202,17 @@ export default async function RootLayout({ children }) {
             <LocationProvider>
               <CartProvider>
                 <SubmissionProvider>
-                  <div className="sticky top-0 z-40">
-                    <Navbar categories={categories} />
-                    <ProductNavbar categories={categories} />
-                  </div>
-                  <main className="pb-20 lg:pb-0">{children}</main>
-                  <Footer />
-                  <BottomNavbar />
-                  <WhatsAppButton/>
-                  <CartDrawer />
+                  {!isLandingPage && (
+                    <div className="sticky top-0 z-40">
+                      <Navbar categories={categories} />
+                      <ProductNavbar categories={categories} />
+                    </div>
+                  )}
+                  <main className={isLandingPage ? '' : 'pb-20 lg:pb-0'}>{children}</main>
+                  {!isLandingPage && <Footer />}
+                  {!isLandingPage && <BottomNavbar />}
+                  {!isLandingPage && <WhatsAppButton />}
+                  {!isLandingPage && <CartDrawer />}
                 </SubmissionProvider>
               </CartProvider>
             </LocationProvider>

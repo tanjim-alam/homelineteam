@@ -103,11 +103,7 @@ export default async function CategorySection() {
             </Link>
           </div>
 
-          {/* Responsive grid:
-              sm  (640–767px)  → 3 columns
-              md  (768–1023px) → 4 columns
-              lg  (1024–1279px)→ 5 columns
-              xl  (1280px+)    → 6 columns                    */}
+          {/* Responsive grid */}
           <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
             {categories.map((cat) => (
               <Link
@@ -125,15 +121,12 @@ export default async function CategorySection() {
                     sizes="(max-width: 640px) 33vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 16vw"
                     loading="lazy"
                   />
-                  {/* Gradient overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
-                  {/* Name */}
                   <div className="absolute bottom-0 inset-x-0 px-1.5 sm:px-2 pb-2 sm:pb-2.5">
                     <h3 className="text-white font-bold text-[10px] sm:text-xs md:text-sm leading-snug line-clamp-2 drop-shadow-sm">
                       {cat.name}
                     </h3>
                   </div>
-                  {/* Hover shine */}
                   <div className="absolute inset-0 bg-white/0 group-hover:bg-white/5 transition-colors duration-300 rounded-xl sm:rounded-2xl" />
                 </div>
               </Link>
