@@ -1,10 +1,12 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { Phone, MessageCircle, Star, Truck, ShieldCheck, Clock, BadgeCheck, Users } from 'lucide-react'
+import { Star, Truck, ShieldCheck, BadgeCheck, Users, Clock, MessageCircle, Phone } from 'lucide-react'
 import HomeProductSection from '@/components/HomeProductSection'
 import CurtainsHero from '@/components/CurtainsHero'
 import LandingBanners from './LandingBanners'
 import LeadModal from './LeadModal'
+import CustomCurtainsButton from './CustomCurtainsButton'
+import LandingHeader from './LandingHeader'
 
 const PHONE  = '+919611925494'
 const WA_NUM = '919611925494'
@@ -23,45 +25,7 @@ export default function CurtainsLandingPage() {
     <div className="min-h-screen bg-gray-50">
 
       {/* ── Header ────────────────────────────────────────────────────── */}
-      <header className="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
-        <div className="container-custom">
-          <div className="flex items-center justify-between py-3">
-
-            {/* Logo — same size as main navbar */}
-            <Link href="/" className="flex-shrink-0">
-              <Image src="/logo.jpeg" alt="HomelineTeam" width={140} height={48} priority />
-            </Link>
-
-            {/* Centre tagline — desktop only */}
-            <p className="hidden md:block text-sm text-gray-500 font-medium">
-              Premium Curtains · Free Installation · Pan India Delivery
-            </p>
-
-            {/* CTA buttons */}
-            <div className="flex items-center gap-2 sm:gap-3">
-              <a
-                href={`https://wa.me/${WA_NUM}?text=${WA_MSG}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 bg-green-500 hover:bg-green-600 text-white text-xs sm:text-sm font-bold px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl shadow-sm transition-colors"
-              >
-                <MessageCircle className="w-4 h-4" />
-                <span className="hidden sm:inline">WhatsApp</span>
-                <span className="sm:hidden">Chat</span>
-              </a>
-              <a
-                href={`tel:${PHONE}`}
-                className="flex items-center gap-1.5 bg-primary-600 hover:bg-primary-700 text-white text-xs sm:text-sm font-bold px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl shadow-sm transition-colors"
-              >
-                <Phone className="w-4 h-4" />
-                <span className="hidden sm:inline">{PHONE}</span>
-                <span className="sm:hidden">Call</span>
-              </a>
-            </div>
-
-          </div>
-        </div>
-      </header>
+      <LandingHeader />
 
       {/* ── Hero with auto-slide ───────────────────────────────────────── */}
       <CurtainsHero />
@@ -212,7 +176,9 @@ export default function CurtainsLandingPage() {
 
             {/* Brand column */}
             <div className="flex flex-col gap-4">
-              <Image src="/logo.jpeg" alt="HomelineTeam" width={130} height={44} className="brightness-0 invert opacity-90" />
+              <div className="bg-white rounded-lg p-1 w-fit">
+                <Image src="/logo.jpeg" alt="HomelineTeam" width={120} height={40} />
+              </div>
               <p className="text-gray-400 text-sm leading-relaxed max-w-xs">
                 Premium curtains, blinds & wallpapers delivered and installed across India.
               </p>
@@ -299,6 +265,9 @@ export default function CurtainsLandingPage() {
         </div>
 
       </footer>
+
+      {/* Floating custom curtains button */}
+      <CustomCurtainsButton />
 
       {/* Lead capture modal — triggered by any click on the page */}
       <LeadModal />

@@ -42,6 +42,17 @@
   }
 }
 
+button,
+a,
+[role="button"],
+label[for],
+select,
+input[type="submit"],
+input[type="button"],
+input[type="reset"] {
+  cursor: pointer;
+}
+
 body {
   background: var(--color-background);
   color: var(--color-foreground);

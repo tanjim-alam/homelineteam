@@ -1,5 +1,4 @@
-import Link from 'next/link'
-import { ArrowRight } from 'lucide-react'
+import { Tag } from 'lucide-react'
 import ProductsGrid from './ProductsGrid'
 
 const BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.homelineteam.com'
@@ -38,35 +37,30 @@ async function fetchProducts(slug, categoryId) {
   } catch { return [] }
 }
 
-export default async function HomeProductSection({
-  slug,
-  categoryId,
-  title,
-  viewAllHref,
-  bgFrom,
-  bgTo,
-  badgeFrom,
-  badgeTo,
-}) {
+export default async function HomeProductSection({ slug, categoryId, title, viewAllHref, bgFrom, bgTo, badgeFrom, badgeTo }) {
   const products = await fetchProducts(slug, categoryId)
   if (!products.length) return null
 
-  const href = viewAllHref || `/collections/${slug}`
-
   return (
-    <section
-      className="py-5 sm:py-6"
-      style={{ background: `linear-gradient(135deg, ${bgFrom} 0%, ${bgTo} 100%)` }}
-    >
+    <section className="bg-gray-50 py-8 sm:py-10">
       <div className="container-custom">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base sm:text-lg font-bold text-white">{title}</h2>
-          <Link
-            href={href}
-            className="flex items-center gap-1 text-white/80 hover:text-white text-xs sm:text-sm font-semibold transition-colors"
-          >
-            View All <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
+
+        {/* Section header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div
+              className="w-1 h-8 rounded-full"
+              style={{ background: `linear-gradient(180deg, ${bgFrom}, ${bgTo})` }}
+            />
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-0.5">Our Collection</p>
+              <h2 className="text-lg sm:text-2xl font-extrabold text-gray-900">{title}</h2>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 bg-green-50 border border-green-200 text-green-700 text-xs font-semibold px-3 py-1.5 rounded-full">
+            <Tag className="w-3 h-3" />
+            Best Prices
+          </div>
         </div>
 
         <ProductsGrid

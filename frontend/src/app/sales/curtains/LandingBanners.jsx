@@ -9,7 +9,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 // alt: image description
 // link: click destination — leave '' for no link
 const BANNERS = [
-  { src: '/hero-bg-1.jpg', alt: 'Curtains Installation', link: '' },
+  { src: '/curtains-hero.png', alt: 'Curtains Installation', link: '' },
   { src: '/hero-bg-2.jpg', alt: 'Blinds Installation',   link: '' },
   { src: '/hero-bg-3.jpg', alt: 'Wallpaper Installation', link: '' },
 ]
@@ -20,7 +20,7 @@ const openModal = () => window.dispatchEvent(new CustomEvent('openLeadModal'))
 function BannerCard({ banner, compact = false }) {
   return (
     <div
-      className="cursor-pointer"
+      className="cursor-pointer select-none"
       onClick={openModal}
     >
       <div
@@ -119,7 +119,7 @@ export default function LandingBanners() {
                 aria-label="Previous"
                 className="absolute left-2 top-1/2 -translate-y-1/2 z-10
                   w-8 h-8 bg-white/90 rounded-full shadow-md border border-gray-200
-                  flex items-center justify-center hover:bg-white transition-colors"
+                  flex items-center justify-center hover:bg-white transition-colors cursor-pointer"
               >
                 <ChevronLeft className="w-4 h-4 text-gray-700" />
               </button>
@@ -128,7 +128,7 @@ export default function LandingBanners() {
                 aria-label="Next"
                 className="absolute right-2 top-1/2 -translate-y-1/2 z-10
                   w-8 h-8 bg-white/90 rounded-full shadow-md border border-gray-200
-                  flex items-center justify-center hover:bg-white transition-colors"
+                  flex items-center justify-center hover:bg-white transition-colors cursor-pointer"
               >
                 <ChevronRight className="w-4 h-4 text-gray-700" />
               </button>
@@ -143,7 +143,7 @@ export default function LandingBanners() {
                 key={i}
                 onClick={() => setCurrent(i)}
                 aria-label={`Banner ${i + 1}`}
-                className={`rounded-full transition-all duration-300 ${
+                className={`rounded-full transition-all duration-300 cursor-pointer ${
                   i === current ? 'w-5 h-2 bg-primary-600' : 'w-2 h-2 bg-gray-300 hover:bg-gray-400'
                 }`}
               />

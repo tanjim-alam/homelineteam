@@ -1,17 +1,20 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { X, Phone, Mail, User, CheckCircle } from 'lucide-react'
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.homelineteam.com'
 
 export default function LeadModal() {
+  const router = useRouter()
   const [open, setOpen]           = useState(false)
   const [form, setForm]           = useState({ name: '', phone: '', email: '' })
   const [errors, setErrors]       = useState({})
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading]     = useState(false)
   const [serverError, setServerError] = useState('')
+  const [countdown, setCountdown] = useState(3)
 
   useEffect(() => {
     const handler = () => {
@@ -33,6 +36,22 @@ export default function LeadModal() {
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [open, close])
+
+  // After success: countdown 3→0 then redirect to home
+  useEffect(() => {
+    if (!submitted) return
+    setCountdown(3)
+    const tick = setInterval(() => {
+      setCountdown(c => {
+        if (c <= 1) {
+          clearInterval(tick)
+          router.push('/')
+        }
+        return c - 1
+      })
+    }, 1000)
+    return () => clearInterval(tick)
+  }, [submitted, router])
 
   const validate = () => {
     const e = {}
@@ -77,7 +96,7 @@ export default function LeadModal() {
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={close} />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm cursor-pointer" onClick={close} />
 
       {/* Modal */}
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
@@ -86,7 +105,7 @@ export default function LeadModal() {
         <div className="bg-[#0d1f3b] px-6 py-5">
           <button
             onClick={close}
-            className="absolute top-4 right-4 w-8 h-8 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors"
+            className="absolute top-4 right-4 w-8 h-8 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors cursor-pointer"
             aria-label="Close"
           >
             <X className="w-4 h-4 text-white" />
@@ -171,7 +190,7 @@ export default function LeadModal() {
                 type="submit"
                 disabled={loading}
                 className="w-full flex items-center justify-center gap-2 bg-[#1a3c6e] hover:bg-[#0d1f3b]
-                  text-white font-bold py-3.5 rounded-xl shadow-md transition-all
+                  text-white font-bold py-3.5 rounded-xl shadow-md transition-all cursor-pointer
                   disabled:opacity-70 disabled:cursor-not-allowed mt-1 text-sm tracking-wide"
               >
                 {loading
@@ -186,16 +205,32 @@ export default function LeadModal() {
             </form>
           ) : (
             <div className="flex flex-col items-center text-center py-6 gap-4">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                <CheckCircle className="w-8 h-8 text-green-500" />
+              <div className="relative w-16 h-16">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                  <CheckCircle className="w-8 h-8 text-green-500" />
+                </div>
+                {/* Countdown ring */}
+                <svg className="absolute inset-0 w-16 h-16 -rotate-90" viewBox="0 0 64 64">
+                  <circle cx="32" cy="32" r="30" fill="none" stroke="#dcfce7" strokeWidth="3" />
+                  <circle
+                    cx="32" cy="32" r="30" fill="none"
+                    stroke="#22c55e" strokeWidth="3"
+                    strokeDasharray={`${2 * Math.PI * 30}`}
+                    strokeDashoffset={`${2 * Math.PI * 30 * (1 - countdown / 3)}`}
+                    className="transition-all duration-1000"
+                  />
+                </svg>
               </div>
+
               <div>
                 <h3 className="text-gray-900 font-extrabold text-lg mb-1">Booking Confirmed!</h3>
                 <p className="text-gray-500 text-sm leading-relaxed">
                   Thank you, <span className="font-semibold text-gray-700">{form.name}</span>!
-                  We've received your request and will call you at <span className="font-semibold text-gray-700">+91 {form.phone}</span> within 30 minutes.
+                  We've received your request and will call you at{' '}
+                  <span className="font-semibold text-gray-700">+91 {form.phone}</span> within 30 minutes.
                 </p>
               </div>
+
               <a
                 href={`tel:+91${form.phone}`}
                 className="flex items-center gap-2 bg-[#0d1f3b] text-white font-bold px-6 py-3 rounded-xl text-sm transition hover:bg-[#1a3c6e]"
@@ -203,9 +238,10 @@ export default function LeadModal() {
                 <Phone className="w-4 h-4" />
                 Call Us Now
               </a>
-              <button onClick={close} className="text-gray-400 text-xs hover:text-gray-600 underline">
-                Close
-              </button>
+
+              <p className="text-gray-400 text-xs">
+                Redirecting to home in <span className="font-bold text-gray-600">{countdown}s</span>…
+              </p>
             </div>
           )}
         </div>
