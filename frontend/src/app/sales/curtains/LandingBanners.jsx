@@ -9,9 +9,9 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 // alt: image description
 // link: click destination — leave '' for no link
 const BANNERS = [
-  { src: '/curtains-hero.png', alt: 'Curtains Installation', link: '' },
-  { src: '/hero-bg-2.jpg', alt: 'Blinds Installation',   link: '' },
-  { src: '/hero-bg-3.jpg', alt: 'Wallpaper Installation', link: '' },
+  { src: '/curtains-ads1.jpeg', alt: 'Curtains Offer 1', link: '' },
+  { src: '/curtains-ads2.jpeg', alt: 'Curtains Offer 2', link: '' },
+  { src: '/curtains-ads3.jpeg', alt: 'Curtains Offer 3', link: '' },
 ]
 // ─────────────────────────────────────────────────────────────────────────────
 

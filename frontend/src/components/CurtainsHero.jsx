@@ -8,9 +8,9 @@ const openModal = () => window.dispatchEvent(new CustomEvent('openLeadModal'))
 
 // ── ADD YOUR HERO BANNER IMAGES HERE ─────────────────────────────────────────
 const SLIDES = [
-  { src: '/hero-bg-1.jpg', alt: 'Curtains Banner 1' },
-  { src: '/hero-bg-2.jpg', alt: 'Curtains Banner 2' },
-  { src: '/hero-bg-3.jpg', alt: 'Curtains Banner 3' },
+  { src: '/curtains-hero1.jpeg', alt: 'Curtains Collection 1' },
+  { src: '/curtains-hero2.jpeg', alt: 'Curtains Collection 2' },
+  { src: '/curtains-hero3.jpeg', alt: 'Curtains Collection 3' },
 ]
 // ─────────────────────────────────────────────────────────────────────────────
 
