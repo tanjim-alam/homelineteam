@@ -6,7 +6,7 @@ import { updateCategory } from '../store/slices/categorySlice'
 import api from '../api/client'
 import TipTapEditor from '../components/TipTapEditor'
 import {
-  ArrowLeft, Save, Upload, X, Tag, Globe, Image as ImageIcon,
+  ArrowLeft, Save, Upload, X, Tag, Globe, Image as ImageIcon, Phone,
 } from 'lucide-react'
 
 const slugify = (s) =>
@@ -15,6 +15,7 @@ const slugify = (s) =>
 const EMPTY_FORM = {
   name: '', slug: '', image: null, imagePreview: null,
   seoContent: '', order: 0, mainCategoryId: '',
+  phoneNumber: '', whatsappNumber: '',
   metaData: { title: '', description: '', keywords: '' },
 }
 
@@ -113,6 +114,8 @@ export default function CategoryFormPage() {
       seoContent:     cat.seoContent || '',
       order:          cat.order || 0,
       mainCategoryId: cat.mainCategoryId?._id || cat.mainCategoryId || '',
+      phoneNumber:    cat.phoneNumber || '',
+      whatsappNumber: cat.whatsappNumber || '',
       metaData: {
         title:       cat.metaData?.title || '',
         description: cat.metaData?.description || '',
@@ -141,6 +144,8 @@ export default function CategoryFormPage() {
     fd.append('order', form.order)
     fd.append('mainCategoryId', form.mainCategoryId)
     fd.append('type', 'sub')
+    fd.append('phoneNumber', form.phoneNumber)
+    fd.append('whatsappNumber', form.whatsappNumber)
     fd.append('metaData[title]', form.metaData.title)
     fd.append('metaData[description]', form.metaData.description)
     fd.append('metaData[keywords]', form.metaData.keywords)
@@ -267,6 +272,33 @@ export default function CategoryFormPage() {
                   <Field label="Display Order" hint="Lower number = appears first in lists">
                     <input type="number" min="0" value={form.order}
                       onChange={e => setForm(f => ({ ...f, order: parseInt(e.target.value) || 0 }))}
+                      className={inputCls} />
+                  </Field>
+                </div>
+              </div>
+
+              {/* Contact Numbers card */}
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-5">
+                <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
+                  <div className="w-9 h-9 bg-green-50 rounded-xl flex items-center justify-center">
+                    <Phone className="w-[18px] h-[18px] text-green-600" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-gray-900">Contact Numbers</p>
+                    <p className="text-xs text-gray-400">Phone & WhatsApp shown on product pages in this category</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <Field label="Phone Number" hint="Shown on 'Call Us' button — include country code e.g. +919611925494">
+                    <input type="tel" value={form.phoneNumber}
+                      onChange={e => setForm(f => ({ ...f, phoneNumber: e.target.value }))}
+                      placeholder="+919611925494"
+                      className={inputCls} />
+                  </Field>
+                  <Field label="WhatsApp Number" hint="Digits only, with country code e.g. 919611925494">
+                    <input type="tel" value={form.whatsappNumber}
+                      onChange={e => setForm(f => ({ ...f, whatsappNumber: e.target.value }))}
+                      placeholder="919611925494"
                       className={inputCls} />
                   </Field>
                 </div>

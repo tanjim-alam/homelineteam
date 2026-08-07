@@ -4,7 +4,7 @@ const { uploadBuffer } = require('../utils/cloudinary');
 // Create category
 exports.createCategory = async (req, res, next) => {
   try {
-    const { name, slug, description, seoContent, mainCategoryId, order } = req.body;
+    const { name, slug, description, seoContent, mainCategoryId, order, phoneNumber, whatsappNumber } = req.body;
 
     // Validate required fields
     if (!name || !slug) {
@@ -92,7 +92,9 @@ exports.createCategory = async (req, res, next) => {
       metaData,
       seoContent,
       mainCategoryId,
-      order: order || 0
+      order: order || 0,
+      phoneNumber: phoneNumber || '',
+      whatsappNumber: whatsappNumber || '',
     });
 
     // Category created successfully
@@ -351,10 +353,11 @@ exports.getCategoryFilterOptions = async (req, res, next) => {
 exports.updateCategory = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { name, slug, description, seoContent, mainCategoryId, order } = req.body;
-
+    const { name, slug, description, seoContent, mainCategoryId, order, phoneNumber, whatsappNumber } = req.body;
 
     const updates = { name, slug, description, seoContent };
+    if (phoneNumber !== undefined) updates.phoneNumber = phoneNumber;
+    if (whatsappNumber !== undefined) updates.whatsappNumber = whatsappNumber;
 
     // Add mainCategoryId and order to updates if provided
     if (mainCategoryId !== undefined) {

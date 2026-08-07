@@ -62,7 +62,9 @@ const categorySchema = new mongoose.Schema(
 			required: true
 		},
 		order: { type: Number, default: 0 }, // For display ordering
-		isActive: { type: Boolean, default: true }
+		isActive: { type: Boolean, default: true },
+		phoneNumber: { type: String, default: '' },
+		whatsappNumber: { type: String, default: '' }
 	},
 	{ timestamps: true }
 );

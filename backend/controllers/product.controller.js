@@ -631,7 +631,8 @@ exports.getProducts = async (req, res, next) => {
 exports.getProductBySlug = async (req, res, next) => {
     try {
         const { slug } = req.params;
-        const product = await Product.findOne({ slug });
+        const product = await Product.findOne({ slug })
+            .populate('categoryId', 'name slug phoneNumber whatsappNumber');
         if (!product) return res.status(404).json({ message: 'Product not found' });
         res.json(product);
     } catch (err) {
