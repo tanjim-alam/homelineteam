@@ -67,11 +67,11 @@ function ColoredCard({ s }) {
         }}
       />
 
-      <div className="relative z-10 p-5 sm:p-6 flex flex-col flex-1">
+      <div className="relative z-10 p-4 sm:p-6 flex flex-col flex-1">
         {/* Icon + badge */}
-        <div className="flex items-start justify-between mb-5">
-          <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center group-hover:bg-white/30 transition-colors">
-            <Icon className="w-6 h-6 text-white" />
+        <div className="flex items-start justify-between mb-2.5 sm:mb-5">
+          <div className="w-9 h-9 sm:w-12 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center group-hover:bg-white/30 transition-colors">
+            <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
           </div>
           <span className="text-[10px] font-bold uppercase tracking-widest text-white/60 bg-white/10 px-2 py-1 rounded-full">
             {s.label}
@@ -79,17 +79,17 @@ function ColoredCard({ s }) {
         </div>
 
         {/* Title */}
-        <h3 className="text-lg font-extrabold text-white leading-snug mb-2">
+        <h3 className="text-sm sm:text-lg font-extrabold text-white leading-snug mb-1 sm:mb-2">
           {s.title}
         </h3>
 
         {/* Description */}
-        <p className="text-white/70 text-sm leading-relaxed flex-1 mb-5">
+        <p className="hidden sm:block text-white/70 text-sm leading-relaxed flex-1 mb-5">
           {s.description}
         </p>
 
         {/* Features */}
-        <div className="flex flex-wrap gap-1.5 mb-5">
+        <div className="hidden sm:flex flex-wrap gap-1.5 mb-5">
           {s.features.map(f => (
             <span key={f} className="flex items-center gap-1 bg-white/15 backdrop-blur-sm text-white text-[11px] font-semibold px-2.5 py-1 rounded-full">
               <CheckCircle className="w-2.5 h-2.5" />
@@ -99,10 +99,10 @@ function ColoredCard({ s }) {
         </div>
 
         {/* CTA */}
-        <div className="flex items-center justify-between pt-4 border-t border-white/20">
-          <span className="text-white text-xs font-bold tracking-wide">Explore Service</span>
-          <span className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center group-hover:bg-white transition-colors duration-300">
-            <ArrowRight className="w-4 h-4 text-white group-hover:text-primary-600 transition-colors group-hover:translate-x-0.5" />
+        <div className="flex items-center justify-between pt-2.5 sm:pt-4 mt-auto border-t border-white/20">
+          <span className="text-white text-[11px] sm:text-xs font-bold tracking-wide">Explore</span>
+          <span className="w-6 h-6 sm:w-8 sm:h-8 bg-white/20 rounded-full flex items-center justify-center group-hover:bg-white transition-colors duration-300">
+            <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white group-hover:text-primary-600 transition-colors group-hover:translate-x-0.5" />
           </span>
         </div>
       </div>
@@ -121,11 +121,11 @@ function PlainCard({ s }) {
       {/* Subtle red tint on hover fill */}
       <div className="absolute inset-0 bg-primary-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
-      <div className="relative z-10 p-5 sm:p-6 flex flex-col flex-1">
+      <div className="relative z-10 p-4 sm:p-6 flex flex-col flex-1">
         {/* Icon + badge */}
-        <div className="flex items-start justify-between mb-5">
-          <div className="w-12 h-12 bg-primary-50 group-hover:bg-primary-100 rounded-xl flex items-center justify-center transition-colors">
-            <Icon className="w-6 h-6 text-primary-600" />
+        <div className="flex items-start justify-between mb-2.5 sm:mb-5">
+          <div className="w-9 h-9 sm:w-12 sm:h-12 bg-primary-50 group-hover:bg-primary-100 rounded-xl flex items-center justify-center transition-colors">
+            <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-primary-600" />
           </div>
           <span className="text-[10px] font-bold uppercase tracking-widest text-primary-500 bg-primary-50 border border-primary-200 px-2 py-1 rounded-full">
             {s.label}
@@ -133,17 +133,17 @@ function PlainCard({ s }) {
         </div>
 
         {/* Title */}
-        <h3 className="text-lg font-extrabold text-gray-900 group-hover:text-primary-700 leading-snug mb-2 transition-colors">
+        <h3 className="text-sm sm:text-lg font-extrabold text-gray-900 group-hover:text-primary-700 leading-snug mb-1 sm:mb-2 transition-colors">
           {s.title}
         </h3>
 
         {/* Description */}
-        <p className="text-gray-500 text-sm leading-relaxed flex-1 mb-5">
+        <p className="hidden sm:block text-gray-500 text-sm leading-relaxed flex-1 mb-5">
           {s.description}
         </p>
 
         {/* Features */}
-        <div className="flex flex-wrap gap-1.5 mb-5">
+        <div className="hidden sm:flex flex-wrap gap-1.5 mb-5">
           {s.features.map(f => (
             <span key={f} className="flex items-center gap-1 bg-primary-50 border border-primary-200 text-primary-700 text-[11px] font-semibold px-2.5 py-1 rounded-full">
               <CheckCircle className="w-2.5 h-2.5" />
@@ -153,10 +153,10 @@ function PlainCard({ s }) {
         </div>
 
         {/* CTA */}
-        <div className="flex items-center justify-between pt-4 border-t border-primary-100">
-          <span className="text-primary-600 text-xs font-bold tracking-wide">Explore Service</span>
-          <span className="w-8 h-8 bg-primary-50 group-hover:bg-primary-600 rounded-full flex items-center justify-center transition-colors duration-300 border border-primary-200 group-hover:border-primary-600">
-            <ArrowRight className="w-4 h-4 text-primary-600 group-hover:text-white transition-colors group-hover:translate-x-0.5" />
+        <div className="flex items-center justify-between pt-2.5 sm:pt-4 mt-auto border-t border-primary-100">
+          <span className="text-primary-600 text-[11px] sm:text-xs font-bold tracking-wide">Explore</span>
+          <span className="w-6 h-6 sm:w-8 sm:h-8 bg-primary-50 group-hover:bg-primary-600 rounded-full flex items-center justify-center transition-colors duration-300 border border-primary-200 group-hover:border-primary-600">
+            <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary-600 group-hover:text-white transition-colors group-hover:translate-x-0.5" />
           </span>
         </div>
       </div>
@@ -186,7 +186,7 @@ export default function InteriorDesignSection() {
         </div>
 
         {/* Cards grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 mb-8">
           {services.map((s) =>
             s.type === 'colored'
               ? <ColoredCard key={s.title} s={s} />

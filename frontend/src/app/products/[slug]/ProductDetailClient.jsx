@@ -11,6 +11,15 @@ import api from '@/services/api';
 import { CartContext } from '@/contexts/CartContext';
 import BookingModal from '@/components/interior/BookingModal';
 
+const PRICE_UNIT_LABELS = {
+  meter: 'meter',
+  piece: 'piece',
+  'sq.ft': 'sq. ft.',
+  roll: 'roll',
+  set: 'set',
+  pair: 'pair',
+};
+
 export default function ProductDetailClient({ slug }) {
   const { addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useContext(CartContext);
 
@@ -478,6 +487,9 @@ export default function ProductDetailClient({ slug }) {
                 {/* Price */}
                 <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6 flex-wrap">
                   <span className="text-2xl sm:text-3xl font-bold text-gray-900">₹{currentPrice.toFixed(2)}</span>
+                  {product.priceUnit && (
+                    <span className="text-sm sm:text-base text-gray-500 font-medium">/ {PRICE_UNIT_LABELS[product.priceUnit] || product.priceUnit}</span>
+                  )}
                   {discount > 0 && (
                     <>
                       <span className="text-lg sm:text-xl text-gray-500 line-through">₹{currentMRP.toFixed(2)}</span>

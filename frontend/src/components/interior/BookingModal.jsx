@@ -104,7 +104,7 @@ export default function BookingModal({ isOpen, onClose, product, sourcePage }) {
               </div>
               <h3 className="text-lg font-bold text-gray-900 mb-1">Booking Confirmed!</h3>
               <p className="text-gray-600 text-sm mb-4 leading-relaxed">
-                Our team will call you within 24 hours to confirm your order.
+                Our team will call you shortly to confirm your order.
               </p>
               <button
                 onClick={handleClose}

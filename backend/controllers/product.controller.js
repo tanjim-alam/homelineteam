@@ -24,6 +24,7 @@ exports.createProduct = async (req, res, next) => {
             basePrice,
             mrp,
             discount,
+            priceUnit,
             description,
             variants,
             variantOptions,
@@ -165,6 +166,7 @@ exports.createProduct = async (req, res, next) => {
             basePrice,
             mrp: mrpValue,
             discount: discountValue,
+            priceUnit: priceUnit || '',
             description,
             mainImages,
             dynamicFields,
@@ -208,6 +210,7 @@ exports.updateProduct = async (req, res, next) => {
             basePrice,
             mrp,
             discount,
+            priceUnit,
             description,
             metaData,
             variants,
@@ -216,6 +219,7 @@ exports.updateProduct = async (req, res, next) => {
         } = req.body;
 
         const updates = { categoryId, name, slug, basePrice, description };
+        if (priceUnit !== undefined) updates.priceUnit = priceUnit;
 
         // Validate and prepare MRP and discount values
         if (mrp !== undefined) {

@@ -47,6 +47,7 @@ export default function ProductsPage() {
   const [categories, setCategories]         = useState([]);
   const [subcategories, setSubcategories]   = useState([]);
   const [loading, setLoading]               = useState(true);
+  const [fetchError, setFetchError]         = useState(false);
   const [showForm, setShowForm]             = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [createLoading, setCreateLoading]   = useState(false);
@@ -56,7 +57,7 @@ export default function ProductsPage() {
   const [searchQuery, setSearchQuery]       = useState('');
 
   const [form, setForm] = useState({
-    subcategoryId: '', name: '', slug: '', basePrice: '', mrp: '', discount: '',
+    subcategoryId: '', name: '', slug: '', basePrice: '', mrp: '', discount: '', priceUnit: '',
     description: '', mainImages: [], imagePreviews: [], hasVariants: false, isFeatured: false,
     variants: [], variantOptions: {}, dynamicFields: {},
     customSize: { enabled: false, sizeUnit: 'mm', widthBasePrice: '', heightBasePrice: '', minWidth: '', maxWidth: '', minHeight: '', maxHeight: '' },
@@ -79,17 +80,26 @@ export default function ProductsPage() {
   /* ── fetch ──────────────────────────────────────────────────────── */
   useEffect(() => { fetchProducts(); fetchCategories(); }, []);
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (retriesLeft = 2) => {
+    setLoading(true);
     try {
-      setLoading(true);
       const res = await apiClient.get('/products');
       const data = res?.data ?? res;
       if (Array.isArray(data)) setProducts(data);
       else if (Array.isArray(data?.products)) setProducts(data.products);
       else if (Array.isArray(data?.items)) setProducts(data.items);
       else setProducts([]);
-    } catch { setProducts([]); }
-    finally { setLoading(false); }
+      setFetchError(false);
+      setLoading(false);
+    } catch (err) {
+      // Auth errors aren't transient — don't retry those, just surface them.
+      if (retriesLeft > 0 && err?.response?.status !== 401) {
+        setTimeout(() => fetchProducts(retriesLeft - 1), 1200);
+        return; // keep the spinner up through the retry instead of flashing an error
+      }
+      setFetchError(true);
+      setLoading(false);
+    }
   };
 
   const fetchCategories = async () => {
@@ -225,7 +235,7 @@ export default function ProductsPage() {
 
   /* ── form reset / edit ──────────────────────────────────────────── */
   const resetForm = () => {
-    setForm({ subcategoryId: '', name: '', slug: '', basePrice: '', mrp: '', discount: '', description: '', mainImages: [], imagePreviews: [], hasVariants: false, isFeatured: false, variants: [], variantOptions: {}, dynamicFields: {}, customSize: { enabled: false, sizeUnit: 'mm', widthBasePrice: '', heightBasePrice: '', minWidth: '', maxWidth: '', minHeight: '', maxHeight: '' }, metaData: { title: '', description: '', keywords: '', ogImage: null } });
+    setForm({ subcategoryId: '', name: '', slug: '', basePrice: '', mrp: '', discount: '', priceUnit: '', description: '', mainImages: [], imagePreviews: [], hasVariants: false, isFeatured: false, variants: [], variantOptions: {}, dynamicFields: {}, customSize: { enabled: false, sizeUnit: 'mm', widthBasePrice: '', heightBasePrice: '', minWidth: '', maxWidth: '', minHeight: '', maxHeight: '' }, metaData: { title: '', description: '', keywords: '', ogImage: null } });
     setEditingProduct(null); setSelectedCategory(null); setExistingImages([]);
     setVariantForm({ fields: {}, price: '', mrp: '', discount: '', stock: 0, images: [] });
     setVariantOptionsForm({ fieldSlug: '', options: [''] });
@@ -238,7 +248,7 @@ export default function ProductsPage() {
     setForm({
       subcategoryId: product.categoryId || product.subcategoryId || '',
       name: product.name, slug: product.slug,
-      basePrice: product.basePrice || product.price || '', mrp: product.mrp || '', discount: product.discount || '',
+      basePrice: product.basePrice || product.price || '', mrp: product.mrp || '', discount: product.discount || '', priceUnit: product.priceUnit || '',
       description: product.description || '', mainImages: [], imagePreviews: [],
       hasVariants: product.hasVariants || false, isFeatured: product.isFeatured || false, variants: product.variants || [],
       variantOptions: product.variantOptions || {}, dynamicFields: product.dynamicFields || {},
@@ -264,6 +274,7 @@ export default function ProductsPage() {
       fd.append('categoryId', form.subcategoryId);
       fd.append('name', form.name); fd.append('slug', form.slug);
       fd.append('basePrice', form.basePrice); fd.append('mrp', form.mrp); fd.append('discount', form.discount);
+      fd.append('priceUnit', form.priceUnit || '');
       fd.append('description', form.description);
       fd.append('hasVariants', form.hasVariants);
       fd.append('isFeatured', form.isFeatured);
@@ -425,6 +436,23 @@ export default function ProductsPage() {
                   value={form.discount} placeholder="0"
                   onChange={e => setForm(f => ({ ...f, discount: e.target.value }))}
                   hint="Percentage off MRP" />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-1.5">
+                  <label className="block text-sm font-semibold text-gray-700">Price Unit</label>
+                  <select value={form.priceUnit}
+                    onChange={e => setForm(f => ({ ...f, priceUnit: e.target.value }))}
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                    <option value="">None</option>
+                    <option value="meter">Meter</option>
+                    <option value="piece">Piece</option>
+                    <option value="sq.ft">Sq. Ft.</option>
+                    <option value="roll">Roll</option>
+                    <option value="set">Set</option>
+                    <option value="pair">Pair</option>
+                  </select>
+                  <p className="text-xs text-gray-400">Shown next to the price, e.g. "₹320.00 /meter"</p>
+                </div>
               </div>
               {form.basePrice && form.mrp && parseFloat(form.mrp) > parseFloat(form.basePrice) && (
                 <div className="flex items-center gap-2 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-700">
@@ -799,6 +827,18 @@ export default function ProductsPage() {
           {loading ? (
             <div className="flex justify-center py-20">
               <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : fetchError ? (
+            <div className="bg-white rounded-2xl border border-red-100 shadow-sm py-20 text-center">
+              <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <AlertCircle className="w-8 h-8 text-red-400" />
+              </div>
+              <p className="text-gray-700 font-bold text-lg mb-1">Couldn't load products</p>
+              <p className="text-gray-400 text-sm mb-6">The server didn't respond in time. Make sure the backend is running.</p>
+              <button onClick={() => fetchProducts()}
+                className="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-sm">
+                Retry
+              </button>
             </div>
           ) : filteredProducts.length === 0 ? (
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm py-20 text-center">
