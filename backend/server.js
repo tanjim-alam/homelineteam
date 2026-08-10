@@ -31,6 +31,7 @@ const returnRoutes = require('./routes/return.routes');
 const settingsRoutes = require('./routes/settings.routes');
 const offerBannerRoutes = require('./routes/offerBanner.routes');
 const teamRoutes = require('./routes/team.routes');
+const trashRoutes = require('./routes/trash.routes');
 
 // Middlewares
 const { notFoundHandler, errorHandler } = require('./middlewares/error.middleware');
@@ -115,6 +116,7 @@ app.use('/returns', returnRoutes);
 app.use('/settings', settingsRoutes);
 app.use('/offer-banners', offerBannerRoutes);
 app.use('/team', authLimiter, teamRoutes);
+app.use('/trash', trashRoutes);
 
 
 app.use(notFoundHandler);
@@ -126,4 +128,15 @@ connectDatabase().then(() => {
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });
+
+  // Recycle Bin cleanup: permanently purge anything past its retention window,
+  // once at startup and then once every 24h for as long as the process runs.
+  const { purgeExpired } = require('./controllers/trash.controller');
+  const runTrashCleanup = () => {
+    purgeExpired()
+      .then((count) => { if (count > 0) console.log(`Recycle Bin cleanup: purged ${count} expired item(s)`); })
+      .catch((err) => console.error('Recycle Bin cleanup failed:', err));
+  };
+  runTrashCleanup();
+  setInterval(runTrashCleanup, 24 * 60 * 60 * 1000);
 }).catch(() => process.exit(1));

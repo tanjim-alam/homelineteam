@@ -258,7 +258,7 @@ exports.login = async (req, res, next) => {
             });
         }
 
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email, deletedAt: null });
         if (!user || !user.isActive) {
             return res.status(401).json({
                 success: false,
@@ -746,7 +746,7 @@ exports.manualVerifyUser = async (req, res, next) => {
 // Get all users (admin)
 exports.getAllUsers = async (req, res, next) => {
     try {
-        const users = await User.find()
+        const users = await User.find({ deletedAt: null })
             .select('-password -emailVerificationToken -emailVerificationExpires -resetPasswordToken -resetPasswordExpires')
             .sort({ createdAt: -1 });
 
@@ -760,7 +760,7 @@ exports.getAllUsers = async (req, res, next) => {
 exports.getUserById = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const user = await User.findById(id)
+        const user = await User.findOne({ _id: id, deletedAt: null })
             .select('-password -emailVerificationToken -emailVerificationExpires -resetPasswordToken -resetPasswordExpires');
 
         if (!user) {
@@ -816,16 +816,18 @@ exports.deleteUser = async (req, res, next) => {
     try {
         const { id } = req.params;
 
-        const user = await User.findById(id);
+        const user = await User.findOneAndUpdate(
+            { _id: id, deletedAt: null },
+            { deletedAt: new Date(), isActive: false },
+            { new: true }
+        );
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        await User.findByIdAndDelete(id);
-
         res.json({
             success: true,
-            message: 'User deleted successfully',
+            message: 'User moved to Recycle Bin',
             _id: id
         });
     } catch (error) {

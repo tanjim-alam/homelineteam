@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { softDeletePlugin } = require('../utils/softDelete');
 
 // Schema for custom fields definition at category level
 const customFieldSchema = new mongoose.Schema(
@@ -68,6 +69,8 @@ const categorySchema = new mongoose.Schema(
 	},
 	{ timestamps: true }
 );
+
+categorySchema.plugin(softDeletePlugin);
 
 module.exports = mongoose.model('Category', categorySchema);
 

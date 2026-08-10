@@ -63,7 +63,7 @@ exports.getLeads = async (req, res, next) => {
   try {
     const { status } = req.query;
     // Exclude product bookings — they have their own page
-    const filter = { 'meta.requestType': { $ne: 'product-booking' } };
+    const filter = { 'meta.requestType': { $ne: 'product-booking' }, deletedAt: null };
     if (status) filter.status = status;
     const leads = await Lead.find(filter).sort({ createdAt: -1 });
     res.json({ success: true, data: leads, total: leads.length });
@@ -75,7 +75,7 @@ exports.getLeads = async (req, res, next) => {
 exports.getBookings = async (req, res, next) => {
   try {
     const { status } = req.query;
-    const filter = { 'meta.requestType': 'product-booking' };
+    const filter = { 'meta.requestType': 'product-booking', deletedAt: null };
     if (status) filter.status = status;
     const bookings = await Lead.find(filter).sort({ createdAt: -1 });
     res.json({ success: true, data: bookings, total: bookings.length });
@@ -100,9 +100,9 @@ exports.updateLeadStatus = async (req, res, next) => {
 
 exports.deleteLead = async (req, res, next) => {
   try {
-    const deleted = await Lead.findByIdAndDelete(req.params.id);
+    const deleted = await Lead.findOneAndUpdate({ _id: req.params.id, deletedAt: null }, { deletedAt: new Date() }, { new: true });
     if (!deleted) return res.status(404).json({ message: 'Lead not found' });
-    res.json({ message: 'Lead deleted successfully' });
+    res.json({ message: 'Lead moved to Recycle Bin' });
   } catch (err) {
     next(err);
   }

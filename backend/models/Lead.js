@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { softDeletePlugin } = require('../utils/softDelete');
 
 const LeadSchema = new mongoose.Schema(
   {
@@ -21,6 +22,8 @@ const LeadSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+LeadSchema.plugin(softDeletePlugin);
 
 module.exports = mongoose.model('Lead', LeadSchema);
 

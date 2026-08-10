@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { softDeletePlugin } = require('../utils/softDelete');
 
 const POSITIONS = ['below-hero', 'below-categories', 'below-products', 'below-design', 'all'];
 
@@ -14,6 +15,8 @@ const offerBannerSchema = new mongoose.Schema({
     // 'all' shows the banner in every position slot on the home page
     position: { type: String, enum: POSITIONS, default: 'below-hero' },
 }, { timestamps: true });
+
+offerBannerSchema.plugin(softDeletePlugin);
 
 module.exports = mongoose.model('OfferBanner', offerBannerSchema);
 module.exports.POSITIONS = POSITIONS;

@@ -8,6 +8,9 @@ router.post('/register', authenticate, requireAdmin, controller.register);
 router.post('/login', controller.login);
 router.post('/logout', controller.logout);
 router.get('/me', authenticate, controller.me);
+router.post('/forgot-password', controller.forgotPassword);
+router.post('/reset-password', controller.resetPassword);
+router.patch('/change-password', authenticate, controller.changePassword);
 
 module.exports = router;
 

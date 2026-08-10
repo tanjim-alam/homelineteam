@@ -64,7 +64,7 @@ exports.getTwoBHKPackages = async (req, res, next) => {
             priceMin, priceMax, sort, limit, search
         } = req.query;
 
-        const filter = {};
+        const filter = { deletedAt: null };
 
         // Layout filtering
         if (kitchenLayout) {
@@ -147,7 +147,7 @@ exports.getTwoBHKPackages = async (req, res, next) => {
 
 exports.getTwoBHKPackageBySlug = async (req, res, next) => {
     try {
-        const item = await TwoBHKPackage.findOne({ slug: req.params.slug });
+        const item = await TwoBHKPackage.findOne({ slug: req.params.slug, deletedAt: null });
         if (!item) return res.status(404).json({ message: '2BHK package not found' });
         item.views += 1;
         await item.save();
@@ -194,9 +194,9 @@ exports.updateTwoBHKPackage = async (req, res, next) => {
 
 exports.deleteTwoBHKPackage = async (req, res, next) => {
     try {
-        const deleted = await TwoBHKPackage.findByIdAndDelete(req.params.id);
+        const deleted = await TwoBHKPackage.findOneAndUpdate({ _id: req.params.id, deletedAt: null }, { deletedAt: new Date() }, { new: true });
         if (!deleted) return res.status(404).json({ message: '2BHK package not found' });
-        res.json({ message: '2BHK package deleted successfully' });
+        res.json({ message: '2BHK package moved to Recycle Bin' });
     } catch (err) {
         next(err);
     }

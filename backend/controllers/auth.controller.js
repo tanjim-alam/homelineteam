@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const Admin = require('../models/Admin');
+const { createEmailTransporter } = require('../utils/emailService');
 
 function signToken(admin) {
 	const payload = {
@@ -38,7 +39,7 @@ exports.register = async (req, res, next) => {
 exports.login = async (req, res, next) => {
 	try {
 		const { email, password } = req.body;
-		const admin = await Admin.findOne({ email });
+		const admin = await Admin.findOne({ email, deletedAt: null });
 		if (!admin || !admin.isActive) return res.status(401).json({ message: 'Invalid credentials' });
 		const ok = await admin.comparePassword(password);
 		if (!ok) return res.status(401).json({ message: 'Invalid credentials' });
@@ -92,7 +93,7 @@ exports.logout = async (req, res) => {
 exports.me = async (req, res) => {
 	if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
 	// Re-fetch from DB so role/permission changes apply without waiting for the JWT to expire.
-	const admin = await Admin.findById(req.user.id);
+	const admin = await Admin.findOne({ _id: req.user.id, deletedAt: null });
 	if (!admin || !admin.isActive) return res.status(401).json({ message: 'Unauthorized' });
 	res.json({
 		user: {
@@ -103,6 +104,107 @@ exports.me = async (req, res) => {
 			permissions: admin.permissions || [],
 		},
 	});
+};
+
+// Request a password reset code — sent to the admin's email, valid for 1 hour.
+// Always responds with the same message whether or not the email exists, so this
+// endpoint can't be used to enumerate admin accounts.
+exports.forgotPassword = async (req, res, next) => {
+	try {
+		const { email } = req.body;
+		if (!email) return res.status(400).json({ message: 'Email is required' });
+
+		const genericMessage = 'If that email belongs to an admin account, a reset code has been sent.';
+		const admin = await Admin.findOne({ email: email.toLowerCase(), deletedAt: null, isActive: true });
+		if (!admin) return res.json({ success: true, message: genericMessage });
+
+		const otp = admin.generatePasswordResetToken();
+		await admin.save();
+
+		try {
+			const transporter = createEmailTransporter();
+			await transporter.sendMail({
+				from: process.env.EMAIL_USER || 'homeline042@gmail.com',
+				to: admin.email,
+				subject: 'Password Reset Code - HomelineTeam Admin Panel',
+				html: `
+					<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+						<h2 style="color: #333;">Password Reset Request</h2>
+						<p>Hello ${admin.name},</p>
+						<p>Use the following code to reset your admin panel password:</p>
+						<div style="background-color: #f4f4f4; padding: 20px; text-align: center; margin: 20px 0;">
+							<h1 style="color: #2563eb; font-size: 32px; margin: 0; letter-spacing: 5px;">${otp}</h1>
+						</div>
+						<p>This code is valid for 1 hour. If you didn't request this, you can safely ignore this email.</p>
+						<p>Best regards,<br>HomelineTeam</p>
+					</div>
+				`,
+			});
+		} catch (emailErr) {
+			// Don't leak whether the send failed — but don't leave a dangling reset token either.
+			admin.resetPasswordToken = null;
+			admin.resetPasswordExpires = null;
+			await admin.save();
+			return next(emailErr);
+		}
+
+		res.json({ success: true, message: genericMessage });
+	} catch (err) {
+		next(err);
+	}
+};
+
+// Complete a password reset using the emailed code.
+exports.resetPassword = async (req, res, next) => {
+	try {
+		const { email, code, newPassword } = req.body;
+		if (!email || !code || !newPassword) {
+			return res.status(400).json({ message: 'Email, code and new password are required' });
+		}
+		if (newPassword.length < 6) {
+			return res.status(400).json({ message: 'Password must be at least 6 characters' });
+		}
+
+		const admin = await Admin.findOne({ email: email.toLowerCase(), deletedAt: null });
+		if (!admin || !admin.isPasswordResetTokenValid() || admin.resetPasswordToken !== code) {
+			return res.status(400).json({ message: 'Invalid or expired reset code' });
+		}
+
+		admin.passwordHash = await bcrypt.hash(newPassword, 10);
+		admin.resetPasswordToken = null;
+		admin.resetPasswordExpires = null;
+		await admin.save();
+
+		res.json({ success: true, message: 'Password reset successfully. You can now sign in.' });
+	} catch (err) {
+		next(err);
+	}
+};
+
+// Self-service password change for a logged-in admin panel user (any role).
+exports.changePassword = async (req, res, next) => {
+	try {
+		const { currentPassword, newPassword } = req.body;
+		if (!currentPassword || !newPassword) {
+			return res.status(400).json({ message: 'Current and new password are required' });
+		}
+		if (newPassword.length < 6) {
+			return res.status(400).json({ message: 'New password must be at least 6 characters' });
+		}
+
+		const admin = await Admin.findOne({ _id: req.user.id, deletedAt: null });
+		if (!admin) return res.status(401).json({ message: 'Unauthorized' });
+
+		const ok = await admin.comparePassword(currentPassword);
+		if (!ok) return res.status(401).json({ message: 'Current password is incorrect' });
+
+		admin.passwordHash = await bcrypt.hash(newPassword, 10);
+		await admin.save();
+
+		res.json({ success: true, message: 'Password changed successfully' });
+	} catch (err) {
+		next(err);
+	}
 };
 
 

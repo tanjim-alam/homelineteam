@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { softDeletePlugin } = require('../utils/softDelete');
 
 const packageFeatureSchema = new mongoose.Schema({
     id: { type: String, required: true },
@@ -186,5 +187,7 @@ oneBHKPackageSchema.index({ category: 1, isActive: 1 });
 oneBHKPackageSchema.index({ 'packageMetadata.suitableFor': 1 });
 oneBHKPackageSchema.index({ 'packageMetadata.style': 1 });
 oneBHKPackageSchema.index({ basePrice: 1 });
+
+oneBHKPackageSchema.plugin(softDeletePlugin);
 
 module.exports = mongoose.model('OneBHKPackage', oneBHKPackageSchema);

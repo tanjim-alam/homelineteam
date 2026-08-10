@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const { softDeletePlugin } = require('../utils/softDelete')
 
 const mainCategorySchema = new mongoose.Schema(
     {
@@ -40,5 +41,7 @@ mainCategorySchema.pre('save', function (next) {
     }
     next()
 })
+
+mainCategorySchema.plugin(softDeletePlugin)
 
 module.exports = mongoose.model('MainCategory', mainCategorySchema)

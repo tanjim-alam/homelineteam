@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { softDeletePlugin } = require('../utils/softDelete');
 
 const wardrobeDimensionSchema = new mongoose.Schema({
   width: Number,
@@ -84,6 +85,8 @@ wardrobeProductSchema.methods.generateVariantSKU = function(variant) {
 wardrobeProductSchema.index({ name: 'text', description: 'text', tags: 'text' });
 wardrobeProductSchema.index({ category: 1, isActive: 1 });
 wardrobeProductSchema.index({ basePrice: 1 });
+
+wardrobeProductSchema.plugin(softDeletePlugin);
 
 module.exports = mongoose.model('WardrobeProduct', wardrobeProductSchema);
 

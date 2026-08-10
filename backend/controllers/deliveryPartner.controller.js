@@ -59,7 +59,7 @@ exports.getDeliveryPartners = async (req, res, next) => {
             status, isAvailable, city, state, serviceType, search, sort, limit
         } = req.query;
 
-        const filter = {};
+        const filter = { deletedAt: null };
 
         // Status filtering
         if (status) {
@@ -127,7 +127,7 @@ exports.getDeliveryPartners = async (req, res, next) => {
 
 exports.getDeliveryPartnerById = async (req, res, next) => {
     try {
-        const partner = await DeliveryPartner.findById(req.params.id);
+        const partner = await DeliveryPartner.findOne({ _id: req.params.id, deletedAt: null });
         if (!partner) {
             return res.status(404).json({ message: 'Delivery partner not found' });
         }
@@ -139,7 +139,7 @@ exports.getDeliveryPartnerById = async (req, res, next) => {
 
 exports.getDeliveryPartnerBySlug = async (req, res, next) => {
     try {
-        const partner = await DeliveryPartner.findOne({ slug: req.params.slug });
+        const partner = await DeliveryPartner.findOne({ slug: req.params.slug, deletedAt: null });
         if (!partner) {
             return res.status(404).json({ message: 'Delivery partner not found' });
         }
@@ -195,11 +195,11 @@ exports.updateDeliveryPartner = async (req, res, next) => {
 
 exports.deleteDeliveryPartner = async (req, res, next) => {
     try {
-        const partner = await DeliveryPartner.findByIdAndDelete(req.params.id);
+        const partner = await DeliveryPartner.findOneAndUpdate({ _id: req.params.id, deletedAt: null }, { deletedAt: new Date() }, { new: true });
         if (!partner) {
             return res.status(404).json({ message: 'Delivery partner not found' });
         }
-        res.json({ message: 'Delivery partner deleted successfully' });
+        res.json({ message: 'Delivery partner moved to Recycle Bin' });
     } catch (err) {
         next(err);
     }
@@ -266,6 +266,7 @@ exports.getPartnersByArea = async (req, res, next) => {
         const partners = await DeliveryPartner.find({
             status: 'active',
             isAvailable: true,
+            deletedAt: null,
             'serviceAreas': {
                 $elemMatch: {
                     city: new RegExp(city, 'i'),

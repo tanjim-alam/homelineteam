@@ -112,7 +112,7 @@ exports.createCategory = async (req, res, next) => {
 // Get all categories
 exports.getCategories = async (req, res, next) => {
   try {
-    const categories = await Category.find().populate('mainCategoryId', 'name slug order').sort({ createdAt: -1 });
+    const categories = await Category.find({ deletedAt: null }).populate('mainCategoryId', 'name slug order').sort({ createdAt: -1 });
     res.json(categories);
   } catch (err) {
     next(err);
@@ -123,7 +123,7 @@ exports.getCategories = async (req, res, next) => {
 exports.getMainCategories = async (req, res, next) => {
   try {
     const MainCategory = require('../models/MainCategory');
-    const categories = await MainCategory.find({ isActive: true })
+    const categories = await MainCategory.find({ isActive: true, deletedAt: null })
       .sort({ order: 1, createdAt: -1 });
     res.json(categories);
   } catch (err) {
@@ -135,7 +135,8 @@ exports.getMainCategories = async (req, res, next) => {
 exports.getSubcategories = async (req, res, next) => {
   try {
     const subcategories = await Category.find({
-      isActive: true
+      isActive: true,
+      deletedAt: null
     }).populate('mainCategoryId', 'name slug order').sort({ order: 1, createdAt: -1 });
     res.json(subcategories);
   } catch (err) {
@@ -147,7 +148,8 @@ exports.getSubcategories = async (req, res, next) => {
 exports.getCategoriesWithMainCategory = async (req, res, next) => {
   try {
     const categories = await Category.find({
-      isActive: true
+      isActive: true,
+      deletedAt: null
     }).populate('mainCategoryId', 'name slug order').sort({ order: 1, createdAt: -1 });
     res.json(categories);
   } catch (err) {
@@ -161,7 +163,8 @@ exports.getSubcategoriesByMainCategory = async (req, res, next) => {
     const { mainCategoryId } = req.params;
     const subcategories = await Category.find({
       mainCategoryId: mainCategoryId,
-      isActive: true
+      isActive: true,
+      deletedAt: null
     }).populate('mainCategoryId', 'name slug').sort({ order: 1, createdAt: -1 });
     res.json(subcategories);
   } catch (err) {
@@ -175,7 +178,7 @@ exports.getHierarchicalCategories = async (req, res, next) => {
     const MainCategory = require('../models/MainCategory');
 
     // Step 1: Get all main categories from MainCategory model
-    const mainCategories = await MainCategory.find({ isActive: true })
+    const mainCategories = await MainCategory.find({ isActive: true, deletedAt: null })
       .sort({ order: 1, createdAt: -1 });
 
     // Step 2: For each main category, fetch its subcategories from Category model
@@ -183,7 +186,8 @@ exports.getHierarchicalCategories = async (req, res, next) => {
       mainCategories.map(async (mainCategory) => {
         // Get subcategories from Category model that reference this main category
         const subcategories = await Category.find({
-          mainCategoryId: mainCategory._id
+          mainCategoryId: mainCategory._id,
+          deletedAt: null
         }).populate('mainCategoryId', 'name slug order').sort({ order: 1, createdAt: -1 });
 
         return {
@@ -209,7 +213,7 @@ exports.getHierarchicalCategories = async (req, res, next) => {
 exports.getCategoryBySlug = async (req, res, next) => {
   try {
     const { slug } = req.params;
-    const category = await Category.findOne({ slug });
+    const category = await Category.findOne({ slug, deletedAt: null });
     if (!category) return res.status(404).json({ message: 'Category not found' });
     res.json(category);
   } catch (err) {
@@ -221,7 +225,7 @@ exports.getCategoryBySlug = async (req, res, next) => {
 exports.getCategoryById = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const category = await Category.findById(id);
+    const category = await Category.findOne({ _id: id, deletedAt: null });
     if (!category) return res.status(404).json({ message: 'Category not found' });
     res.json(category);
   } catch (err) {
@@ -233,7 +237,7 @@ exports.getCategoryById = async (req, res, next) => {
 exports.getCategoryFilterOptions = async (req, res, next) => {
   try {
     const { slug } = req.params;
-    const category = await Category.findOne({ slug });
+    const category = await Category.findOne({ slug, deletedAt: null });
 
     if (!category) {
       return res.status(404).json({ message: 'Category not found' });
@@ -241,7 +245,7 @@ exports.getCategoryFilterOptions = async (req, res, next) => {
 
     // Get all products in this category to extract filter options
     const Product = require('../models/Product');
-    const products = await Product.find({ categoryId: category._id });
+    const products = await Product.find({ categoryId: category._id, deletedAt: null });
 
     // Extract only essential filter options
     const filterOptions = {
@@ -598,11 +602,11 @@ exports.deleteVariantField = async (req, res, next) => {
 exports.deleteCategory = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const deleted = await Category.findByIdAndDelete(id);
+    const deleted = await Category.findOneAndUpdate({ _id: id, deletedAt: null }, { deletedAt: new Date() }, { new: true });
     if (!deleted) return res.status(404).json({ message: 'Category not found' });
     res.json({
       success: true,
-      message: 'Category deleted successfully',
+      message: 'Category moved to Recycle Bin',
       _id: id
     });
   } catch (err) {

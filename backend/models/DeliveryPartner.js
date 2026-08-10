@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { softDeletePlugin } = require('../utils/softDelete');
 
 const deliveryPartnerSchema = new mongoose.Schema({
     // Basic Information
@@ -223,6 +224,8 @@ deliveryPartnerSchema.methods.calculateDeliveryCost = function (distance, weight
 
     return cost;
 };
+
+deliveryPartnerSchema.plugin(softDeletePlugin);
 
 module.exports = mongoose.model('DeliveryPartner', deliveryPartnerSchema);
 

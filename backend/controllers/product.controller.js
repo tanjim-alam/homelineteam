@@ -321,7 +321,7 @@ exports.updateProduct = async (req, res, next) => {
             };
         }
 
-        const existingProduct = await Product.findById(id);
+        const existingProduct = await Product.findOne({ _id: id, deletedAt: null });
         if (!existingProduct) return res.status(404).json({ message: 'Product not found' });
 
         if (req.body.dynamicFields) {
@@ -406,7 +406,7 @@ exports.getProducts = async (req, res, next) => {
             ...variantFilters
         } = req.query;
 
-        const filter = {};
+        const filter = { deletedAt: null };
 
         // Featured filter
         if (featured === 'true') filter.isFeatured = true;
@@ -635,7 +635,7 @@ exports.getProducts = async (req, res, next) => {
 exports.getProductBySlug = async (req, res, next) => {
     try {
         const { slug } = req.params;
-        const product = await Product.findOne({ slug })
+        const product = await Product.findOne({ slug, deletedAt: null })
             .populate('categoryId', 'name slug phoneNumber whatsappNumber');
         if (!product) return res.status(404).json({ message: 'Product not found' });
         res.json(product);
@@ -650,12 +650,13 @@ exports.getRelatedProducts = async (req, res, next) => {
         const { slug } = req.params;
         const { limit = 8 } = req.query;
 
-        const current = await Product.findOne({ slug });
+        const current = await Product.findOne({ slug, deletedAt: null });
         if (!current) return res.status(404).json({ message: 'Product not found' });
 
         const related = await Product.find({
             categoryId: current.categoryId,
-            _id: { $ne: current._id }
+            _id: { $ne: current._id },
+            deletedAt: null
         })
             .sort({ createdAt: -1 })
             .limit(parseInt(limit));
@@ -666,13 +667,13 @@ exports.getRelatedProducts = async (req, res, next) => {
     }
 };
 
-// Delete product
+// Delete product (soft delete — moves it to the Recycle Bin)
 exports.deleteProduct = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const deleted = await Product.findByIdAndDelete(id);
+        const deleted = await Product.findOneAndUpdate({ _id: id, deletedAt: null }, { deletedAt: new Date() }, { new: true });
         if (!deleted) return res.status(404).json({ message: 'Product not found' });
-        res.json({ message: 'Product deleted' });
+        res.json({ message: 'Product moved to Recycle Bin' });
     } catch (err) {
         next(err);
     }
@@ -689,6 +690,7 @@ exports.searchProducts = async (req, res, next) => {
 
         // Build search query
         const searchQuery = {
+            deletedAt: null,
             $or: [
                 { name: { $regex: q, $options: 'i' } },
                 { description: { $regex: q, $options: 'i' } },
@@ -764,6 +766,7 @@ exports.searchSuggestions = async (req, res, next) => {
 
         const products = await Product.find({
             name: { $regex: q.trim(), $options: 'i' },
+            deletedAt: null,
         })
             .select('name slug basePrice mainImages categoryId')
             .populate('categoryId', 'name')

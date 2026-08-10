@@ -62,7 +62,7 @@ exports.getKitchenProducts = async (req, res, next) => {
             priceMin, priceMax, sort, limit, search
         } = req.query;
 
-        const filter = {};
+        const filter = { deletedAt: null };
 
         // Layout filtering
         if (layout) {
@@ -134,7 +134,7 @@ exports.getKitchenProducts = async (req, res, next) => {
 
 exports.getKitchenProductBySlug = async (req, res, next) => {
     try {
-        const item = await KitchenProduct.findOne({ slug: req.params.slug });
+        const item = await KitchenProduct.findOne({ slug: req.params.slug, deletedAt: null });
         if (!item) return res.status(404).json({ message: 'Kitchen product not found' });
         item.views += 1;
         await item.save();
@@ -188,9 +188,9 @@ exports.updateKitchenProduct = async (req, res, next) => {
 
 exports.deleteKitchenProduct = async (req, res, next) => {
     try {
-        const deleted = await KitchenProduct.findByIdAndDelete(req.params.id);
+        const deleted = await KitchenProduct.findOneAndUpdate({ _id: req.params.id, deletedAt: null }, { deletedAt: new Date() }, { new: true });
         if (!deleted) return res.status(404).json({ message: 'Kitchen product not found' });
-        res.json({ message: 'Kitchen product deleted successfully' });
+        res.json({ message: 'Kitchen product moved to Recycle Bin' });
     } catch (err) {
         next(err);
     }

@@ -3,7 +3,7 @@ const Admin = require('../models/Admin');
 
 exports.listTeam = async (req, res, next) => {
 	try {
-		const team = await Admin.find().select('-passwordHash').sort({ createdAt: -1 });
+		const team = await Admin.find({ deletedAt: null }).select('-passwordHash').sort({ createdAt: -1 });
 		res.json({ success: true, data: team });
 	} catch (err) {
 		next(err);
@@ -45,7 +45,7 @@ exports.updateTeamMember = async (req, res, next) => {
 		const { id } = req.params;
 		const { name, role, permissions, isActive, password } = req.body;
 
-		const member = await Admin.findById(id);
+		const member = await Admin.findOne({ _id: id, deletedAt: null });
 		if (!member) return res.status(404).json({ message: 'Team member not found' });
 
 		if (name !== undefined) member.name = name;
@@ -76,9 +76,9 @@ exports.deleteTeamMember = async (req, res, next) => {
 		if (String(id) === String(req.user.id)) {
 			return res.status(400).json({ message: 'You cannot delete your own account' });
 		}
-		const member = await Admin.findByIdAndDelete(id);
+		const member = await Admin.findOneAndUpdate({ _id: id, deletedAt: null }, { deletedAt: new Date(), isActive: false }, { new: true });
 		if (!member) return res.status(404).json({ message: 'Team member not found' });
-		res.json({ success: true, message: 'Team member removed' });
+		res.json({ success: true, message: 'Team member moved to Recycle Bin' });
 	} catch (err) {
 		next(err);
 	}

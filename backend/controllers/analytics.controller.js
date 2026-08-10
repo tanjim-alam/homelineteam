@@ -108,9 +108,9 @@ exports.getDashboardAnalytics = async (req, res, next) => {
         ]);
 
         // Get total counts
-        const totalProducts = await Product.countDocuments();
-        const totalCategories = await Category.countDocuments();
-        const totalUsers = await User.countDocuments();
+        const totalProducts = await Product.countDocuments({ deletedAt: null });
+        const totalCategories = await Category.countDocuments({ deletedAt: null });
+        const totalUsers = await User.countDocuments({ deletedAt: null });
         const totalOrders = await Order.countDocuments();
         const totalReturns = await Return.countDocuments();
 

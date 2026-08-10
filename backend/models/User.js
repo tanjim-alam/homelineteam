@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { softDeletePlugin } = require('../utils/softDelete');
 const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({
@@ -182,5 +183,7 @@ userSchema.methods.isPhoneVerificationOTPValid = function () {
 userSchema.methods.isPasswordResetTokenValid = function () {
     return this.resetPasswordToken && this.resetPasswordExpires > Date.now();
 };
+
+userSchema.plugin(softDeletePlugin);
 
 module.exports = mongoose.model('User', userSchema);

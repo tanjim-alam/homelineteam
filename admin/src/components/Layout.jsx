@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { logout } from '../store/slices/authSlice'
+import ChangePasswordModal from './ChangePasswordModal'
 import {
   Home,
   FolderOpen,
@@ -26,6 +27,8 @@ import {
   Mail,
   ShoppingBag,
   UserCog,
+  Trash2,
+  KeyRound,
 } from 'lucide-react'
 
 const INTERIOR_CHILDREN = [
@@ -68,6 +71,7 @@ const menuItems = [
     children: SETTINGS_CHILDREN,
   },
   { path: '/team',              label: 'Team Management',    icon: UserCog,      adminOnly: true },
+  { path: '/recycle-bin',       label: 'Recycle Bin',        icon: Trash2,       adminOnly: true },
 ]
 
 const pageTitles = {
@@ -90,6 +94,7 @@ const pageTitles = {
   '/bookings':          'Product Bookings',
   '/returns':           'Returns & Exchanges',
   '/team':              'Team Management',
+  '/recycle-bin':       'Recycle Bin',
 }
 
 const GROUP_CHILDREN = {
@@ -253,6 +258,8 @@ const Sidebar = ({ isOpen, onClose }) => {
 const Header = ({ onMenuClick }) => {
   const { user } = useSelector(s => s.auth)
   const location = useLocation()
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [showChangePassword, setShowChangePassword] = useState(false)
   const pageTitle = pageTitles[location.pathname]
     || (location.pathname.startsWith('/categories/edit/') ? 'Edit Subcategory' : null)
     || (location.pathname.startsWith('/categories/edit-main/') ? 'Edit Main Category' : null)
@@ -277,20 +284,42 @@ const Header = ({ onMenuClick }) => {
         </div>
 
         {/* Right: user */}
-        <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+        <div className="relative flex items-center gap-3">
+          <button
+            onClick={() => setMenuOpen(v => !v)}
+            className="hidden sm:flex items-center gap-2.5 rounded-lg px-2 py-1.5 -mx-2 hover:bg-gray-50 transition-colors"
+          >
+            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
               <span className="text-white text-xs font-bold">
                 {(user?.name || 'A').charAt(0).toUpperCase()}
               </span>
             </div>
-            <div className="text-sm">
+            <div className="text-sm text-left">
               <p className="font-semibold text-gray-900 leading-tight">{user?.name || 'Admin'}</p>
               <p className="text-gray-400 text-xs leading-tight">{user?.email}</p>
             </div>
-          </div>
+            <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${menuOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          {menuOpen && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
+              <div className="absolute right-0 top-full mt-2 w-52 bg-white border border-gray-200 rounded-xl shadow-lg py-1.5 z-50">
+                <button
+                  onClick={() => { setMenuOpen(false); setShowChangePassword(true) }}
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  <KeyRound className="w-4 h-4 text-gray-400" /> Change Password
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
+
+      {showChangePassword && (
+        <ChangePasswordModal onClose={() => setShowChangePassword(false)} />
+      )}
     </header>
   )
 }

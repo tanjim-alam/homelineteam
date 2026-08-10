@@ -25,6 +25,7 @@ import AdminSettingsPage from './pages/AdminSettingsPage'
 import CategoryFormPage from './pages/CategoryFormPage'
 import MainCategoryFormPage from './pages/MainCategoryFormPage'
 import TeamPage from './pages/TeamPage'
+import RecycleBinPage from './pages/RecycleBinPage'
 
 function NotAuthorized() {
   return (
@@ -89,6 +90,7 @@ function App() {
         <Route path="/offer-banner" element={<ProtectedRoute permission="settings"><OfferBannerPage /></ProtectedRoute>} />
         <Route path="/admin-settings" element={<ProtectedRoute permission="settings"><AdminSettingsPage /></ProtectedRoute>} />
         <Route path="/team" element={<ProtectedRoute adminOnly><TeamPage /></ProtectedRoute>} />
+        <Route path="/recycle-bin" element={<ProtectedRoute adminOnly><RecycleBinPage /></ProtectedRoute>} />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

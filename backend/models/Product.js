@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { softDeletePlugin } = require('../utils/softDelete');
 
 const metaSchema = new mongoose.Schema(
 	{
@@ -73,6 +74,8 @@ productSchema.methods.generateVariantSKU = function (variant) {
 
 	return `${baseSlug}-${fieldCodes.join('-')}`;
 };
+
+productSchema.plugin(softDeletePlugin);
 
 module.exports = mongoose.model('Product', productSchema);
 

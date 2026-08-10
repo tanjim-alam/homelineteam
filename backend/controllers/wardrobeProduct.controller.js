@@ -58,7 +58,7 @@ exports.createWardrobeProduct = async (req, res, next) => {
 exports.getWardrobeProducts = async (req, res, next) => {
   try {
     const { opening, type, suitableFor, style, colorScheme, priceMin, priceMax, sort, limit, search } = req.query;
-    const filter = {};
+    const filter = { deletedAt: null };
     if (opening) filter.defaultOpening = { $in: Array.isArray(opening) ? opening : [opening] };
     if (type) filter.defaultType = { $in: Array.isArray(type) ? type : [type] };
     if (suitableFor) filter['wardrobeMetadata.suitableFor'] = { $in: JSON.parse(suitableFor) };
@@ -94,7 +94,7 @@ exports.getWardrobeProducts = async (req, res, next) => {
 
 exports.getWardrobeProductBySlug = async (req, res, next) => {
   try {
-    const item = await WardrobeProduct.findOne({ slug: req.params.slug });
+    const item = await WardrobeProduct.findOne({ slug: req.params.slug, deletedAt: null });
     if (!item) return res.status(404).json({ message: 'Wardrobe product not found' });
     item.views += 1;
     await item.save();
@@ -135,9 +135,9 @@ exports.updateWardrobeProduct = async (req, res, next) => {
 
 exports.deleteWardrobeProduct = async (req, res, next) => {
   try {
-    const deleted = await WardrobeProduct.findByIdAndDelete(req.params.id);
+    const deleted = await WardrobeProduct.findOneAndUpdate({ _id: req.params.id, deletedAt: null }, { deletedAt: new Date() }, { new: true });
     if (!deleted) return res.status(404).json({ message: 'Wardrobe product not found' });
-    res.json({ message: 'Wardrobe product deleted successfully' });
+    res.json({ message: 'Wardrobe product moved to Recycle Bin' });
   } catch (err) { next(err); }
 };
 

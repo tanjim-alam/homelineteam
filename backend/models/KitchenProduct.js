@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { softDeletePlugin } = require('../utils/softDelete');
 
 const kitchenLayoutSchema = new mongoose.Schema({
   type: {
@@ -206,6 +207,8 @@ kitchenProductSchema.index({ category: 1, isActive: 1 });
 kitchenProductSchema.index({ 'kitchenMetadata.suitableFor': 1 });
 kitchenProductSchema.index({ 'kitchenMetadata.style': 1 });
 kitchenProductSchema.index({ basePrice: 1 });
+
+kitchenProductSchema.plugin(softDeletePlugin);
 
 module.exports = mongoose.model('KitchenProduct', kitchenProductSchema);
 

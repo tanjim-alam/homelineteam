@@ -60,7 +60,7 @@ const getMainCategories = async (req, res) => {
     try {
         const { active = true } = req.query
 
-        const query = {}
+        const query = { deletedAt: null }
         if (active === 'true') {
             query.isActive = true
         }
@@ -86,7 +86,7 @@ const getMainCategoryById = async (req, res) => {
     try {
         const { id } = req.params
 
-        const mainCategory = await MainCategory.findById(id)
+        const mainCategory = await MainCategory.findOne({ _id: id, deletedAt: null })
         if (!mainCategory) {
             return res.status(404).json({
                 success: false,
@@ -171,12 +171,13 @@ const deleteMainCategory = async (req, res) => {
         const { id } = req.params
 
         // Check if main category has subcategories
-        const subcategories = await Category.find({ mainCategoryId: id })
+        const subcategories = await Category.find({ mainCategoryId: id, deletedAt: null })
         if (subcategories.length > 0) {
             // Check if any of these subcategories have products
             const subcategoryIds = subcategories.map(cat => cat._id)
             const products = await Product.find({
-                categoryId: { $in: subcategoryIds }
+                categoryId: { $in: subcategoryIds },
+                deletedAt: null
             })
 
             if (products.length > 0) {
@@ -192,7 +193,11 @@ const deleteMainCategory = async (req, res) => {
             }
         }
 
-        const mainCategory = await MainCategory.findByIdAndDelete(id)
+        const mainCategory = await MainCategory.findOneAndUpdate(
+            { _id: id, deletedAt: null },
+            { deletedAt: new Date() },
+            { new: true }
+        )
         if (!mainCategory) {
             return res.status(404).json({
                 success: false,
@@ -202,7 +207,7 @@ const deleteMainCategory = async (req, res) => {
 
         res.json({
             success: true,
-            message: 'Main category deleted successfully'
+            message: 'Main category moved to Recycle Bin'
         })
     } catch (error) {
         res.status(500).json({
@@ -218,7 +223,7 @@ const getMainCategoryWithSubcategories = async (req, res) => {
     try {
         const { id } = req.params
 
-        const mainCategory = await MainCategory.findById(id)
+        const mainCategory = await MainCategory.findOne({ _id: id, deletedAt: null })
         if (!mainCategory) {
             return res.status(404).json({
                 success: false,
@@ -228,7 +233,8 @@ const getMainCategoryWithSubcategories = async (req, res) => {
 
         const subcategories = await Category.find({
             mainCategoryId: id,
-            isActive: true
+            isActive: true,
+            deletedAt: null
         }).sort({ order: 1, name: 1 })
 
         res.json({
