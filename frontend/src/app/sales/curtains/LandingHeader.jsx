@@ -41,9 +41,11 @@ export default function LandingHeader() {
         <div className="flex items-center justify-between py-2.5 gap-3">
 
           {/* Logo */}
-          <Link href="/" className="flex-shrink-0">
+          <button 
+          onClick={openModal}
+           className="flex-shrink-0">
             <Image src="/logo.jpeg" alt="HomelineTeam" width={130} height={44} priority />
-          </Link>
+          </button>
 
           {/* Centre — desktop trust pills */}
           <div className="hidden lg:flex items-center gap-3">
