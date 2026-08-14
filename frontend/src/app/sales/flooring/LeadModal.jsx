@@ -79,14 +79,14 @@ export default function LeadModal() {
         body: JSON.stringify({
           name:       form.name.trim(),
           phone:      form.phone.trim(),
-          sourcePage: 'Curtains Landing Page',
+          sourcePage: 'Flooring Landing Page',
           message:    form.email ? `Email: ${form.email.trim()}` : '',
-          meta: { requestType: 'landing-page-curtains', pageUrl },
+          meta: { requestType: 'landing-page-flooring', pageUrl },
           productDetails: product ? {
             name:     product.name,
             price:    product.basePrice,
             image:    product.mainImages?.[0] || product.images?.[0] || '',
-            category: 'Curtains',
+            category: 'Flooring',
             link:     `${window.location.origin}/products/${product.slug}`,
           } : undefined,
         }),

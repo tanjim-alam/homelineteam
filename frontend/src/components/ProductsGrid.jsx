@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronRight, ShoppingBag } from 'lucide-react'
 
 const PER_PAGE = 12
 
-const openModal = () => window.dispatchEvent(new CustomEvent('openLeadModal'))
+const openModal = (product) => window.dispatchEvent(new CustomEvent('openLeadModal', { detail: product ? { product } : undefined }))
 
 function getPrice(product) {
   if (product.hasVariants && product.variants?.length > 0) {
@@ -23,7 +23,7 @@ function ProductCard({ product, badgeFrom, badgeTo }) {
   return (
     <div
       className="group cursor-pointer bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 flex flex-col"
-      onClick={openModal}
+      onClick={() => openModal({ ...product, basePrice: price })}
     >
       {/* Image */}
       <div className="relative w-full aspect-square bg-gray-50 overflow-hidden">

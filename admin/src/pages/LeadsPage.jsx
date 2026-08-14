@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Phone, MapPin, Home, Calendar, MessageSquare, Package,
-  RefreshCw, Trash2, X, Eye, ChevronDown, User, Tag,
+  RefreshCw, Trash2, X, Eye, ChevronDown, User, Tag, ExternalLink,
 } from 'lucide-react';
 import api from '../api/client';
 import { useToast } from '../context/ToastContext';
@@ -223,9 +223,23 @@ export default function LeadsPage() {
                     </td>
                     {/* Source */}
                     <td className="px-4 py-3">
-                      <span className="inline-block px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs font-medium max-w-[120px] truncate">
-                        {lead.sourcePage || 'Unknown'}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="inline-block px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs font-medium max-w-[120px] truncate">
+                          {lead.sourcePage || 'Unknown'}
+                        </span>
+                        {(lead.productDetails?.link || lead.meta?.pageUrl) && (
+                          <a
+                            href={lead.productDetails?.link || lead.meta?.pageUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title={lead.productDetails?.link ? 'View live product' : 'View live page'}
+                            onClick={e => e.stopPropagation()}
+                            className="flex-shrink-0 text-blue-500 hover:text-blue-700"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        )}
+                      </div>
                     </td>
                     {/* Date */}
                     <td className="px-4 py-3">
@@ -349,6 +363,19 @@ export default function LeadsPage() {
                       <p className="text-sm text-gray-700">{viewLead.message}</p>
                     </div>
                   )}
+                  {viewLead.meta?.pageUrl && (
+                    <div className="flex items-center justify-between text-sm pt-2 border-t border-gray-200">
+                      <span className="text-gray-500 font-medium">Live Page</span>
+                      <a
+                        href={viewLead.meta.pageUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 font-semibold text-blue-600 hover:underline"
+                      >
+                        View Page <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -387,6 +414,16 @@ export default function LeadsPage() {
                         <span className="font-semibold text-gray-900">{row.value}</span>
                       </div>
                     ) : null)}
+                    {viewLead.productDetails.link && (
+                      <a
+                        href={viewLead.productDetails.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-1.5 w-full pt-2 mt-1 border-t border-purple-100 text-sm font-semibold text-purple-700 hover:text-purple-900"
+                      >
+                        View Live Product <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    )}
                   </div>
                 </div>
               )}
