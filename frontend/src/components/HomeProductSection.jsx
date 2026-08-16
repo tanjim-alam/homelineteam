@@ -3,16 +3,23 @@ import ProductsGrid from './ProductsGrid'
 
 const BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.homelineteam.com'
 
+async function fetchBySubcategoryId(categoryId) {
+  const res = await fetch(`${BASE}/products?subcategoryId=${categoryId}&sort=newest&limit=200`, { next: { revalidate: 120 } })
+  const data = res.ok ? await res.json() : []
+  return Array.isArray(data) ? data : data?.products || data?.data || []
+}
+
 async function fetchProducts(slug, categoryId) {
   try {
-    const url = categoryId
-      ? `${BASE}/products?subcategoryId=${categoryId}&sort=newest&limit=200`
-      : null
+    const ids = Array.isArray(categoryId) ? categoryId.filter(Boolean) : (categoryId ? [categoryId] : [])
 
-    if (url) {
-      const res = await fetch(url, { next: { revalidate: 120 } })
-      const data = res.ok ? await res.json() : []
-      return Array.isArray(data) ? data : data?.products || data?.data || []
+    if (ids.length) {
+      const lists = await Promise.all(ids.map(fetchBySubcategoryId))
+      const merged = new Map()
+      for (const list of lists) {
+        for (const p of list) merged.set(p._id, p)
+      }
+      return [...merged.values()].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     }
 
     const hierRes = await fetch(`${BASE}/categories/hierarchical`, { next: { revalidate: 3600 } })

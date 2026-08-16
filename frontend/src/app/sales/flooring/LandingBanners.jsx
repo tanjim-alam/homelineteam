@@ -9,9 +9,9 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 // alt: image description
 // link: click destination — leave '' for no link
 const BANNERS = [
-  { src: 'https://res.cloudinary.com/dmz316wxm/image/upload/v1775649525/products/premium-soft-ivory-stone-spc-click-lock-flooring-725x48-4mm-waterproof-rigid-core-floor-plank/ubkbfum3y73u3yyfuzda.png', alt: 'Soft Ivory Stone SPC Flooring', link: '' },
-  { src: 'https://res.cloudinary.com/dmz316wxm/image/upload/v1775647431/products/premium-weathered-driftwood-spc-click-lock-flooring-725x48-4mm-waterproof-rigid-core-floor-plank/xaqlmds9n6mlizcembeu.png', alt: 'Weathered Driftwood SPC Flooring', link: '' },
-  { src: 'https://res.cloudinary.com/dmz316wxm/image/upload/v1775644217/products/premium-rustic-walnut-spc-click-lock-flooring-725x48-4mm-waterproof-rigid-core-floor-plank/vatz49pyxc7rdiw2mfro.png', alt: 'Rustic Walnut SPC Flooring', link: '' },
+  { src: '/flooring-lp-ads-banner1.jpeg', alt: 'Flooring Offer 1', link: '' },
+  { src: '/flooring-lp-ads-banner2.jpeg', alt: 'Flooring Offer 2', link: '' },
+  { src: '/flooring-lp-ads-banner3.jpeg', alt: 'Flooring Offer 3', link: '' },
 ]
 // ─────────────────────────────────────────────────────────────────────────────
 

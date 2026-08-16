@@ -4,6 +4,7 @@ import { Star, Truck, ShieldCheck, BadgeCheck, Users, Clock, MessageCircle, Phon
 import HomeProductSection from '@/components/HomeProductSection'
 import FlooringHero from '@/components/FlooringHero'
 import LandingBanners from './LandingBanners'
+import CustomerReviews from './CustomerReviews'
 import LeadModal from './LeadModal'
 import CustomFlooringButton from './CustomFlooringButton'
 import LandingHeader from './LandingHeader'
@@ -33,6 +34,9 @@ export default function FlooringLandingPage() {
       {/* ── Static service banners — landing page only ────────────────── */}
       <LandingBanners />
 
+      {/* ── Customer review videos ───────────────────────────────────── */}
+      <CustomerReviews />
+
       {/* ── Trust badges ──────────────────────────────────────────────── */}
       <div className="bg-white border-b border-gray-100">
         <div className="container-custom py-3 flex items-center justify-center gap-6 sm:gap-10 flex-wrap">
@@ -55,11 +59,11 @@ export default function FlooringLandingPage() {
         </div>
       </div>
 
-      {/* ── Flooring products ─────────────────────────────────────────── */}
+      {/* ── Flooring products (SPC flooring tiles + artificial vertical grasses) ── */}
       <HomeProductSection
-        categoryId="690a1c2087f500e32febad07"
+        categoryId={['690a1c2087f500e32febad07', '69d8ae5a8ffcf5e5352d1013']}
         title="Shop Flooring"
-        viewAllHref="/collections/flooring"
+        viewAllHref="/collections/floor-solution"
         bgFrom="#1a3c6e"
         bgTo="#0d1f3b"
         badgeFrom="#1a3c6e"

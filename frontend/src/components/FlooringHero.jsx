@@ -9,9 +9,9 @@ const openModal = () => window.dispatchEvent(new CustomEvent('openLeadModal'))
 // ── ADD YOUR HERO BANNER IMAGES HERE ─────────────────────────────────────────
 // src: local path from /public (e.g. '/flooring-hero1.jpeg') or a full URL
 const SLIDES = [
-  { src: 'https://res.cloudinary.com/dmz316wxm/image/upload/v1775650511/products/premium-grey-marble-spc-click-lock-flooring-725x48-4mm-waterproof-rigid-core-floor-plank/etbxqxwzfocjwfjpnutg.png', alt: 'Grey Marble SPC Flooring' },
-  { src: 'https://res.cloudinary.com/dmz316wxm/image/upload/v1775646236/products/premium-dual-tone-walnut-spc-click-lock-flooring-725x48-4mm-waterproof-rigid-core-floor-plank/r7uwkjev6ngen9aszg4x.png', alt: 'Dual Tone Walnut SPC Flooring' },
-  { src: 'https://res.cloudinary.com/dmz316wxm/image/upload/v1775645339/products/premium-charcoal-grey-oak-spc-click-lock-flooring-725x48-4mm-waterproof-rigid-core-floor-plank/wv30eupdcikbchqxn9my.png', alt: 'Charcoal Grey Oak SPC Flooring' },
+  { src: '/flooring-lp-banner1.jpeg', alt: 'Flooring Collection 1' },
+  { src: '/flooring-lp-banner2.jpeg', alt: 'Flooring Collection 2' },
+  { src: '/flooring-lp-banner3.jpeg', alt: 'Flooring Collection 3' },
 ]
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -41,8 +41,8 @@ export default function FlooringHero() {
       onTouchEnd={onTouchEnd}
       aria-label="Hero banner"
     >
-      {/* Desktop — same 7:2 ratio as main site hero */}
-      <div className="hidden md:block relative w-full bg-gray-100 cursor-pointer" style={{ paddingBottom: '28.57%' }} onClick={openModal}>
+      {/* Banner images are 1600x600 (2.667:1) — padding matches that ratio exactly so object-cover never crops top/bottom or sides */}
+      <div className="relative w-full bg-gray-100 cursor-pointer" style={{ paddingBottom: '37.5%' }} onClick={openModal}>
         {SLIDES.map((slide, i) => (
           <div
             key={slide.src}
@@ -51,20 +51,6 @@ export default function FlooringHero() {
             }`}
           >
             <Image src={slide.src} alt={slide.alt} fill className="object-cover" priority={i === 0} sizes="100vw" />
-          </div>
-        ))}
-      </div>
-
-      {/* Mobile — same 2:1 ratio as main site hero */}
-      <div className="block md:hidden relative w-full bg-gray-100 cursor-pointer" style={{ paddingBottom: '50%' }} onClick={openModal}>
-        {SLIDES.map((slide, i) => (
-          <div
-            key={slide.src}
-            className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
-              i === current ? 'opacity-100 z-10' : 'opacity-0 z-0'
-            }`}
-          >
-            <Image src={slide.src} alt={slide.alt} fill className="object-cover object-top" priority={i === 0} sizes="100vw" />
           </div>
         ))}
       </div>
