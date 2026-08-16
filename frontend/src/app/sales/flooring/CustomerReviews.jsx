@@ -1,34 +1,80 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { ChevronLeft, ChevronRight, Star } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Star, Play, Volume2, VolumeX } from 'lucide-react'
 
-// ── ADD YOUR REVIEW VIDEOS HERE — paste the Google Drive file ID ────────────
-// (from a share link like https://drive.google.com/file/d/FILE_ID/view)
+// ── Review videos — hosted on Cloudinary (reliable playback, not Google Drive) ──
 const REVIEWS = [
-  { id: '1om-5arlYbl71uVoP3uxLBlG9G-Yl3ibu', name: 'Verified Customer' },
-  { id: '1raUthBQQUsKAfUkgE8ZxoUoUm9EBidYB', name: 'Verified Customer' },
-  { id: '1KIOgWzV0ZCHUfun8FmBcCKjkIl-wxIFZ', name: 'Verified Customer' },
-  { id: '1QhkZA6ywIEpWXCK-J7TjkkZifG6s6oMe', name: 'Verified Customer' },
-  { id: '1SIoXHQtzejcRbSeN1VrOO0WZOjWU7HCT', name: 'Verified Customer' },
-  { id: '19O6mL8Kl1NI31WuWiZE4IMSLN_MFLyy3', name: 'Verified Customer' },
-  { id: '1aRSFmFKSm4-Bx_5PvttwMAeA-qCDIVkk', name: 'Verified Customer' },
-  { id: '13iBc8OYwHt4D2a3isp_xDZaOGvq2z-mP', name: 'Verified Customer' },
-  { id: '1Xtw2-sEANLWOLXJmR2LrLWQSZNdyaaKT', name: 'Verified Customer' },
+  { src: 'https://res.cloudinary.com/dmz316wxm/video/upload/v1786902626/reviews/flooring/1om-5arlYbl71uVoP3uxLBlG9G-Yl3ibu.mp4', name: 'Verified Customer' },
+  { src: 'https://res.cloudinary.com/dmz316wxm/video/upload/v1786902630/reviews/flooring/1raUthBQQUsKAfUkgE8ZxoUoUm9EBidYB.mp4', name: 'Verified Customer' },
+  { src: 'https://res.cloudinary.com/dmz316wxm/video/upload/v1786902635/reviews/flooring/1KIOgWzV0ZCHUfun8FmBcCKjkIl-wxIFZ.mp4', name: 'Verified Customer' },
+  { src: 'https://res.cloudinary.com/dmz316wxm/video/upload/v1786902637/reviews/flooring/1QhkZA6ywIEpWXCK-J7TjkkZifG6s6oMe.mp4', name: 'Verified Customer' },
+  { src: 'https://res.cloudinary.com/dmz316wxm/video/upload/v1786902641/reviews/flooring/1SIoXHQtzejcRbSeN1VrOO0WZOjWU7HCT.mp4', name: 'Verified Customer' },
+  { src: 'https://res.cloudinary.com/dmz316wxm/video/upload/v1786902646/reviews/flooring/19O6mL8Kl1NI31WuWiZE4IMSLN_MFLyy3.mp4', name: 'Verified Customer' },
+  { src: 'https://res.cloudinary.com/dmz316wxm/video/upload/v1786902650/reviews/flooring/1aRSFmFKSm4-Bx_5PvttwMAeA-qCDIVkk.mp4', name: 'Verified Customer' },
+  { src: 'https://res.cloudinary.com/dmz316wxm/video/upload/v1786902654/reviews/flooring/13iBc8OYwHt4D2a3isp_xDZaOGvq2z-mP.mp4', name: 'Verified Customer' },
+  { src: 'https://res.cloudinary.com/dmz316wxm/video/upload/v1786902658/reviews/flooring/1Xtw2-sEANLWOLXJmR2LrLWQSZNdyaaKT.mp4', name: 'Verified Customer' },
 ]
 // ─────────────────────────────────────────────────────────────────────────────
 
 function ReviewCard({ review }) {
+  const videoRef = useRef(null)
+  const [playing, setPlaying] = useState(false)
+  const [muted, setMuted]     = useState(true)
+
+  const togglePlay = () => {
+    const v = videoRef.current
+    if (!v) return
+    v.paused ? v.play() : v.pause()
+  }
+
+  const toggleMute = (e) => {
+    e.stopPropagation()
+    const v = videoRef.current
+    if (!v) return
+    v.muted = !v.muted
+    setMuted(v.muted)
+  }
+
   return (
-    <div className="relative w-full aspect-[4/5] bg-black shadow-sm hover:shadow-xl transition-shadow duration-300">
-      <iframe
-        src={`https://drive.google.com/file/d/${review.id}/preview`}
-        className="absolute inset-0 w-full h-full"
-        allow="autoplay; encrypted-media"
-        allowFullScreen
-        loading="lazy"
-        title={`${review.name} review video`}
+    <div
+      className="group relative w-full aspect-[9/16] bg-black cursor-pointer"
+      onClick={togglePlay}
+    >
+      <video
+        ref={videoRef}
+        src={review.src}
+        className="absolute inset-0 w-full h-full object-cover"
+        playsInline
+        loop
+        muted={muted}
+        preload="metadata"
+        onPlay={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
       />
+
+      {/* Play overlay — visible until first tap */}
+      {!playing && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/25 group-hover:bg-black/35 transition-colors">
+          <span className="w-14 h-14 sm:w-16 sm:h-16 bg-white/95 rounded-full flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
+            <Play className="w-6 h-6 sm:w-7 sm:h-7 text-primary-600 fill-primary-600 ml-1" />
+          </span>
+        </div>
+      )}
+
+      {/* Mute toggle — visible once playing */}
+      {playing && (
+        <button
+          onClick={toggleMute}
+          aria-label={muted ? 'Unmute' : 'Mute'}
+          className="absolute bottom-2.5 right-2.5 w-8 h-8 bg-black/50 hover:bg-black/70 backdrop-blur-sm rounded-full flex items-center justify-center transition-colors"
+        >
+          {muted
+            ? <VolumeX className="w-4 h-4 text-white" />
+            : <Volume2 className="w-4 h-4 text-white" />
+          }
+        </button>
+      )}
     </div>
   )
 }
@@ -96,7 +142,7 @@ export default function CustomerReviews() {
               style={{ transform: `translateX(${slideX}%)` }}
             >
               {REVIEWS.map((review) => (
-                <div key={review.id} style={{ width: `${itemW}%` }} className="px-1.5 sm:px-2 flex-shrink-0">
+                <div key={review.src} style={{ width: `${itemW}%` }} className="px-1.5 sm:px-2 flex-shrink-0">
                   <ReviewCard review={review} />
                 </div>
               ))}
